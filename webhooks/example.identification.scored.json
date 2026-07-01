@@ -1,0 +1,57 @@
+{
+  "event_type": "identification.scored",
+  "schema_version": "2026-06-01",
+  "created_at": "2026-07-01T12:34:56Z",
+  "data": {
+    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+    "visitor_id": "9b74c98e-1a3f-0d2c-5b6a-7e8f10293847",
+    "device_id": "1c2d3e4f-5a6b-7c8d-9e0f-112233445566",
+    "session_id": "aabbccdd-eeff-0011-2233-445566778899",
+    "cookie_id": "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
+    "user_hid": null,
+    "domain": "myshop.com",
+    "public_ip": { "ip": "203.0.113.7", "country": "US" },
+    "local_ip": { "ip": "192.168.1.24", "country": "US" },
+    "connection_type": "vpn",
+    "os": "Windows",
+    "browser": "Chrome",
+    "device_type": "desktop",
+    "traffic_source": {
+      "channel": "paid_search",
+      "referrer_domain": "google.com",
+      "landing_url": "https://myshop.com/sale",
+      "click_id_type": "gclid",
+      "utm_source": "google",
+      "utm_medium": "cpc",
+      "utm_campaign": "summer",
+      "utm_content": "ad-a",
+      "utm_term": "sneakers"
+    },
+    "risk_score": 62,
+    "signals": [
+      { "name": "is_vpn", "weight": 30 },
+      { "name": "datacenter_ip", "weight": 20 },
+      { "name": "timezone_mismatch", "weight": 12 }
+    ],
+    "detection_flags": {
+      "vpn": true,
+      "privacy_relay": false,
+      "browser_vpn_proxy": false,
+      "tor": false,
+      "proxy": false,
+      "datacenter_ip": true,
+      "abuser": false,
+      "os_mismatch": false,
+      "os_not_detected": false,
+      "timezone_mismatch": true,
+      "anti_detect_browser": false,
+      "ip_mismatch": false,
+      "incognito": false,
+      "suspicious_paid_click": false,
+      "javascript_disabled": false,
+      "stun_request_seen": true,
+      "stun_not_checked": false
+    },
+    "observed_at": "2026-07-01T12:34:55Z"
+  }
+}

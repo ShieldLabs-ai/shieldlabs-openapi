@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ShieldLabs-ai/shieldlabs-openapi/webhooks/identification.scored.schema.json",
+  "title": "ShieldLabs webhook event",
+  "description": "Envelope ShieldLabs POSTs to your configured callback URL. Derived 1:1 from Shield.Core internal/entity/webhook.go (schema_version 2026-06-01). The body is signed with the X-Shield-Signature header; see SIGNATURE.md.",
+  "type": "object",
+  "required": ["event_type", "schema_version", "created_at"],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": ["identification.scored", "webhook.ping"],
+      "description": "identification.scored carries a scored visit in `data`. webhook.ping is a test event with no `data`."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "2026-06-01"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "$ref": "#/$defs/ScoredData",
+      "description": "Present for identification.scored; omitted for webhook.ping."
+    }
+  },
+  "$defs": {
+    "ScoredData": {
+      "type": "object",
+      "required": ["request_id", "visitor_id", "device_id", "risk_score", "signals", "detection_flags", "observed_at"],
+      "properties": {
+        "request_id": { "type": "string", "description": "Unique per visit. Use as an idempotency key." },
+        "visitor_id": { "type": "string" },
+        "device_id": { "type": "string" },
+        "session_id": { "type": "string" },
+        "cookie_id": { "type": "string" },
+        "user_hid": { "type": ["string", "null"], "description": "Your hashed user identifier, if you passed one." },
+        "domain": { "type": "string" },
+        "public_ip": { "$ref": "#/$defs/IPAddress" },
+        "local_ip": { "$ref": "#/$defs/IPAddress" },
+        "connection_type": {
+          "type": "string",
+          "description": "Observed values include the enum below; treat as open (new values may appear).",
+          "enum": ["direct", "mobile", "vpn", "proxy", "tor", "privacy_relay", "browser_vpn_proxy", "unknown"]
+        },
+        "os": { "type": "string" },
+        "browser": { "type": "string" },
+        "device_type": { "type": "string" },
+        "traffic_source": { "$ref": "#/$defs/TrafficSource" },
+        "risk_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "signals": {
+          "type": "array",
+          "description": "Named signals that moved the risk score, with their weight. Debug entries (weight 0) are omitted.",
+          "items": { "$ref": "#/$defs/Signal" }
+        },
+        "detection_flags": { "$ref": "#/$defs/DetectionFlags" },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "IPAddress": {
+      "type": "object",
+      "properties": {
+        "ip": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "TrafficSource": {
+      "type": "object",
+      "properties": {
+        "channel": { "type": "string" },
+        "referrer_domain": { "type": "string" },
+        "landing_url": { "type": "string" },
+        "click_id_type": { "type": "string" },
+        "utm_source": { "type": "string" },
+        "utm_medium": { "type": "string" },
+        "utm_campaign": { "type": "string" },
+        "utm_content": { "type": "string" },
+        "utm_term": { "type": "string" }
+      }
+    },
+    "Signal": {
+      "type": "object",
+      "required": ["name", "weight"],
+      "properties": {
+        "name": { "type": "string" },
+        "weight": { "type": "integer" }
+      }
+    },
+    "DetectionFlags": {
+      "type": "object",
+      "description": "Denormalized boolean flags. Convenience view over the signals.",
+      "properties": {
+        "vpn": { "type": "boolean" },
+        "privacy_relay": { "type": "boolean" },
+        "browser_vpn_proxy": { "type": "boolean" },
+        "tor": { "type": "boolean" },
+        "proxy": { "type": "boolean" },
+        "datacenter_ip": { "type": "boolean" },
+        "abuser": { "type": "boolean" },
+        "os_mismatch": { "type": "boolean" },
+        "os_not_detected": { "type": "boolean" },
+        "timezone_mismatch": { "type": "boolean" },
+        "anti_detect_browser": { "type": "boolean" },
+        "ip_mismatch": { "type": "boolean" },
+        "incognito": { "type": "boolean" },
+        "suspicious_paid_click": { "type": "boolean" },
+        "javascript_disabled": { "type": "boolean" },
+        "stun_request_seen": { "type": "boolean" },
+        "stun_not_checked": { "type": "boolean" }
+      }
+    }
+  }
+}
