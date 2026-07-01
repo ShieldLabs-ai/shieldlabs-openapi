@@ -1,0 +1,25 @@
+openapi: 3.1.0
+info:
+  title: ShieldLabs API
+  version: 0.0.0
+  description: >-
+    Public API for ShieldLabs identification and anonymity detection.
+    Pre-launch placeholder. The full specification will be generated from the
+    live API before the first release and used to generate SDKs and docs.
+  contact:
+    name: ShieldLabs
+    url: https://shieldlabs.ai
+    email: contact@shieldlabs.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://api.shieldlabs.ai
+    description: Production
+paths: {}
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
