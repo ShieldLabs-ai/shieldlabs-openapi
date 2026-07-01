@@ -1,8 +1,10 @@
 # Contract drift: webhook payload (must reconcile before public launch)
 
-**Status: OPEN. Owner: founder / Core + Docs devs.**
+**Status: OPEN. Owner: Vasili (webhook contract is his area — do not edit `Shield.Docs/references/openapi.yaml` without coordinating).**
 
-The `openapi.yaml` in this repo is mirrored from `Shield.Docs/references/openapi.yaml` (the maintained source of truth). Its **webhook section is stale relative to the live `Shield.Core` code** on `development`. The non-webhook surface (History API, Management API, Profile, Snapshot, error responses) matches the code and needs no change.
+The `openapi.yaml` in this repo is a faithful mirror of `Shield.Docs/references/openapi.yaml`. That upstream file's **webhook section is the one stale artifact**: the v2026-06-01 contract sweep on 2026-06-30 updated the live `Shield.Core` code **and** the Shield.Docs MDX pages (`setup/webhooks.mdx`, `api/webhooks.mdx`) to the new contract, but **missed `references/openapi.yaml`** — it still shows the old `{ Data, Assing }` PascalCase envelope.
+
+So the correct contract already exists in three places (code, MDX docs, and [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json) here); only the upstream OpenAPI file lags. The non-webhook surface of `openapi.yaml` (History API, Management API, Profile, Snapshot, error responses) matches the code and needs no change.
 
 ## The mismatch
 
@@ -21,10 +23,10 @@ The `openapi.yaml` in this repo is mirrored from `Shield.Docs/references/openapi
 
 The code-accurate contract is captured in [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json) and [`webhooks/SIGNATURE.md`](./webhooks/SIGNATURE.md).
 
-## Open questions to resolve
+## To resolve
 
-1. **Which contract is live in production?** The new contract is committed on `Shield.Core@development`. Confirm whether it is deployed to prod before anything is published.
-2. **Update the docs.** Once confirmed, replace the `webhooks:` section (and `WebhookEnvelope` / `WebhookBody` schemas) in `Shield.Docs/references/openapi.yaml` with the new contract, and update `Shield.Docs/api/webhooks.mdx` and `setup/webhooks.mdx`.
-3. **Then regenerate** this repo's `openapi.yaml` and the SDK types from the reconciled source of truth.
+1. **Fix upstream (Vasili).** In `Shield.Docs/references/openapi.yaml`, replace the `webhooks:` section and the `WebhookEnvelope` / `WebhookBody` / `ScoreDetail` schemas with the v2026-06-01 contract already reflected in the MDX docs and in [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json). The MDX pages are already correct and can be used as the reference.
+2. **Re-mirror.** Once the upstream file is fixed, re-copy it into this repo's `openapi.yaml`.
+3. **Then generate** the SDK types and API reference from the reconciled spec.
 
-Until this is resolved, do **not** make `shieldlabs-openapi` public: the two contracts contradict each other.
+Until step 1 is done, do **not** make `shieldlabs-openapi` public: `openapi.yaml`'s webhook section still contradicts the live contract.
