@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
   title: ShieldLabs API
-  version: "1.1"
+  version: "1.2"
   description: |
     The ShieldLabs API surfaces visitor identification, anonymity detection, and
     abuse and fraud prevention for your application.
@@ -11,13 +11,15 @@ info:
     - The **JS snippet** posts collected signals to `rest.shieldlabs.ai` automatically.
       You do not call this endpoint yourself. See [Install the snippet](/setup/snippet).
     - **Webhooks** deliver the Risk Score and signals to your server shortly after a
-      visit. See [Webhooks](/api/webhooks).
+      visit. See [Webhooks](/api/webhooks). Contract: schema_version `2026-06-01`
+      (`identification.scored` / `webhook.ping`), signature in `X-Shield-Signature`.
     - The **Server API** has two backend hosts:
-      - **History API** (recommended) on `account.shieldlabs.ai/api` — Private API Key
-        (`Authorization: Bearer sec_…`). See [Server API](/api/server-api).
-      - **Management API** on `api.shieldlabs.ai` — Secret Key in headers (`X-Shield-Domain`
-        + `Authorization: Bearer`). Profile, balance, and alternate billed History path.
-        Legacy `{domain}:{secret}` path auth is deprecated (sunset 2027-01-01).
+      - **History API** (recommended) on `account.shieldlabs.ai/api` — implemented by
+        **Shield.Portal.Admin**. Private API Key (`Authorization: Bearer sec_…`).
+        Envelope `{ data, total }`. See [Server API](/api/server-api).
+      - **Management API** on `api.shieldlabs.ai` — implemented by **Shield.Core**.
+        Secret Key in headers (`X-Shield-Domain` + `Authorization: Bearer`).
+        Profile, balance, and alternate billed History path (PascalCase array).
 
     The Risk Score is an integer from 0 to 100. ShieldLabs scores visits; your own
     code decides whether to allow, challenge, review, or block.
@@ -26,15 +28,19 @@ info:
 
 servers:
   - url: https://account.shieldlabs.ai/api
-    description: History API (Private API Key, recommended for snapshot reads)
+    description: History API (Shield.Portal.Admin — Private API Key, recommended for snapshot reads)
   - url: https://api.shieldlabs.ai
-    description: Management API (Secret Key — profile, balance, billed History)
+    description: Management API (Shield.Core — Secret Key — profile, balance, billed History)
 
 tags:
   - name: history-api
-    description: Recommended snapshot reads on account.shieldlabs.ai. Authenticated with Private API Key.
+    description: |
+      Recommended snapshot reads on account.shieldlabs.ai (service: Shield.Portal.Admin).
+      Authenticated with Private API Key. Response envelope `{ data, total }`.
   - name: management-api
-    description: Profile, balance, and alternate History on api.shieldlabs.ai. Authenticated with Secret Key headers (v1) or legacy path credentials.
+    description: |
+      Profile, balance, and alternate History on api.shieldlabs.ai (service: Shield.Core).
+      Authenticated with Secret Key headers. History returns a PascalCase JSON array.
 
 paths:
   /api/v1/history/{search_type}/{value}:
@@ -44,6 +50,7 @@ paths:
       description: |
         Returns stored snapshots that match an identifier, newest first, in a paginated
         `{ data, total }` envelope. Does not consume request balance.
+        Served by Shield.Portal.Admin on account.shieldlabs.ai.
       operationId: searchHistoryAccount
       security:
         - PrivateApiKey: []
@@ -87,8 +94,7 @@ paths:
       tags: [management-api]
       summary: Get domain profile
       description: |
-        Returns the profile for a domain: remaining request balance, configured
-        callback URL, and masked keys. Free (0 requests).
+        Returns the profile for a domain: remaining request balance and masked keys. Free (0 requests).
       operationId: getProfileV1
       security:
         - SecretKeyHeader: []
@@ -110,6 +116,7 @@ paths:
         Returns stored snapshots in a PascalCase JSON array, newest first. Each returned
         row consumes one request from your balance (an empty result still consumes one).
         Prefer `/api/v1/history/…` on account.shieldlabs.ai for new integrations.
+        Served by Shield.Core on api.shieldlabs.ai.
       operationId: searchHistoryV1
       security:
         - SecretKeyHeader: []
@@ -119,7 +126,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [ip, user_hid, visitor_id, request_id, device_id]
+            enum: [ip, user_hid, visitor_id, request_id, device_id, session_id, cookie_id]
         - name: value
           in: path
           required: true
@@ -154,102 +161,103 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
-  /v1/callback:
+webhooks:
+  identificationScored:
     post:
-      tags: [management-api]
-      summary: Set the webhook callback URL (deprecated)
-      deprecated: true
+      summary: identification.scored delivered
       description: |
-        Deprecated. Register webhook endpoints in the dashboard instead.
-      operationId: setCallbackV1
-      security:
-        - SecretKeyHeader: []
+        ShieldLabs POSTs a signed JSON envelope to your configured webhook endpoint after
+        a visit is scored. One delivery per check (at-most-once, no retries).
+
+        Verify `X-Shield-Signature: sha256=<hex>` (HMAC-SHA256 over the raw body with your
+        endpoint secret). Treat `data.request_id` as an idempotency key.
+
+        Schema version is `2026-06-01` (`schema_version` field). Ping/test deliveries use
+        `event_type: webhook.ping` with no `data`.
+      parameters:
+        - name: X-Shield-Signature
+          in: header
+          required: true
+          description: |
+            HMAC-SHA256 of the raw request body, hex-encoded, prefixed with `sha256=`.
+            Example: `sha256=9f1c2b3a…`.
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [application/json]
       requestBody:
         required: true
         content:
-          text/plain:
-            schema:
-              type: string
-              format: uri
-      responses:
-        "200":
-          description: Callback URL stored
-        "401":
-          $ref: "#/components/responses/UnauthorizedEmpty"
-
-  /{credentials}/profile:
-    get:
-      tags: [management-api]
-      summary: Get domain profile (legacy path auth)
-      deprecated: true
-      operationId: getProfileLegacy
-      parameters:
-        - $ref: "#/components/parameters/Credentials"
-      responses:
-        "200":
-          description: Domain profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Profile"
-        "401":
-          $ref: "#/components/responses/UnauthorizedEmpty"
-
-  /{credentials}/history/{type}/{value}:
-    get:
-      tags: [management-api]
-      summary: Search history (legacy path auth)
-      deprecated: true
-      operationId: searchHistoryLegacy
-      parameters:
-        - $ref: "#/components/parameters/Credentials"
-        - name: type
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: [ip, user_hid, visitor_id, request_id, device_id]
-        - name: value
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 100
-      responses:
-        "200":
-          description: Matching snapshots
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Snapshot"
-        "401":
-          $ref: "#/components/responses/UnauthorizedEmpty"
-        "402":
-          $ref: "#/components/responses/OutOfRequests"
-
-webhooks:
-  scoreDelivered:
-    post:
-      summary: Risk Score delivered
-      description: |
-        ShieldLabs POSTs this envelope to your configured callback URL after a visit is
-        scored. It fires once with `Phase: "initial"` (about a second after the visit)
-        and may fire again with `Phase: "update"` after a follow-up network check completes.
-        Delivery is at-most-once with no retries. Verify the `Assing` HMAC-SHA256
-        signature and treat `RequestID` as an idempotency key.
-      requestBody:
-        content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WebhookEnvelope"
+              $ref: "#/components/schemas/WebhookEvent"
+            examples:
+              scored:
+                summary: identification.scored
+                value:
+                  event_type: identification.scored
+                  schema_version: "2026-06-01"
+                  created_at: "2026-06-26T14:20:42Z"
+                  data:
+                    request_id: "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11"
+                    visitor_id: "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d"
+                    device_id: "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f"
+                    session_id: "7a1b2c3d-4e5f-6789-abcd-ef0123456789"
+                    cookie_id: "3f2e1d0c-9b8a-7654-3210-fedcba987654"
+                    user_hid: null
+                    domain: example.com
+                    public_ip: { ip: "203.0.113.42", country: "US" }
+                    local_ip: { ip: "198.51.100.23", country: "DE" }
+                    connection_type: proxy
+                    os: Windows
+                    browser: Chrome
+                    device_type: desktop
+                    traffic_source:
+                      channel: "Google Ads"
+                      referrer_domain: google.com
+                      landing_url: "https://example.com/lp?gclid=abc123"
+                      click_id_type: gclid
+                      utm_source: google
+                      utm_medium: cpc
+                      utm_campaign: summer_sale
+                      utm_content: ad_a
+                      utm_term: "buy shoes"
+                    risk_score: 30
+                    signals:
+                      - { name: proxy, weight: 10 }
+                      - { name: datacenter_ip, weight: 10 }
+                      - { name: abuser, weight: 10 }
+                    detection_flags:
+                      vpn: false
+                      privacy_relay: false
+                      browser_vpn_proxy: false
+                      tor: false
+                      proxy: true
+                      datacenter_ip: true
+                      abuser: true
+                      os_mismatch: false
+                      os_not_detected: false
+                      timezone_mismatch: false
+                      anti_detect_browser: false
+                      browser_automation: false
+                      ip_mismatch: true
+                      incognito: false
+                      search_bot: false
+                      suspicious_paid_click: false
+                      javascript_disabled: false
+                      stun_request_seen: true
+                      stun_not_checked: false
+                    observed_at: "2026-06-26T14:20:42Z"
+              ping:
+                summary: webhook.ping
+                value:
+                  event_type: webhook.ping
+                  schema_version: "2026-06-01"
+                  created_at: "2026-06-26T14:20:42Z"
       responses:
         "200":
           description: Acknowledged. Return 200 quickly.
@@ -264,16 +272,6 @@ components:
       type: http
       scheme: bearer
       description: Secret Key plus `X-Shield-Domain` header with your registered domain.
-
-  parameters:
-    Credentials:
-      name: credentials
-      in: path
-      required: true
-      description: "Legacy: domain and secret key joined by a colon, e.g. `myshop.com:9b74c98e…`. Deprecated — sunset 2027-01-01."
-      schema:
-        type: string
-      example: myshop.com:9b74c98e1a3f0d2c5b6a7e8f10293847
 
   responses:
     UnauthorizedEmpty:
@@ -350,60 +348,179 @@ components:
 
     ScoreDetail:
       type: object
+      description: Signal row on Management API Snapshot.Details (PascalCase). Not used in webhooks.
       properties:
         Value:
           type: integer
         Description:
           type: string
 
-    WebhookBody:
+    WebhookIPAddress:
       type: object
       properties:
-        RequestID:
+        ip:
+          type: string
+        country:
+          type: string
+
+    WebhookSignal:
+      type: object
+      required: [name, weight]
+      properties:
+        name:
+          type: string
+          description: Stable signal slug (e.g. proxy, vpn, datacenter_ip).
+        weight:
+          type: integer
+          description: Points contributed to risk_score. Debug entries with weight 0 are omitted.
+
+    WebhookTrafficSource:
+      type: object
+      properties:
+        channel:
+          type: string
+        referrer_domain:
+          type: string
+        landing_url:
+          type: string
+        click_id_type:
+          type: string
+        utm_source:
+          type: string
+        utm_medium:
+          type: string
+        utm_campaign:
+          type: string
+        utm_content:
+          type: string
+        utm_term:
+          type: string
+
+    WebhookDetectionFlags:
+      type: object
+      description: Denormalized detection booleans from Shield.Core entity.WebhookDetectionFlags.
+      properties:
+        vpn:
+          type: boolean
+        privacy_relay:
+          type: boolean
+        browser_vpn_proxy:
+          type: boolean
+        tor:
+          type: boolean
+        proxy:
+          type: boolean
+        datacenter_ip:
+          type: boolean
+        abuser:
+          type: boolean
+        os_mismatch:
+          type: boolean
+        os_not_detected:
+          type: boolean
+        timezone_mismatch:
+          type: boolean
+        anti_detect_browser:
+          type: boolean
+        browser_automation:
+          type: boolean
+        ip_mismatch:
+          type: boolean
+        incognito:
+          type: boolean
+        search_bot:
+          type: boolean
+        suspicious_paid_click:
+          type: boolean
+        javascript_disabled:
+          type: boolean
+        stun_request_seen:
+          type: boolean
+        stun_not_checked:
+          type: boolean
+
+    WebhookScoredData:
+      type: object
+      description: Payload inside identification.scored (Shield.Core entity.WebhookScoredData).
+      required:
+        - request_id
+        - visitor_id
+        - device_id
+        - risk_score
+        - signals
+        - detection_flags
+        - observed_at
+      properties:
+        request_id:
           type: string
           format: uuid
-        SessionID:
+          description: Unique per visit. Use as an idempotency key.
+        visitor_id:
           type: string
           format: uuid
-        CookieID:
+        device_id:
           type: string
           format: uuid
-        DeviceID:
+        session_id:
           type: string
           format: uuid
-        VisitorID:
+        cookie_id:
           type: string
           format: uuid
-        IP:
+        user_hid:
+          type: ["string", "null"]
+          description: Your hashed user identifier, if provided; null when empty.
+        domain:
           type: string
-        OS:
+        public_ip:
+          $ref: "#/components/schemas/WebhookIPAddress"
+        local_ip:
+          $ref: "#/components/schemas/WebhookIPAddress"
+        connection_type:
           type: string
-        Country:
+          description: Observed connection class; new values may appear.
+          enum: [direct, mobile, vpn, proxy, tor, privacy_relay, browser_vpn_proxy, unknown]
+        os:
           type: string
-        UserHID:
+        browser:
           type: string
-        Score:
+        device_type:
+          type: string
+        traffic_source:
+          $ref: "#/components/schemas/WebhookTrafficSource"
+        risk_score:
           type: integer
           minimum: 0
           maximum: 100
-        Details:
+        signals:
           type: array
           items:
-            $ref: "#/components/schemas/ScoreDetail"
-        LastRequestTime:
+            $ref: "#/components/schemas/WebhookSignal"
+        detection_flags:
+          $ref: "#/components/schemas/WebhookDetectionFlags"
+        observed_at:
           type: string
           format: date-time
-        Phase:
-          type: string
-          enum: [initial, update]
 
-    WebhookEnvelope:
+    WebhookEvent:
       type: object
+      description: |
+        POST body envelope (Shield.Core entity.WebhookEvent). Signature is NOT in the body —
+        verify the X-Shield-Signature header.
+      required: [event_type, schema_version, created_at]
       properties:
-        Data:
-          $ref: "#/components/schemas/WebhookBody"
-        Assing:
+        event_type:
           type: string
+          enum: [identification.scored, webhook.ping]
+        schema_version:
+          type: string
+          const: "2026-06-01"
+        created_at:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/WebhookScoredData"
+          description: Present for identification.scored; omitted for webhook.ping.
 
     Snapshot:
       type: object
@@ -458,8 +575,6 @@ components:
           type: string
         Weight:
           type: integer
-        Callback:
-          type: string
         PublicKey:
           type: string
         Secret:

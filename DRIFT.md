@@ -1,32 +1,24 @@
-# Contract drift: webhook payload (must reconcile before public launch)
+# Contract drift: webhook payload
 
-**Status: OPEN. Owner: Vasili (webhook contract is his area — do not edit `Shield.Docs/references/openapi.yaml` without coordinating).**
+**Status: RESOLVED (2026-07-11).**
 
-The `openapi.yaml` in this repo is a faithful mirror of `Shield.Docs/references/openapi.yaml`. That upstream file's **webhook section is the one stale artifact**: the v2026-06-01 contract sweep on 2026-06-30 updated the live `Shield.Core` code **and** the Shield.Docs MDX pages (`setup/webhooks.mdx`, `api/webhooks.mdx`) to the new contract, but **missed `references/openapi.yaml`** — it still shows the old `{ Data, Assing }` PascalCase envelope.
+Upstream [`Shield.Docs/references/openapi.yaml`](https://github.com/ShieldLabs-ai/Shield.Docs/blob/main/references/openapi.yaml) webhook section now matches Shield.Core:
 
-So the correct contract already exists in three places (code, MDX docs, and [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json) here); only the upstream OpenAPI file lags. The non-webhook surface of `openapi.yaml` (History API, Management API, Profile, Snapshot, error responses) matches the code and needs no change.
+- Envelope: `event_type`, `schema_version: "2026-06-01"`, `created_at`, `data` (optional for ping)
+- Events: `identification.scored`, `webhook.ping`
+- Signature: header `X-Shield-Signature: sha256=<hex>` (not a body field)
+- Scored data: `risk_score`, `signals[{name,weight}]`, `detection_flags` (19 booleans including `browser_automation` / `search_bot`), `public_ip` / `local_ip`, `traffic_source`, …
 
-## The mismatch
+Source of truth: `Shield.Core/internal/entity/webhook.go`, `internal/provider/webhook/sender.go`, `internal/pipeline/stackhandler/adapter/webhook.go`.
 
-| Aspect | `openapi.yaml` (from Shield.Docs, v1.1) | Shield.Core code (`internal/entity/webhook.go`, `internal/provider/webhook/sender.go`) |
-|---|---|---|
-| Envelope | `{ Data, Assing }` | `{ event_type, schema_version: "2026-06-01", created_at, data }` |
-| Field casing | PascalCase (`Score`, `Details[]`, `RequestID`) | snake_case (`risk_score`, `signals[]`, `request_id`) |
-| Score field | `Score` (0-100) | `risk_score` (0-100) |
-| Signals | `Details[]` of `{ Value, Description }` | `signals[]` of `{ name, weight }` |
-| Detection flags | none | `detection_flags{}` (17 booleans) |
-| Traffic source | none | `traffic_source{}` (channel + UTM set) |
-| IPs | single `IP` | `public_ip{ip,country}`, `local_ip{ip,country}` |
-| Phase | `Phase: initial \| update` | not present in the envelope |
-| Signature | `Assing` field **in the body** | header `X-Shield-Signature: sha256=HMAC-SHA256(secret, raw_body)` |
-| Event types | implicit | `identification.scored`, `webhook.ping` |
+This repo's `openapi.yaml` is a mirror of that upstream file. Code-accurate JSON Schema remains in [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json); see [`SIGNATURE.md`](./webhooks/SIGNATURE.md) for verification.
 
-The code-accurate contract is captured in [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json) and [`webhooks/SIGNATURE.md`](./webhooks/SIGNATURE.md).
+## Prod confirmation (A2)
 
-## To resolve
+Webhook contract `2026-06-01` is on `main` and deployed via Shield.Core Deploy workflow (confirmed successful production deploys through 2026-07-10).
 
-1. **Fix upstream (Vasili).** In `Shield.Docs/references/openapi.yaml`, replace the `webhooks:` section and the `WebhookEnvelope` / `WebhookBody` / `ScoreDetail` schemas with the v2026-06-01 contract already reflected in the MDX docs and in [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json). The MDX pages are already correct and can be used as the reference.
-2. **Re-mirror.** Once the upstream file is fixed, re-copy it into this repo's `openapi.yaml`.
-3. **Then generate** the SDK types and API reference from the reconciled spec.
+## History ownership (A3) / lookup types (A4)
 
-Until step 1 is done, do **not** make `shieldlabs-openapi` public: `openapi.yaml`'s webhook section still contradicts the live contract.
+- History API (`account.shieldlabs.ai/api`): **Shield.Portal.Admin**, envelope `{ data, total }`
+- Management History (`api.shieldlabs.ai/v1/history`): **Shield.Core**, PascalCase array
+- Unified lookup types (both surfaces): `ip`, `user_hid`, `visitor_id`, `request_id`, `device_id`, `session_id`, `cookie_id`

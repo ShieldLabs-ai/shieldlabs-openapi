@@ -88,7 +88,7 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Denormalized boolean flags. Convenience view over the signals.",
+      "description": "Denormalized boolean flags. Convenience view over the signals. Matches Shield.Core entity.WebhookDetectionFlags.",
       "properties": {
         "vpn": { "type": "boolean" },
         "privacy_relay": { "type": "boolean" },
@@ -101,8 +101,10 @@
         "os_not_detected": { "type": "boolean" },
         "timezone_mismatch": { "type": "boolean" },
         "anti_detect_browser": { "type": "boolean" },
+        "browser_automation": { "type": "boolean" },
         "ip_mismatch": { "type": "boolean" },
         "incognito": { "type": "boolean" },
+        "search_bot": { "type": "boolean" },
         "suspicious_paid_click": { "type": "boolean" },
         "javascript_disabled": { "type": "boolean" },
         "stun_request_seen": { "type": "boolean" },
