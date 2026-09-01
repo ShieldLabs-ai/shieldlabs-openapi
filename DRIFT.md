@@ -19,6 +19,6 @@ Webhook contract `2026-06-01` is on `main` and deployed via Shield.Core Deploy w
 
 ## History ownership (A3) / lookup types (A4)
 
-- History API (`account.shieldlabs.ai/api`): **Shield.Portal.Admin**, envelope `{ data, total }`
-- Management History (`api.shieldlabs.ai/v1/history`): **Shield.Core**, PascalCase array
+- History API (`account.shieldlabs.ai/api`): **Shield.Portal.Admin**, envelope `{ data, total }` — canonical snapshot read.
+- Management History (`api.shieldlabs.ai/v1/history`): **Shield.Core**, PascalCase array — **deprecated in this spec** (`searchHistoryV1`). Handler still live; do not document per-row billing (code does not debit).
 - Unified lookup types (both surfaces): `ip`, `user_hid`, `visitor_id`, `request_id`, `device_id`, `session_id`, `cookie_id`
