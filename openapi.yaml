@@ -19,7 +19,7 @@ info:
         Envelope `{ data, total }`. See [Server API](/api/server-api).
       - **Management API** on `api.shieldlabs.ai` — implemented by **Shield.Core**.
         Secret Key in headers (`X-Shield-Domain` + `Authorization: Bearer`).
-        Profile, balance, and alternate billed History path (PascalCase array).
+        Profile and balance (Secret Key). Snapshot history: use History API.
 
     The Risk Score is an integer from 0 to 100. ShieldLabs scores visits; your own
     code decides whether to allow, challenge, review, or block.
@@ -30,7 +30,7 @@ servers:
   - url: https://account.shieldlabs.ai/api
     description: History API (Shield.Portal.Admin — Private API Key, recommended for snapshot reads)
   - url: https://api.shieldlabs.ai
-    description: Management API (Shield.Core — Secret Key — profile, balance, billed History)
+    description: Management API (Shield.Core — Secret Key — profile and balance)
 
 tags:
   - name: history-api
@@ -39,8 +39,8 @@ tags:
       Authenticated with Private API Key. Response envelope `{ data, total }`.
   - name: management-api
     description: |
-      Profile, balance, and alternate History on api.shieldlabs.ai (service: Shield.Core).
-      Authenticated with Secret Key headers. History returns a PascalCase JSON array.
+      Profile and balance on api.shieldlabs.ai (service: Shield.Core).
+      Authenticated with Secret Key headers. GET /v1/history is deprecated; use History API.
 
 paths:
   /api/v1/history/{search_type}/{value}:
@@ -111,12 +111,12 @@ paths:
   /v1/history/{type}/{value}:
     get:
       tags: [management-api]
-      summary: Search history by identifier (Management API)
+      summary: Search history by identifier (deprecated)
+      deprecated: true
       description: |
-        Returns stored snapshots in a PascalCase JSON array, newest first. Each returned
-        row consumes one request from your balance (an empty result still consumes one).
-        Prefer `/api/v1/history/…` on account.shieldlabs.ai for new integrations.
-        Served by Shield.Core on api.shieldlabs.ai.
+        Deprecated. Use `searchHistoryAccount` on account.shieldlabs.ai.
+        Still returns stored snapshots in a PascalCase JSON array, newest first.
+        Does not consume request balance. Served by Shield.Core on api.shieldlabs.ai.
       operationId: searchHistoryV1
       security:
         - SecretKeyHeader: []
@@ -152,8 +152,6 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/UnauthorizedEmpty"
-        "402":
-          $ref: "#/components/responses/OutOfRequests"
         "404":
           description: Unsupported identifier type
         "429":
@@ -249,7 +247,6 @@ webhooks:
                       search_bot: false
                       suspicious_paid_click: false
                       javascript_disabled: false
-                      stun_request_seen: true
                       stun_not_checked: false
                     observed_at: "2026-06-26T14:20:42Z"
               ping:
@@ -434,8 +431,6 @@ components:
           type: boolean
         javascript_disabled:
           type: boolean
-        stun_request_seen:
-          type: boolean
         stun_not_checked:
           type: boolean
 
@@ -524,7 +519,7 @@ components:
 
     Snapshot:
       type: object
-      description: Snapshot from the Management API History path (PascalCase array element).
+      description: Deprecated Management History array element (PascalCase). Prefer History API snake_case rows.
       properties:
         RequestID:
           type: string
@@ -545,7 +540,7 @@ components:
           type: string
         ConnectionType:
           type: string
-          enum: [direct, mobile, vpn, proxy, tor, privacy_relay, unknown]
+          enum: [direct, mobile, vpn, proxy, tor, privacy_relay, browser_vpn_proxy, unknown]
         WebRtcHIP:
           type: string
         OS:
