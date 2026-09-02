@@ -14,10 +14,10 @@ info:
       visit. See [Webhooks](/api/webhooks). Contract: schema_version `2026-06-01`
       (`identification.scored` / `webhook.ping`), signature in `X-Shield-Signature`.
     - The **Server API** has two backend hosts:
-      - **History API** (recommended) on `account.shieldlabs.ai/api` — implemented by
-        **Shield.Portal.Admin**. Private API Key (`Authorization: Bearer sec_…`).
+      - **History API** (recommended) on `account.shieldlabs.ai/api`.
+        Private API Key (`Authorization: Bearer sec_…`).
         Envelope `{ data, total }`. See [Server API](/api/server-api).
-      - **Management API** on `api.shieldlabs.ai` — implemented by **Shield.Core**.
+      - **Management API** on `api.shieldlabs.ai`.
         Secret Key in headers (`X-Shield-Domain` + `Authorization: Bearer`).
         Profile and balance (Secret Key). Snapshot history: use History API.
 
@@ -28,18 +28,18 @@ info:
 
 servers:
   - url: https://account.shieldlabs.ai/api
-    description: History API (Shield.Portal.Admin — Private API Key, recommended for snapshot reads)
+    description: History API (Private API Key, recommended for snapshot reads)
   - url: https://api.shieldlabs.ai
-    description: Management API (Shield.Core — Secret Key — profile and balance)
+    description: Management API (Secret Key — profile and balance)
 
 tags:
   - name: history-api
     description: |
-      Recommended snapshot reads on account.shieldlabs.ai (service: Shield.Portal.Admin).
+      Recommended snapshot reads on account.shieldlabs.ai.
       Authenticated with Private API Key. Response envelope `{ data, total }`.
   - name: management-api
     description: |
-      Profile and balance on api.shieldlabs.ai (service: Shield.Core).
+      Profile and balance on api.shieldlabs.ai.
       Authenticated with Secret Key headers. GET /v1/history is deprecated; use History API.
 
 paths:
@@ -50,7 +50,7 @@ paths:
       description: |
         Returns stored snapshots that match an identifier, newest first, in a paginated
         `{ data, total }` envelope. Does not consume request balance.
-        Served by Shield.Portal.Admin on account.shieldlabs.ai.
+        Served on account.shieldlabs.ai.
       operationId: searchHistoryAccount
       security:
         - PrivateApiKey: []
@@ -116,7 +116,7 @@ paths:
       description: |
         Deprecated. Use `searchHistoryAccount` on account.shieldlabs.ai.
         Still returns stored snapshots in a PascalCase JSON array, newest first.
-        Does not consume request balance. Served by Shield.Core on api.shieldlabs.ai.
+        Does not consume request balance. Served on api.shieldlabs.ai.
       operationId: searchHistoryV1
       security:
         - SecretKeyHeader: []
@@ -370,7 +370,7 @@ components:
           description: Stable signal slug (e.g. proxy, vpn, datacenter_ip).
         weight:
           type: integer
-          description: Points contributed to risk_score. Debug entries with weight 0 are omitted.
+          description: Points contributed to risk_score. Entries with weight 0 are omitted.
 
     WebhookTrafficSource:
       type: object
@@ -396,7 +396,7 @@ components:
 
     WebhookDetectionFlags:
       type: object
-      description: Denormalized detection booleans from Shield.Core entity.WebhookDetectionFlags.
+      description: Detection flag booleans on the webhook payload.
       properties:
         vpn:
           type: boolean
@@ -439,7 +439,7 @@ components:
 
     WebhookScoredData:
       type: object
-      description: Payload inside identification.scored (Shield.Core entity.WebhookScoredData).
+      description: Payload inside identification.scored.
       required:
         - request_id
         - visitor_id
@@ -503,7 +503,7 @@ components:
     WebhookEvent:
       type: object
       description: |
-        POST body envelope (Shield.Core entity.WebhookEvent). Signature is NOT in the body —
+        Webhook POST body envelope. Signature is NOT in the body —
         verify the X-Shield-Signature header.
       required: [event_type, schema_version, created_at]
       properties:

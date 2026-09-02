@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/ShieldLabs-ai/shieldlabs-openapi/webhooks/identification.scored.schema.json",
   "title": "ShieldLabs webhook event",
-  "description": "Envelope ShieldLabs POSTs to your configured callback URL. Derived 1:1 from Shield.Core internal/entity/webhook.go (schema_version 2026-06-01). The body is signed with the X-Shield-Signature header; see SIGNATURE.md.",
+  "description": "Envelope ShieldLabs POSTs to your configured callback URL (schema_version 2026-06-01). The body is signed with the X-Shield-Signature header; see SIGNATURE.md.",
   "type": "object",
   "required": ["event_type", "schema_version", "created_at"],
   "properties": {
@@ -50,7 +50,7 @@
         "risk_score": { "type": "integer", "minimum": 0, "maximum": 100 },
         "signals": {
           "type": "array",
-          "description": "Named signals that moved the risk score, with their weight. Debug entries (weight 0) are omitted.",
+          "description": "Named signals that moved the risk score, with their weight. Entries with weight 0 are omitted.",
           "items": { "$ref": "#/$defs/Signal" }
         },
         "detection_flags": { "$ref": "#/$defs/DetectionFlags" },
@@ -88,7 +88,7 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Denormalized boolean flags. Convenience view over the signals. Matches Shield.Core entity.WebhookDetectionFlags.",
+      "description": "Detection flag booleans on the webhook payload. Convenience view over the signals.",
       "properties": {
         "vpn": { "type": "boolean" },
         "privacy_relay": { "type": "boolean" },
