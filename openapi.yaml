@@ -114,9 +114,11 @@ paths:
       summary: Search history by identifier (deprecated)
       deprecated: true
       description: |
-        Deprecated. Use `searchHistoryAccount` on account.shieldlabs.ai.
-        Still returns stored snapshots in a PascalCase JSON array, newest first.
-        Does not consume request balance. Served on api.shieldlabs.ai.
+        Deprecated. Use `searchHistoryAccount` on account.shieldlabs.ai
+        (`https://account.shieldlabs.ai/api/v1/history`). Sunset: 2027-01-01.
+        Responses include `Deprecation`, `Sunset`, and `Link: rel="successor-version"`
+        pointing at the History API. Still returns stored snapshots in a PascalCase
+        JSON array, newest first. Does not consume request balance. Served on api.shieldlabs.ai.
       operationId: searchHistoryV1
       security:
         - SecretKeyHeader: []
