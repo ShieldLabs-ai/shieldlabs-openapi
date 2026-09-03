@@ -8,7 +8,7 @@ Public OpenAPI specification for the ShieldLabs API. Source of truth for generat
 
 - [`openapi.yaml`](./openapi.yaml) — the API spec (OpenAPI 3.1). Mirrored from the maintained internal docs spec. Covers:
   - **History API** (`account.shieldlabs.ai/api`) — snapshot reads with a Private API Key. Recommended, does not consume request balance.
-  - **Management API** (`api.shieldlabs.ai`) — profile and balance. Secret Key in headers (`X-Shield-Domain` + `Authorization: Bearer`); legacy path auth deprecated (sunset 2027-01-01). `GET /v1/history` is deprecated; use History API.
+  - **Management API** (`api.shieldlabs.ai`) — profile and balance. Secret Key in headers (`X-Shield-Domain` + `Authorization: Bearer`); legacy path auth deprecated (sunset 2027-01-01). `GET /v1/history` is deprecated (Sunset 2027-01-01); successor is History API `https://account.shieldlabs.ai/api/v1/history`.
 - [`webhooks/identification.scored.schema.json`](./webhooks/identification.scored.schema.json) — JSON Schema for the outbound webhook (`schema_version 2026-06-01`).
 - [`webhooks/example.identification.scored.json`](./webhooks/example.identification.scored.json) — a sample payload.
 - [`webhooks/SIGNATURE.md`](./webhooks/SIGNATURE.md) — how to verify the `X-Shield-Signature` header.
