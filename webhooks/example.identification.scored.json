@@ -49,7 +49,6 @@
       "incognito": false,
       "suspicious_paid_click": false,
       "javascript_disabled": false,
-      "stun_request_seen": true,
       "stun_not_checked": false
     },
     "observed_at": "2026-07-01T12:34:55Z"

@@ -107,7 +107,6 @@
         "search_bot": { "type": "boolean" },
         "suspicious_paid_click": { "type": "boolean" },
         "javascript_disabled": { "type": "boolean" },
-        "stun_request_seen": { "type": "boolean" },
         "stun_not_checked": { "type": "boolean" }
       }
     }

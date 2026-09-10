@@ -249,7 +249,6 @@ webhooks:
                       search_bot: false
                       suspicious_paid_click: false
                       javascript_disabled: false
-                      stun_request_seen: true
                       stun_not_checked: false
                     observed_at: "2026-06-26T14:20:42Z"
               ping:
@@ -433,8 +432,6 @@ components:
         suspicious_paid_click:
           type: boolean
         javascript_disabled:
-          type: boolean
-        stun_request_seen:
           type: boolean
         stun_not_checked:
           type: boolean
