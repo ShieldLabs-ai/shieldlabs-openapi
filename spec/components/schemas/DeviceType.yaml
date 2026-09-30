@@ -1,0 +1,12 @@
+type: string
+description: >-
+  Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the
+  class could not be determined). The set is open: keep values added in later versions and treat
+  them as `unknown`.
+x-extensible-enum:
+  - desktop
+  - mobile
+  - tablet
+  - unknown
+examples:
+  - desktop

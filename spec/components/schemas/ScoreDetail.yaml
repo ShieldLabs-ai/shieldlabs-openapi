@@ -1,0 +1,18 @@
+type: object
+description: >-
+  One entry behind the score, in the PascalCase shape the server stores. `Value` is the weight
+  (0 for informational entries); `Description` is free text for display, never branch on it.
+required:
+  - Value
+  - Description
+properties:
+  Value:
+    type: integer
+    description: Weight of the entry. Can be negative; 0 for informational entries.
+    examples:
+      - 10
+  Description:
+    type: string
+    description: Human-readable description, for example `Is proxy` or `Antidetect browser (turn_block)`.
+    examples:
+      - Is proxy

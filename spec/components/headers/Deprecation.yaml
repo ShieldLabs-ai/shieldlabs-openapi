@@ -1,0 +1,8 @@
+description: Marks the endpoint as deprecated. The value is the literal `true`.
+schema:
+  type: string
+  const: 'true'
+examples:
+  deprecated:
+    summary: Deprecated endpoint
+    value: 'true'

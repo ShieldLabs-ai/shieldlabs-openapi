@@ -1,0 +1,20 @@
+name: type
+in: path
+required: true
+description: >-
+  Identifier to search by. Other values get a `404` with a bare JSON string such as
+  `"auto is not supported"`.
+schema:
+  type: string
+  enum:
+    - request_id
+    - device_id
+    - user_hid
+    - visitor_id
+    - ip
+    - session_id
+    - cookie_id
+examples:
+  requestId:
+    summary: Search by request ID
+    value: request_id

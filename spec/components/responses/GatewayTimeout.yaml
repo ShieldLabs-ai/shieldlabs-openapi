@@ -1,0 +1,8 @@
+description: The service did not answer the edge proxy in time. HTML body. Retry with backoff.
+content:
+  text/html:
+    schema:
+      $ref: ../schemas/HtmlText.yaml
+    examples:
+      gatewayTimeout:
+        $ref: ../examples/GatewayTimeoutHtml.yaml

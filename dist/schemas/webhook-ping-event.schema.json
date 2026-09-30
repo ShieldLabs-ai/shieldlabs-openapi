@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/webhook-ping-event.schema.json",
+  "title": "ShieldLabs webhook.ping event",
+  "type": "object",
+  "description": "Body of a `webhook.ping` delivery, sent when you verify an endpoint. It has no `data`. The keys arrive sorted alphabetically and `created_at` has second precision.",
+  "required": [
+    "event_type",
+    "schema_version",
+    "created_at"
+  ],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "const": "webhook.ping",
+      "description": "Event type."
+    },
+    "schema_version": {
+      "$ref": "#/$defs/SchemaVersion"
+    },
+    "created_at": {
+      "$ref": "#/$defs/Rfc3339Timestamp",
+      "description": "When the ping was sent, with second precision."
+    }
+  },
+  "$defs": {
+    "Rfc3339Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+      "description": "RFC 3339 timestamp in UTC with up to 9 fractional digits (trailing zeros trimmed), for example `2026-09-30T12:34:57.482913041Z`. Parse it with a parser that accepts nanoseconds.",
+      "examples": [
+        "2026-09-30T12:34:57.482913041Z",
+        "2026-09-30T12:34:56Z"
+      ]
+    },
+    "SchemaVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version of the webhook payload contract. Every event sent today carries `2026-06-01`. Accept other values, so that a future version does not break your handler.",
+      "examples": [
+        "2026-06-01"
+      ]
+    }
+  }
+}

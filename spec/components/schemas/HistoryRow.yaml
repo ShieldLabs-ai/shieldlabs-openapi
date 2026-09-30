@@ -1,0 +1,272 @@
+type: object
+additionalProperties: true
+description: |-
+  One identification as stored, in its latest version. It describes the same identification as a
+  webhook `data` object, with different field names:
+
+  | Webhook `data` | History row |
+  |---|---|
+  | `risk_score` | `score` |
+  | `signals` | `score_details` (JSON-encoded string, zero weights included) |
+  | `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |
+  | `detection_flags.browser_vpn_proxy` | derive it: `connection_type == "browser_vpn_proxy"` |
+  | `domain` | `site_domain` when present, otherwise `domain` |
+  | `public_ip` | `ip` (`0.0.0.0` instead of `""`) and `country` |
+  | `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |
+  | `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |
+  | `observed_at` (when scoring finished) | `created_at` (when the identification was made) |
+
+  The `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and
+  STUN measurements) that are not part of the stable contract: ignore fields you do not know.
+required:
+  - request_id
+  - session_id
+  - cookie_id
+  - domain
+  - user_hid
+  - device_id
+  - visitor_id
+  - ip
+  - os
+  - browser
+  - device_type
+  - country
+  - connection_type
+  - score
+  - score_details
+  - created_at
+  - ver
+  - web_rtc_ip
+  - web_rtc_country
+  - web_rtc_connection_type
+  - webrtc_leak_ip
+  - webrtc_leak_country
+  - webrtc_leak_connection_type
+  - webrtc_leak_source
+  - is_vpn
+  - is_tor
+  - is_proxy
+  - is_datacenter
+  - is_abuser
+  - is_privacy_relay
+  - is_stun_not_checked
+  - check_incomplete
+  - is_antidetect
+  - is_os_mismatch
+  - is_os_not_detected
+  - is_timezone_mismatch
+  - is_js_disabled
+  - is_browser_automation
+  - is_incognito
+  - is_search_bot
+properties:
+  request_id:
+    $ref: ./RequestId.yaml
+  session_id:
+    $ref: ./SessionId.yaml
+  cookie_id:
+    $ref: ./CookieId.yaml
+  domain:
+    type: string
+    description: Host the identification came from. Can be a subdomain of your registered domain.
+    examples:
+      - shop.example.com
+  site_domain:
+    type: string
+    description: >-
+      Your registered domain, present when the identification came from a subdomain. Omitted
+      when empty.
+    examples:
+      - example.com
+  user_hid:
+    type: string
+    description: >-
+      User HID exactly as it was passed to the agent (hashed or pseudonymous account identifier).
+      `anonymous` for anonymous checks; `fail`, `-1` and `unknown` also mean "no user". Empty
+      string when no value was stored. Leave the empty string and these values out when you count
+      accounts.
+    examples:
+      - 9f86d081884c7d659a2feaa0c55ad015
+      - anonymous
+  device_id:
+    $ref: ./DeviceId.yaml
+  visitor_id:
+    $ref: ./VisitorId.yaml
+  ip:
+    $ref: ./Ipv4.yaml
+    description: Public IPv4 address of the HTTP request; `0.0.0.0` when none (for example IPv6 visitors).
+  os:
+    $ref: ./OperatingSystem.yaml
+  browser:
+    $ref: ./Browser.yaml
+  device_type:
+    $ref: ./DeviceType.yaml
+  country:
+    $ref: ./Country.yaml
+    description: Country of `ip` as an English country name, or an empty string.
+  connection_type:
+    $ref: ./ConnectionType.yaml
+  score:
+    $ref: ./RiskScore.yaml
+  score_details:
+    type: string
+    contentMediaType: application/json
+    contentSchema:
+      type: array
+      items:
+        $ref: ./ScoreDetail.yaml
+    description: |-
+      The entries behind `score` as a JSON-encoded **string** holding an array of
+      `{"Value": <integer>, "Description": <string>}`. Parse it before use. Scored entries come
+      first, followed by informational entries with `Value` 0, which can be long. Empty string
+      when no details were stored.
+
+      The webhook `signals` are the entries with a non-zero `Value`, in the same order, with each
+      description turned into a signal name (for example `Is proxy` becomes `proxy`). Descriptions
+      are free text for display: never branch on them.
+    examples:
+      - '[{"Value":10,"Description":"Is proxy"},{"Value":0,"Description":"Check Incomplete"}]'
+      - ''
+  created_at:
+    $ref: ./HistoryTimestamp.yaml
+  ver:
+    type: integer
+    format: int64
+    description: >-
+      Version of the row in Unix milliseconds. It increases every time the row is refined, for
+      example when late network data re-scores it after the webhook was sent.
+    examples:
+      - 1790771696123
+  web_rtc_ip:
+    $ref: ./Ipv4.yaml
+    description: Local IP address observed by the ShieldLabs network check; `0.0.0.0` when none.
+  web_rtc_country:
+    $ref: ./Country.yaml
+    description: Country of `web_rtc_ip`, or an empty string.
+  web_rtc_connection_type:
+    $ref: ./NetworkClass.yaml
+    description: Connection class of `web_rtc_ip`, or an empty string.
+  webrtc_leak_ip:
+    $ref: ./Ipv4.yaml
+    description: Local network address leaked by the browser; `0.0.0.0` when none.
+  webrtc_leak_country:
+    $ref: ./Country.yaml
+    description: Country of `webrtc_leak_ip`, or an empty string.
+  webrtc_leak_connection_type:
+    $ref: ./NetworkClass.yaml
+    description: Connection class of `webrtc_leak_ip`, or an empty string.
+  webrtc_leak_source:
+    type: string
+    description: >-
+      Which check found the local network leak. Known values: `scanner`, `shield`, `none` and the
+      empty string. `none` or an empty string when there is no leak; the webhook `local_ip` then
+      uses `web_rtc_ip`. The set is open: keep values added in later versions.
+    x-extensible-enum:
+      - scanner
+      - shield
+      - none
+      - ''
+    examples:
+      - none
+  is_vpn:
+    type: boolean
+    description: Same meaning as `detection_flags.vpn`.
+  is_tor:
+    type: boolean
+    description: Same meaning as `detection_flags.tor`.
+  is_proxy:
+    type: boolean
+    description: Same meaning as `detection_flags.proxy`.
+  is_datacenter:
+    type: boolean
+    description: Same meaning as `detection_flags.datacenter_ip`.
+  is_abuser:
+    type: boolean
+    description: Same meaning as `detection_flags.abuser`.
+  is_privacy_relay:
+    type: boolean
+    description: Same meaning as `detection_flags.privacy_relay`.
+  is_stun_not_checked:
+    type: boolean
+    description: Same meaning as `detection_flags.stun_not_checked`.
+  check_incomplete:
+    type: boolean
+    description: Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers.
+  is_antidetect:
+    type: boolean
+    description: Same meaning as `detection_flags.anti_detect_browser`.
+  is_os_mismatch:
+    type: boolean
+    description: Same meaning as `detection_flags.os_mismatch`.
+  is_os_not_detected:
+    type: boolean
+    description: Same meaning as `detection_flags.os_not_detected`.
+  is_timezone_mismatch:
+    type: boolean
+    description: Same meaning as `detection_flags.timezone_mismatch`.
+  is_js_disabled:
+    type: boolean
+    description: Same meaning as `detection_flags.javascript_disabled`. Always `false` for search-engine crawlers.
+  is_browser_automation:
+    type: boolean
+    description: Same meaning as `detection_flags.browser_automation`.
+  is_incognito:
+    type: boolean
+    description: Same meaning as `detection_flags.incognito`. Always `false` for search-engine crawlers.
+  is_search_bot:
+    type: boolean
+    description: Same meaning as `detection_flags.search_bot`.
+  is_suspicious_paid_click:
+    type: boolean
+    description: Same meaning as `detection_flags.suspicious_paid_click`. Omitted when `false`.
+  entry_url:
+    type: string
+    description: >-
+      Landing page URL without the `#fragment` (webhook `traffic_source.landing_url`). Omitted
+      when empty. It keeps the query string, which can contain personal data.
+    examples:
+      - https://shop.example.com/signup?utm_source=google&utm_medium=cpc&gclid=abc123
+  utm_source:
+    type: string
+    description: '`utm_source`, lowercased. Omitted when empty.'
+    examples:
+      - google
+  utm_medium:
+    type: string
+    description: '`utm_medium`, lowercased. Omitted when empty.'
+    examples:
+      - cpc
+  utm_campaign:
+    type: string
+    description: '`utm_campaign` as sent. Omitted when empty.'
+    examples:
+      - spring_launch
+  utm_content:
+    type: string
+    description: '`utm_content` as sent. Omitted when empty.'
+    examples:
+      - banner_a
+  utm_term:
+    type: string
+    description: '`utm_term` as sent. Omitted when empty.'
+    examples:
+      - device intelligence
+  traffic_channel:
+    $ref: ./TrafficChannel.yaml
+    description: Marketing channel (webhook `traffic_source.channel`). Omitted when empty.
+  traffic_channel_group:
+    $ref: ./TrafficChannelGroup.yaml
+    description: Group of the marketing channel. Omitted when empty.
+  traffic_reason:
+    $ref: ./TrafficReason.yaml
+    description: Why the channel was chosen. Omitted when empty.
+  referrer_domain:
+    type: string
+    description: >-
+      Registrable domain of the referrer without `www.`; the crawler name (for example
+      `GoogleBot`) for search-engine crawlers. Omitted when empty.
+    examples:
+      - news.example.org
+  click_id_type:
+    $ref: ./ClickIdType.yaml
+    description: Ad click identifier type found in the landing URL. Omitted when empty.

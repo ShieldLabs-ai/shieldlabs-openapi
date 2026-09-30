@@ -1,0 +1,26 @@
+type: string
+description: |-
+  How the visitor connected. Known values:
+  - `direct`: a regular connection;
+  - `mobile`: a mobile carrier network;
+  - `vpn`: a VPN;
+  - `proxy`: a proxy, datacenter or hosting network (search-engine crawlers are reported here too);
+  - `tor`: the Tor network;
+  - `privacy_relay`: a privacy relay such as iCloud Private Relay;
+  - `browser_vpn_proxy`: a VPN or proxy built into the browser or one of its extensions;
+  - `unknown`: not enough data.
+
+  The value can say `vpn` while `detection_flags.vpn` is `false` (IP intelligence classified the
+  network, but the scored VPN check did not fire). Branch on `detection_flags` for decisions.
+  The set is open: keep values added in later versions and treat them as `unknown`.
+x-extensible-enum:
+  - direct
+  - mobile
+  - vpn
+  - proxy
+  - tor
+  - privacy_relay
+  - browser_vpn_proxy
+  - unknown
+examples:
+  - direct

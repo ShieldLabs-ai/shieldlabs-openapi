@@ -1,0 +1,8 @@
+description: HTTP date after which the endpoint stops working.
+schema:
+  type: string
+  const: Sat, 01 Jan 2027 00:00:00 GMT
+examples:
+  sunset:
+    summary: Sunset date
+    value: Sat, 01 Jan 2027 00:00:00 GMT

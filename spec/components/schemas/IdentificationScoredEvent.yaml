@@ -1,0 +1,21 @@
+type: object
+description: >-
+  Body of an `identification.scored` delivery. The signature is not part of the body: it arrives
+  in the `X-Shield-Signature` header.
+required:
+  - event_type
+  - schema_version
+  - created_at
+  - data
+properties:
+  event_type:
+    type: string
+    const: identification.scored
+    description: Event type. Ignore events whose type you do not know instead of failing.
+  schema_version:
+    $ref: ./SchemaVersion.yaml
+  created_at:
+    $ref: ./Rfc3339Timestamp.yaml
+    description: When the event was built. Equal to `data.observed_at`.
+  data:
+    $ref: ./IdentificationScoredData.yaml

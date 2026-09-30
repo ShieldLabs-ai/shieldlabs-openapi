@@ -1,0 +1,8 @@
+type: string
+format: uuid
+description: >-
+  One visit on one origin (UUID v4 created in the browser), shared by the open tabs of that
+  origin. The next visit after the last tab closes gets a new session ID. The nil UUID appears on
+  rate-limit marker rows.
+examples:
+  - bde78778-efd2-4c49-952f-1f11b9c05f35

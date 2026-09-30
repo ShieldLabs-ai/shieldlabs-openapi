@@ -1,0 +1,10 @@
+type: object
+description: Error object sent by the History API and by the Management API rate and load limits.
+required:
+  - error
+properties:
+  error:
+    type: string
+    description: Human-readable error message. Branch on the HTTP status, not on this text.
+    examples:
+      - too many requests

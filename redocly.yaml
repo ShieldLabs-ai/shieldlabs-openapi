@@ -1,0 +1,49 @@
+# Lint configuration: every recommended rule at error level, plus the stricter optional rules.
+extends:
+  - recommended-strict
+telemetry: off
+rules:
+  info-contact: error
+  info-license-strict: error
+  component-name-unique: error
+  no-duplicated-enum-values: error
+  no-enum-type-mismatch: error
+  no-illogical-composition-keywords: error
+  no-invalid-schema-examples: error
+  no-invalid-parameter-examples: error
+  no-invalid-media-type-examples: error
+  no-mixed-number-range-constraints: error
+  no-http-verbs-in-paths: error
+  no-unsafe-markdown: error
+  no-unused-components: error
+  operation-description: error
+  operation-singular-tag: error
+  operation-tag-defined: error
+  parameter-description: error
+  path-http-verbs-order: error
+  path-params-defined: error
+  paths-kebab-case: error
+  boolean-parameter-prefixes: error
+  array-parameter-serialization: error
+  request-mime-type:
+    severity: error
+    allowedValues:
+      - application/json
+  response-mime-type:
+    severity: error
+    allowedValues:
+      - application/json
+      - text/plain
+      - text/html
+  security-defined: error
+  spec-strict-refs: error
+  spec-ref-siblings: error
+  spec-components-invalid-map-name: error
+  spec-example-values: error
+  tag-description: error
+  no-duplicated-tag-names: error
+  operation-4xx-problem-details-rfc7807: off
+  path-segment-plural: off
+  tags-alphabetical: off
+  scalar-property-missing-example: off
+  required-string-property-missing-min-length: off

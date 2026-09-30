@@ -1,0 +1,3 @@
+summary: Value is not a UUID
+description: A bare JSON string.
+value: "fail parse uuid"

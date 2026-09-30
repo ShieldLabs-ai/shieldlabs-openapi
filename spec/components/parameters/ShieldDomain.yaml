@@ -1,0 +1,16 @@
+name: X-Shield-Domain
+in: header
+required: true
+description: >-
+  Your registered domain. The server matches it exactly against the domain registered in the
+  analytics dashboard, so send it normalized: lowercase, without scheme, path, trailing slash or
+  a leading `www.` (`https://www.Example.com/` becomes `example.com`). A missing or wrong value
+  gets a `401` with an empty body.
+schema:
+  type: string
+  minLength: 1
+  maxLength: 253
+examples:
+  domain:
+    summary: A registered domain
+    value: example.com

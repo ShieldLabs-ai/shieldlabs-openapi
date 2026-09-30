@@ -1,0 +1,8 @@
+type: string
+pattern: '^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$'
+description: >-
+  Dotted IPv4 address, or an empty string when no IPv4 address is known (for example for visitors
+  on IPv6).
+examples:
+  - 203.0.113.24
+  - ''

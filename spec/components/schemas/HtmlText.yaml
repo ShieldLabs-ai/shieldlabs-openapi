@@ -1,0 +1,4 @@
+type: string
+description: HTML error page from the edge proxy. Do not parse it; branch on the status.
+examples:
+  - <html><body><h1>502 Bad Gateway</h1></body></html>

@@ -1,0 +1,56 @@
+type: object
+description: Where the visit came from. All nine keys are always present; values can be empty strings.
+required:
+  - channel
+  - referrer_domain
+  - landing_url
+  - click_id_type
+  - utm_source
+  - utm_medium
+  - utm_campaign
+  - utm_content
+  - utm_term
+properties:
+  channel:
+    $ref: ./TrafficChannel.yaml
+  referrer_domain:
+    type: string
+    description: >-
+      Registrable domain of the referrer without `www.`. For search-engine crawlers, the crawler
+      name (for example `GoogleBot`).
+    examples:
+      - google.com
+  landing_url:
+    type: string
+    description: >-
+      Landing page URL without the `#fragment`. It keeps the query string, which can contain
+      personal data: store it with care.
+    examples:
+      - https://shop.example.com/signup?utm_source=google&utm_medium=cpc&gclid=abc123
+  click_id_type:
+    $ref: ./ClickIdType.yaml
+  utm_source:
+    type: string
+    description: '`utm_source` query parameter, lowercased.'
+    examples:
+      - google
+  utm_medium:
+    type: string
+    description: '`utm_medium` query parameter, lowercased.'
+    examples:
+      - cpc
+  utm_campaign:
+    type: string
+    description: '`utm_campaign` query parameter as sent.'
+    examples:
+      - spring_launch
+  utm_content:
+    type: string
+    description: '`utm_content` query parameter as sent.'
+    examples:
+      - ''
+  utm_term:
+    type: string
+    description: '`utm_term` query parameter as sent.'
+    examples:
+      - ''

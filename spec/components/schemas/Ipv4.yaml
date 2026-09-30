@@ -1,0 +1,8 @@
+type: string
+format: ipv4
+description: >-
+  Dotted IPv4 address. `0.0.0.0` when no IPv4 address is known (for example for visitors on
+  IPv6); such identifications cannot be searched by IP.
+examples:
+  - 203.0.113.24
+  - 0.0.0.0

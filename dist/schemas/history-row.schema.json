@@ -1,0 +1,475 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/history-row.schema.json",
+  "title": "ShieldLabs History API row",
+  "type": "object",
+  "additionalProperties": true,
+  "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | `score_details` (JSON-encoded string, zero weights included) |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `detection_flags.browser_vpn_proxy` | derive it: `connection_type == \"browser_vpn_proxy\"` |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nThe `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and\nSTUN measurements) that are not part of the stable contract: ignore fields you do not know.",
+  "required": [
+    "request_id",
+    "session_id",
+    "cookie_id",
+    "domain",
+    "user_hid",
+    "device_id",
+    "visitor_id",
+    "ip",
+    "os",
+    "browser",
+    "device_type",
+    "country",
+    "connection_type",
+    "score",
+    "score_details",
+    "created_at",
+    "ver",
+    "web_rtc_ip",
+    "web_rtc_country",
+    "web_rtc_connection_type",
+    "webrtc_leak_ip",
+    "webrtc_leak_country",
+    "webrtc_leak_connection_type",
+    "webrtc_leak_source",
+    "is_vpn",
+    "is_tor",
+    "is_proxy",
+    "is_datacenter",
+    "is_abuser",
+    "is_privacy_relay",
+    "is_stun_not_checked",
+    "check_incomplete",
+    "is_antidetect",
+    "is_os_mismatch",
+    "is_os_not_detected",
+    "is_timezone_mismatch",
+    "is_js_disabled",
+    "is_browser_automation",
+    "is_incognito",
+    "is_search_bot"
+  ],
+  "properties": {
+    "request_id": {
+      "$ref": "#/$defs/RequestId"
+    },
+    "session_id": {
+      "$ref": "#/$defs/SessionId"
+    },
+    "cookie_id": {
+      "$ref": "#/$defs/CookieId"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Host the identification came from. Can be a subdomain of your registered domain.",
+      "examples": [
+        "shop.example.com"
+      ]
+    },
+    "site_domain": {
+      "type": "string",
+      "description": "Your registered domain, present when the identification came from a subdomain. Omitted when empty.",
+      "examples": [
+        "example.com"
+      ]
+    },
+    "user_hid": {
+      "type": "string",
+      "description": "User HID exactly as it was passed to the agent (hashed or pseudonymous account identifier). `anonymous` for anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Empty string when no value was stored. Leave the empty string and these values out when you count accounts.",
+      "examples": [
+        "9f86d081884c7d659a2feaa0c55ad015",
+        "anonymous"
+      ]
+    },
+    "device_id": {
+      "$ref": "#/$defs/DeviceId"
+    },
+    "visitor_id": {
+      "$ref": "#/$defs/VisitorId"
+    },
+    "ip": {
+      "$ref": "#/$defs/Ipv4",
+      "description": "Public IPv4 address of the HTTP request; `0.0.0.0` when none (for example IPv6 visitors)."
+    },
+    "os": {
+      "$ref": "#/$defs/OperatingSystem"
+    },
+    "browser": {
+      "$ref": "#/$defs/Browser"
+    },
+    "device_type": {
+      "$ref": "#/$defs/DeviceType"
+    },
+    "country": {
+      "$ref": "#/$defs/Country",
+      "description": "Country of `ip` as an English country name, or an empty string."
+    },
+    "connection_type": {
+      "$ref": "#/$defs/ConnectionType"
+    },
+    "score": {
+      "$ref": "#/$defs/RiskScore"
+    },
+    "score_details": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "contentSchema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/ScoreDetail"
+        }
+      },
+      "description": "The entries behind `score` as a JSON-encoded **string** holding an array of\n`{\"Value\": <integer>, \"Description\": <string>}`. Parse it before use. Scored entries come\nfirst, followed by informational entries with `Value` 0, which can be long. Empty string\nwhen no details were stored.\n\nThe webhook `signals` are the entries with a non-zero `Value`, in the same order, with each\ndescription turned into a signal name (for example `Is proxy` becomes `proxy`). Descriptions\nare free text for display: never branch on them.",
+      "examples": [
+        "[{\"Value\":10,\"Description\":\"Is proxy\"},{\"Value\":0,\"Description\":\"Check Incomplete\"}]",
+        ""
+      ]
+    },
+    "created_at": {
+      "$ref": "#/$defs/HistoryTimestamp"
+    },
+    "ver": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Version of the row in Unix milliseconds. It increases every time the row is refined, for example when late network data re-scores it after the webhook was sent.",
+      "examples": [
+        1790771696123
+      ]
+    },
+    "web_rtc_ip": {
+      "$ref": "#/$defs/Ipv4",
+      "description": "Local IP address observed by the ShieldLabs network check; `0.0.0.0` when none."
+    },
+    "web_rtc_country": {
+      "$ref": "#/$defs/Country",
+      "description": "Country of `web_rtc_ip`, or an empty string."
+    },
+    "web_rtc_connection_type": {
+      "$ref": "#/$defs/NetworkClass",
+      "description": "Connection class of `web_rtc_ip`, or an empty string."
+    },
+    "webrtc_leak_ip": {
+      "$ref": "#/$defs/Ipv4",
+      "description": "Local network address leaked by the browser; `0.0.0.0` when none."
+    },
+    "webrtc_leak_country": {
+      "$ref": "#/$defs/Country",
+      "description": "Country of `webrtc_leak_ip`, or an empty string."
+    },
+    "webrtc_leak_connection_type": {
+      "$ref": "#/$defs/NetworkClass",
+      "description": "Connection class of `webrtc_leak_ip`, or an empty string."
+    },
+    "webrtc_leak_source": {
+      "type": "string",
+      "description": "Which check found the local network leak. Known values: `scanner`, `shield`, `none` and the empty string. `none` or an empty string when there is no leak; the webhook `local_ip` then uses `web_rtc_ip`. The set is open: keep values added in later versions.",
+      "examples": [
+        "none"
+      ]
+    },
+    "is_vpn": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.vpn`."
+    },
+    "is_tor": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.tor`."
+    },
+    "is_proxy": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.proxy`."
+    },
+    "is_datacenter": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.datacenter_ip`."
+    },
+    "is_abuser": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.abuser`."
+    },
+    "is_privacy_relay": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.privacy_relay`."
+    },
+    "is_stun_not_checked": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.stun_not_checked`."
+    },
+    "check_incomplete": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers."
+    },
+    "is_antidetect": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.anti_detect_browser`."
+    },
+    "is_os_mismatch": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.os_mismatch`."
+    },
+    "is_os_not_detected": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.os_not_detected`."
+    },
+    "is_timezone_mismatch": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.timezone_mismatch`."
+    },
+    "is_js_disabled": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.javascript_disabled`. Always `false` for search-engine crawlers."
+    },
+    "is_browser_automation": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.browser_automation`."
+    },
+    "is_incognito": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.incognito`. Always `false` for search-engine crawlers."
+    },
+    "is_search_bot": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.search_bot`."
+    },
+    "is_suspicious_paid_click": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.suspicious_paid_click`. Omitted when `false`."
+    },
+    "entry_url": {
+      "type": "string",
+      "description": "Landing page URL without the `#fragment` (webhook `traffic_source.landing_url`). Omitted when empty. It keeps the query string, which can contain personal data.",
+      "examples": [
+        "https://shop.example.com/signup?utm_source=google&utm_medium=cpc&gclid=abc123"
+      ]
+    },
+    "utm_source": {
+      "type": "string",
+      "description": "`utm_source`, lowercased. Omitted when empty.",
+      "examples": [
+        "google"
+      ]
+    },
+    "utm_medium": {
+      "type": "string",
+      "description": "`utm_medium`, lowercased. Omitted when empty.",
+      "examples": [
+        "cpc"
+      ]
+    },
+    "utm_campaign": {
+      "type": "string",
+      "description": "`utm_campaign` as sent. Omitted when empty.",
+      "examples": [
+        "spring_launch"
+      ]
+    },
+    "utm_content": {
+      "type": "string",
+      "description": "`utm_content` as sent. Omitted when empty.",
+      "examples": [
+        "banner_a"
+      ]
+    },
+    "utm_term": {
+      "type": "string",
+      "description": "`utm_term` as sent. Omitted when empty.",
+      "examples": [
+        "device intelligence"
+      ]
+    },
+    "traffic_channel": {
+      "$ref": "#/$defs/TrafficChannel",
+      "description": "Marketing channel (webhook `traffic_source.channel`). Omitted when empty."
+    },
+    "traffic_channel_group": {
+      "$ref": "#/$defs/TrafficChannelGroup",
+      "description": "Group of the marketing channel. Omitted when empty."
+    },
+    "traffic_reason": {
+      "$ref": "#/$defs/TrafficReason",
+      "description": "Why the channel was chosen. Omitted when empty."
+    },
+    "referrer_domain": {
+      "type": "string",
+      "description": "Registrable domain of the referrer without `www.`; the crawler name (for example `GoogleBot`) for search-engine crawlers. Omitted when empty.",
+      "examples": [
+        "news.example.org"
+      ]
+    },
+    "click_id_type": {
+      "$ref": "#/$defs/ClickIdType",
+      "description": "Ad click identifier type found in the landing URL. Omitted when empty."
+    }
+  },
+  "$defs": {
+    "Browser": {
+      "type": "string",
+      "description": "Browser name, for example `Chrome`, `Safari`, `Firefox`, `Microsoft Edge`, `Opera`, `Samsung Internet`, `Brave`, `Chrome (iOS)`, `Safari (iOS)` or `Unknown`. Open set: display it, do not branch on it.",
+      "examples": [
+        "Chrome",
+        "Safari"
+      ]
+    },
+    "ClickIdType": {
+      "type": "string",
+      "description": "Ad click identifier found in the landing URL. Known values: `gclid`, `gbraid`, `wbraid`, `msclkid`, `ttclid`, `fbclid` and the empty string when there is none. `fbclid` counts only together with a Meta referrer or a Meta `utm_source`. The set is open: keep values added in later versions.",
+      "examples": [
+        "gclid",
+        ""
+      ]
+    },
+    "ConnectionType": {
+      "type": "string",
+      "description": "How the visitor connected. Known values:\n- `direct`: a regular connection;\n- `mobile`: a mobile carrier network;\n- `vpn`: a VPN;\n- `proxy`: a proxy, datacenter or hosting network (search-engine crawlers are reported here too);\n- `tor`: the Tor network;\n- `privacy_relay`: a privacy relay such as iCloud Private Relay;\n- `browser_vpn_proxy`: a VPN or proxy built into the browser or one of its extensions;\n- `unknown`: not enough data.\n\nThe value can say `vpn` while `detection_flags.vpn` is `false` (IP intelligence classified the\nnetwork, but the scored VPN check did not fire). Branch on `detection_flags` for decisions.\nThe set is open: keep values added in later versions and treat them as `unknown`.",
+      "examples": [
+        "direct"
+      ]
+    },
+    "CookieId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "First-party browser identifier kept by the ShieldLabs agent (UUID v4). A missing or malformed value is stored as the nil UUID.",
+      "examples": [
+        "4449bb58-590c-444c-ae1f-d1ddc768dbdd"
+      ]
+    },
+    "Country": {
+      "type": "string",
+      "description": "English country name from IP intelligence, for example `Germany` or `United States` (not an ISO code). Empty string when the country is unknown.",
+      "examples": [
+        "Netherlands",
+        "United States",
+        ""
+      ]
+    },
+    "DeviceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.",
+      "examples": [
+        "ac7c303d-971b-41d1-8e25-cd5b46b46aed",
+        "00000000-0000-0000-0000-000000000000"
+      ]
+    },
+    "DeviceType": {
+      "type": "string",
+      "description": "Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the class could not be determined). The set is open: keep values added in later versions and treat them as `unknown`.",
+      "examples": [
+        "desktop"
+      ]
+    },
+    "HistoryTimestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$",
+      "description": "Time of the identification as `YYYY-MM-DD HH:MM:SS.mmm` in UTC, without a zone designator (not RFC 3339). Older rows can lack the milliseconds.",
+      "examples": [
+        "2026-09-30 12:34:56.123",
+        "2026-09-30 13:05:12"
+      ]
+    },
+    "Ipv4": {
+      "type": "string",
+      "format": "ipv4",
+      "description": "Dotted IPv4 address. `0.0.0.0` when no IPv4 address is known (for example for visitors on IPv6); such identifications cannot be searched by IP.",
+      "examples": [
+        "203.0.113.24",
+        "0.0.0.0"
+      ]
+    },
+    "NetworkClass": {
+      "type": "string",
+      "description": "Connection class of one IP address from IP intelligence. Known values: `direct`, `mobile`, `vpn`, `proxy`, `tor`, `privacy_relay` and the empty string when unknown. The set is open: keep values added in later versions.",
+      "examples": [
+        "direct"
+      ]
+    },
+    "OperatingSystem": {
+      "type": "string",
+      "description": "Operating system name, for example `Windows`, `Mac OS X`, `Linux`, `Android`, `IOS (iPhone)`, `IOS (iPad)`, `ChromeOS` or `Unknown`. Open set: display it, do not branch on it.",
+      "examples": [
+        "Windows",
+        "Mac OS X",
+        "Android"
+      ]
+    },
+    "RequestId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "02f1d973-84db-4156-a7f7-e799e6bf389b"
+      ]
+    },
+    "RiskScore": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"rate_limited\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
+      "examples": [
+        0,
+        35,
+        80,
+        999
+      ]
+    },
+    "ScoreDetail": {
+      "type": "object",
+      "description": "One entry behind the score, in the PascalCase shape the server stores. `Value` is the weight (0 for informational entries); `Description` is free text for display, never branch on it.",
+      "required": [
+        "Value",
+        "Description"
+      ],
+      "properties": {
+        "Value": {
+          "type": "integer",
+          "description": "Weight of the entry. Can be negative; 0 for informational entries.",
+          "examples": [
+            10
+          ]
+        },
+        "Description": {
+          "type": "string",
+          "description": "Human-readable description, for example `Is proxy` or `Antidetect browser (turn_block)`.",
+          "examples": [
+            "Is proxy"
+          ]
+        }
+      }
+    },
+    "SessionId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "One visit on one origin (UUID v4 created in the browser), shared by the open tabs of that origin. The next visit after the last tab closes gets a new session ID. The nil UUID appears on rate-limit marker rows.",
+      "examples": [
+        "bde78778-efd2-4c49-952f-1f11b9c05f35"
+      ]
+    },
+    "TrafficChannel": {
+      "type": "string",
+      "description": "Marketing channel of the visit. Known values: `Google Ads`, `Meta`, `TikTok`, `LinkedIn`, `X`, `Pinterest`, `Microsoft Ads`, `Organic Search`, `Search bot`, `Referral`, `Direct`, `Other` and the empty string. Resolved in this order: a click ID, then UTM parameters, then the referrer (search engines give `Organic Search`, social networks give the platform name, other sites give `Referral`), otherwise `Direct`. Search-engine crawlers get `Search bot`. Empty string on identifications without attribution, such as rate-limit marker rows. The set is open: keep values added in later versions and treat them as `Other`.",
+      "examples": [
+        "Google Ads",
+        "Direct"
+      ]
+    },
+    "TrafficChannelGroup": {
+      "type": "string",
+      "description": "Group of the marketing channel. Known values: `Paid Search`, `Paid Social`, `Organic`, `Bot`, `Social`, `Referral`, `Direct` and `Other`. History API only; not part of the webhook. The set is open: keep values added in later versions and treat them as `Other`.",
+      "examples": [
+        "Paid Search"
+      ]
+    },
+    "TrafficReason": {
+      "type": "string",
+      "description": "Why the channel was chosen. Known values: `gclid_present`, `msclkid_present`, `ttclid_present`, `fbclid_present`, `utm_match`, `referrer_search_engine`, `ip_crawler_detected`, `referrer_social`, `external_referrer` and `no_source_detected`. History API only; not part of the webhook. The set is open: keep values added in later versions.",
+      "examples": [
+        "gclid_present"
+      ]
+    },
+    "VisitorId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Server-side visitor identifier (UUID v5). It is sticky to the device: a new cookie on a known device keeps the existing visitor ID, so clearing cookies usually does not change it. The nil UUID appears on identifications without usable device data, such as rate-limit marker rows.",
+      "examples": [
+        "bde0e249-20d8-4544-838c-ed9a0b6d7a36"
+      ]
+    }
+  }
+}

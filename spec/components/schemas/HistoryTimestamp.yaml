@@ -1,0 +1,8 @@
+type: string
+pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})?$'
+description: >-
+  Time of the identification as `YYYY-MM-DD HH:MM:SS.mmm` in UTC, without a zone designator (not
+  RFC 3339). Older rows can lack the milliseconds.
+examples:
+  - '2026-09-30 12:34:56.123'
+  - '2026-09-30 13:05:12'

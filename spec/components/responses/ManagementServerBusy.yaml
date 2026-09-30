@@ -1,0 +1,8 @@
+description: Too many requests are in flight on the server. Retry with backoff.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorBody.yaml
+    examples:
+      serverBusy:
+        $ref: ../examples/ManagementServerBusy.yaml

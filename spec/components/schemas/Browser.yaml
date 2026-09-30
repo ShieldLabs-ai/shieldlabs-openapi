@@ -1,0 +1,8 @@
+type: string
+description: >-
+  Browser name, for example `Chrome`, `Safari`, `Firefox`, `Microsoft Edge`, `Opera`,
+  `Samsung Internet`, `Brave`, `Chrome (iOS)`, `Safari (iOS)` or `Unknown`. Open set: display
+  it, do not branch on it.
+examples:
+  - Chrome
+  - Safari

@@ -1,0 +1,22 @@
+name: X-Shield-Signature
+in: header
+required: true
+description: |-
+  `sha256=` followed by the lowercase hex HMAC-SHA256 of the raw request body:
+  - key: your endpoint's signing secret as UTF-8 bytes, the `whsec_` prefix included (not hex- or
+    base64-decoded, not stripped);
+  - message: the exact bytes of the body as received.
+
+  Compare it with your own digest in constant time, before parsing the JSON. The example values
+  are the signatures of the example bodies (in their compact form as sent) with the test secret
+  `whsec_00112233445566778899aabbccddeeff`.
+schema:
+  type: string
+  pattern: '^sha256=[0-9a-f]{64}$'
+examples:
+  identificationScored:
+    summary: Signature of the identification.scored example
+    value: sha256=c4d44b7873625bdfda98cdb7a02d460f8492ca6a68fad8d147a5f30ad16f92a9
+  webhookPing:
+    summary: Signature of the webhook.ping example
+    value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8

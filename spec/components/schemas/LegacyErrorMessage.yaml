@@ -1,0 +1,9 @@
+type:
+  - string
+  - 'null'
+description: >-
+  A bare JSON string with the error message, or the JSON literal `null` (an unexpected database
+  error, for example for an IPv6 value).
+examples:
+  - fail parse uuid
+  - null

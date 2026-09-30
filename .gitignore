@@ -1,11 +1,18 @@
+# Dependencies and local tooling
 node_modules/
-dist/
-build/
-*.log
+.npm/
 *.tgz
+
+# Local environment and secrets
 .env
 .env.*
-.DS_Store
+
+# Logs, coverage, editor and OS files
+*.log
 coverage/
-.turbo/
-.history
+.history/
+.idea/
+.vscode/
+.DS_Store
+
+# dist/ is committed on purpose: CI checks that it matches spec/.

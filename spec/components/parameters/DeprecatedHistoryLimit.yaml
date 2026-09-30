@@ -1,0 +1,15 @@
+name: limit
+in: query
+required: false
+description: >-
+  Maximum number of identifications, from 1 to 100. Any other value becomes 100. There is no
+  `offset`.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 100
+  default: 100
+examples:
+  ten:
+    summary: Ten rows
+    value: 10

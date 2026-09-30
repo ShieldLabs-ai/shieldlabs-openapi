@@ -1,0 +1,4 @@
+summary: Service is up
+description: The only successful answer.
+value:
+  status: "ok"

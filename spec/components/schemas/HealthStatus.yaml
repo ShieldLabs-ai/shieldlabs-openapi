@@ -1,0 +1,9 @@
+type: object
+description: Liveness status.
+required:
+  - status
+properties:
+  status:
+    type: string
+    const: ok
+    description: Always `ok` when the service answers.

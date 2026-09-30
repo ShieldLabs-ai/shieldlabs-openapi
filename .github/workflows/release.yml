@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# Every job can be re-run: npm publishing is skipped when the version is already on npm, and an
+# existing GitHub release gets its files replaced instead of failing.
+jobs:
+  build:
+    name: Check, bundle and pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Tag matches the package version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${version}." >&2
+            exit 1
+          fi
+      - run: npm run lint
+      - run: npm test
+      - name: dist/ matches spec/
+        run: |
+          npm run bundle
+          git diff --exit-code -- dist/
+      - name: Package, dist/ files and release notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p release
+          awk -v v="$version" 'index($0, "## [" v "]") == 1 {found = 1; next} found && /^## \[/ {exit} found {print}' \
+            CHANGELOG.md > release/release-notes.md
+          test -s release/release-notes.md
+          npm pack --pack-destination release
+          test -f "release/shieldlabs-openapi-${version}.tgz"
+          cp dist/shieldlabs-api.yaml dist/shieldlabs-api.json dist/schemas/*.schema.json release/
+          (cd dist && zip -qr ../release/shieldlabs-openapi-dist.zip .)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release
+          path: release/
+          if-no-files-found: error
+          overwrite: true
+
+  npm:
+    name: Publish @shieldlabs/openapi to npm
+    needs: build
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release
+          path: release
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - name: Publish unless this version is already on npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if npm view "@shieldlabs/openapi@${version}" version >/dev/null 2>&1; then
+            echo "@shieldlabs/openapi@${version} is already on npm; nothing to publish."
+          else
+            npm publish "release/shieldlabs-openapi-${version}.tgz" --provenance --access public
+          fi
+
+  github-release:
+    name: GitHub release with dist/ attached
+    needs: npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release
+          path: release
+      - name: Create the release, or replace its files when it already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cd release
+          files=(shieldlabs-api.yaml shieldlabs-api.json *.schema.json shieldlabs-openapi-dist.zip)
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
+              --notes-file release-notes.md "${files[@]}"
+          fi

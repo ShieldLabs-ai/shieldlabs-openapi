@@ -1,0 +1,19 @@
+type: string
+description: >-
+  Why the channel was chosen. Known values: `gclid_present`, `msclkid_present`,
+  `ttclid_present`, `fbclid_present`, `utm_match`, `referrer_search_engine`,
+  `ip_crawler_detected`, `referrer_social`, `external_referrer` and `no_source_detected`. History
+  API only; not part of the webhook. The set is open: keep values added in later versions.
+x-extensible-enum:
+  - gclid_present
+  - msclkid_present
+  - ttclid_present
+  - fbclid_present
+  - utm_match
+  - referrer_search_engine
+  - ip_crawler_detected
+  - referrer_social
+  - external_referrer
+  - no_source_detected
+examples:
+  - gclid_present

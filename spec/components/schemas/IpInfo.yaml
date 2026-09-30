@@ -1,0 +1,10 @@
+type: object
+description: An IPv4 address and its country. Both keys are always present and can be empty strings.
+required:
+  - ip
+  - country
+properties:
+  ip:
+    $ref: ./Ipv4OrEmpty.yaml
+  country:
+    $ref: ./Country.yaml

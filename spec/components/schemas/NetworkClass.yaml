@@ -1,0 +1,15 @@
+type: string
+description: >-
+  Connection class of one IP address from IP intelligence. Known values: `direct`, `mobile`,
+  `vpn`, `proxy`, `tor`, `privacy_relay` and the empty string when unknown. The set is open: keep
+  values added in later versions.
+x-extensible-enum:
+  - direct
+  - mobile
+  - vpn
+  - proxy
+  - tor
+  - privacy_relay
+  - ''
+examples:
+  - direct
