@@ -5,4 +5,4 @@ description: >-
   device keeps the existing visitor ID, so clearing cookies usually does not change it. The nil
   UUID appears on identifications without usable device data, such as rate-limit marker rows.
 examples:
-  - bde0e249-20d8-4544-838c-ed9a0b6d7a36
+  - e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b

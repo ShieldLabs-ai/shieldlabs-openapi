@@ -1,7 +1,7 @@
-// The shared SDK fixtures (vendored in test/fixtures/) match the spec and the JSON Schema exports.
+// The contract fixtures (contract/) match the spec, the JSON Schema exports and contract/manifest.json.
 import assert from 'node:assert/strict';
-import { createHmac, timingSafeEqual } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { FIXTURE_FILES, FIXTURES_DIR, readFixture } from '../scripts/lib/fixtures.mjs';
@@ -314,18 +314,24 @@ describe('JSON Schema exports', () => {
   });
 });
 
-describe('vendored fixtures', () => {
-  it('equal the shared fixture set when FIXTURES_DIR points to it', (t) => {
-    const source = process.env.FIXTURES_DIR;
-    if (!source) {
-      t.skip('set FIXTURES_DIR to compare test/fixtures/ with the shared fixture set');
-      return;
+describe('contract manifest', () => {
+  const manifest = JSON.parse(readFileSync(path.join(FIXTURES_DIR, 'manifest.json'), 'utf8'));
+  const fix = 'run `python3 scripts/contract_manifest.py --write`';
+
+  it('lists every contract file with its SHA-256', () => {
+    const onDisk = readdirSync(FIXTURES_DIR)
+      .filter((file) => file !== 'README.md' && file !== 'manifest.json')
+      .sort();
+    assert.deepEqual(onDisk, [...FIXTURE_FILES].sort(), 'contract/ and FIXTURE_FILES differ');
+    assert.deepEqual(Object.keys(manifest.files).sort(), onDisk, `manifest file list is stale: ${fix}`);
+    for (const file of onDisk) {
+      const digest = createHash('sha256').update(readFileSync(path.join(FIXTURES_DIR, file))).digest('hex');
+      assert.equal(manifest.files[file], digest, `${file} changed: ${fix}`);
     }
-    for (const file of FIXTURE_FILES) {
-      assert.ok(
-        readFileSync(path.join(source, file)).equals(readFileSync(path.join(FIXTURES_DIR, file))),
-        `${file} differs: run npm run sync:fixtures -- --from "$FIXTURES_DIR"`,
-      );
-    }
+  });
+
+  it('carries the spec version as contract_version', () => {
+    const { doc } = freshBuild();
+    assert.equal(manifest.contract_version, doc.info.version, fix);
   });
 });

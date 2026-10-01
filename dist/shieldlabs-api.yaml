@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: ShieldLabs API
-  version: 1.0.0
+  version: 1.0.1
   summary: Identification results and risk scoring for your backend.
   description: |-
     The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent
@@ -246,7 +246,7 @@ paths:
         - lang: Shell
           label: curl
           source: |
-            curl "https://account.shieldlabs.ai/api/v1/history/request_id/02f1d973-84db-4156-a7f7-e799e6bf389b?limit=1" \
+            curl "https://account.shieldlabs.ai/api/v1/history/request_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
               -H "Authorization: Bearer $SHIELDLABS_API_KEY"
   /v1/profile:
     servers:
@@ -630,7 +630,7 @@ components:
       examples:
         requestId:
           summary: A request ID
-          value: 02f1d973-84db-4156-a7f7-e799e6bf389b
+          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
         ip:
           summary: A public IPv4 address
           value: 203.0.113.24
@@ -713,7 +713,7 @@ components:
       examples:
         requestId:
           summary: A request ID
-          value: 02f1d973-84db-4156-a7f7-e799e6bf389b
+          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
     DeprecatedHistoryLimit:
       name: limit
       in: query
@@ -747,7 +747,7 @@ components:
       examples:
         identificationScored:
           summary: Signature of the identification.scored example
-          value: sha256=c4d44b7873625bdfda98cdb7a02d460f8492ca6a68fad8d147a5f30ad16f92a9
+          value: sha256=397ff9bd26888e9e86addc2d920a8c5b2037251a3a1181f3b4810ca6c5f78062
         webhookPing:
           summary: Signature of the webhook.ping example
           value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8
@@ -757,32 +757,32 @@ components:
       format: uuid
       description: Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.
       examples:
-        - 02f1d973-84db-4156-a7f7-e799e6bf389b
+        - a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
     SessionId:
       type: string
       format: uuid
       description: One visit on one origin (UUID v4 created in the browser), shared by the open tabs of that origin. The next visit after the last tab closes gets a new session ID. The nil UUID appears on rate-limit marker rows.
       examples:
-        - bde78778-efd2-4c49-952f-1f11b9c05f35
+        - b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e
     CookieId:
       type: string
       format: uuid
       description: First-party browser identifier kept by the ShieldLabs agent (UUID v4). A missing or malformed value is stored as the nil UUID.
       examples:
-        - 4449bb58-590c-444c-ae1f-d1ddc768dbdd
+        - c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f
     DeviceId:
       type: string
       format: uuid
       description: 'Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.'
       examples:
-        - ac7c303d-971b-41d1-8e25-cd5b46b46aed
+        - d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a
         - 00000000-0000-0000-0000-000000000000
     VisitorId:
       type: string
       format: uuid
       description: 'Server-side visitor identifier (UUID v5). It is sticky to the device: a new cookie on a known device keeps the existing visitor ID, so clearing cookies usually does not change it. The nil UUID appears on identifications without usable device data, such as rate-limit marker rows.'
       examples:
-        - bde0e249-20d8-4544-838c-ed9a0b6d7a36
+        - e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b
     Ipv4:
       type: string
       format: ipv4
@@ -1764,14 +1764,14 @@ components:
       description: 'One page of five identifications out of 37 matches: a dangerous paid click through a proxy with an anti-detect browser, a trusted anonymous visit, a VPN visit with a local network leak and a late network correction, a rate-limit marker (999) and a search-engine crawler.'
       value:
         data:
-          - request_id: 02f1d973-84db-4156-a7f7-e799e6bf389b
-            session_id: bde78778-efd2-4c49-952f-1f11b9c05f35
-            cookie_id: 4449bb58-590c-444c-ae1f-d1ddc768dbdd
+          - request_id: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+            session_id: b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e
+            cookie_id: c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f
             domain: shop.example.com
             site_domain: example.com
             user_hid: 9f86d081884c7d659a2feaa0c55ad015
-            device_id: ac7c303d-971b-41d1-8e25-cd5b46b46aed
-            visitor_id: bde0e249-20d8-4544-838c-ed9a0b6d7a36
+            device_id: d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a
+            visitor_id: e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b
             ip: 203.0.113.24
             os: Windows
             browser: Chrome
@@ -2095,11 +2095,11 @@ components:
       summary: One identification (deprecated shape)
       description: The PascalCase array returned by the deprecated endpoint, for the same identification as the first History API example row.
       value:
-        - RequestID: 02f1d973-84db-4156-a7f7-e799e6bf389b
-          SessionID: bde78778-efd2-4c49-952f-1f11b9c05f35
-          CookieID: 4449bb58-590c-444c-ae1f-d1ddc768dbdd
-          DeviceID: ac7c303d-971b-41d1-8e25-cd5b46b46aed
-          VisitorID: bde0e249-20d8-4544-838c-ed9a0b6d7a36
+        - RequestID: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+          SessionID: b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e
+          CookieID: c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f
+          DeviceID: d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a
+          VisitorID: e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b
           IP: 203.0.113.24
           ConnectionType: proxy
           TcpMss: 1460
@@ -2159,11 +2159,11 @@ components:
         schema_version: '2026-06-01'
         created_at: '2026-09-30T12:34:57.482913041Z'
         data:
-          request_id: 02f1d973-84db-4156-a7f7-e799e6bf389b
-          visitor_id: bde0e249-20d8-4544-838c-ed9a0b6d7a36
-          device_id: ac7c303d-971b-41d1-8e25-cd5b46b46aed
-          session_id: bde78778-efd2-4c49-952f-1f11b9c05f35
-          cookie_id: 4449bb58-590c-444c-ae1f-d1ddc768dbdd
+          request_id: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+          visitor_id: e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b
+          device_id: d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a
+          session_id: b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e
+          cookie_id: c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f
           user_hid: 9f86d081884c7d659a2feaa0c55ad015
           domain: example.com
           public_ip:

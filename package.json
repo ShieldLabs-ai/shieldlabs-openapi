@@ -1,6 +1,6 @@
 {
   "name": "@shieldlabs-ai/openapi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OpenAPI 3.1 description and JSON Schemas of the ShieldLabs API: History API, Management API, Health and webhooks.",
   "license": "MIT",
   "author": "ShieldLabs Inc. <contact@shieldlabs.ai>",

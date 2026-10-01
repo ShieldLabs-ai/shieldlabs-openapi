@@ -30,7 +30,7 @@ function runCheckLive(env) {
 
 /** A local stand-in for both APIs that serves the shared fixtures. */
 async function startMockApi({ corruptRow = false } = {}) {
-  const liveId = '02f1d973-84db-4156-a7f7-e799e6bf389b';
+  const liveId = 'a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d';
   const seen = [];
   const server = createServer((req, res) => {
     seen.push({ url: req.url, headers: req.headers });
@@ -191,7 +191,7 @@ describe('examples', () => {
   });
 
   it('node-validate-webhook rejects a wrong secret', async () => {
-    const body = path.join(ROOT, 'test', 'fixtures', 'webhook-ping.raw.txt');
+    const body = path.join(ROOT, 'contract', 'webhook-ping.raw.txt');
     const header = 'sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8';
     const good = await runExample('node-validate-webhook', [body, header], {
       SHIELDLABS_WEBHOOK_SECRET: 'whsec_old_secret_value_0000000000, whsec_00112233445566778899aabbccddeeff',
@@ -207,9 +207,9 @@ describe('examples', () => {
 });
 
 describe('package', () => {
-  it('is @shieldlabs-ai/openapi 1.0.0 and ships dist/ and spec/', () => {
+  it('is @shieldlabs-ai/openapi 1.0.1 and ships dist/ and spec/', () => {
     assert.equal(pkg.name, '@shieldlabs-ai/openapi');
-    assert.equal(pkg.version, '1.0.0');
+    assert.equal(pkg.version, '1.0.1');
     assert.equal(pkg.license, 'MIT');
     assert.ok(pkg.files.includes('dist/'));
     assert.ok(pkg.files.includes('spec/'));

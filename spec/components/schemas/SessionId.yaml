@@ -5,4 +5,4 @@ description: >-
   origin. The next visit after the last tab closes gets a new session ID. The nil UUID appears on
   rate-limit marker rows.
 examples:
-  - bde78778-efd2-4c49-952f-1f11b9c05f35
+  - b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e

@@ -1,22 +1,24 @@
-// Shared fixture catalogue: which fixture files this repository vendors, and which OpenAPI
-// examples are generated from them. Used by scripts/sync-fixtures.mjs and by the tests, so the
-// examples in spec/components/examples/ can never drift from test/fixtures/.
+// Contract catalogue: the shared SDK test fixtures published in contract/, and the OpenAPI
+// examples generated from them. Used by scripts/sync-fixtures.mjs and by the tests, so the
+// examples in spec/components/examples/ can never drift from contract/.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures');
+export const FIXTURES_DIR = path.join(ROOT, 'contract');
 export const EXAMPLES_DIR = path.join(ROOT, 'spec', 'components', 'examples');
 
-/** Fixture files copied verbatim from the shared SDK fixture set into test/fixtures/. */
+/** Fixture files of the contract: every file in contract/ except README.md and manifest.json. */
 export const FIXTURE_FILES = [
   'error-responses.json',
   'history-empty.json',
   'history-page.json',
+  'management-profile-expected.json',
   'management-profile.json',
   'normalization-cases.json',
   'risk-band-cases.json',
+  'signal-slug-cases.json',
   'webhook-identification-scored.json',
   'webhook-identification-scored.raw.txt',
   'webhook-ping.json',
@@ -160,7 +162,7 @@ export const FIXTURE_EXAMPLES = [
   },
 ];
 
-/** Reads a vendored fixture (JSON files are parsed, text files returned as strings). */
+/** Reads a contract fixture (JSON files are parsed, text files returned as strings). */
 export function readFixture(file, dir = FIXTURES_DIR) {
   const text = readFileSync(path.join(dir, file), 'utf8');
   return file.endsWith('.json') ? JSON.parse(text) : text;

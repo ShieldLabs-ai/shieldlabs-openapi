@@ -49,14 +49,14 @@ Load the document in Node.js 20.10 or later: save this as `index.mjs` next to yo
 import spec from '@shieldlabs-ai/openapi' with { type: 'json' };
 // CommonJS: const spec = require('@shieldlabs-ai/openapi');
 
-console.log(spec.info.version); // "1.0.0"
+console.log(spec.info.version); // "1.0.1"
 console.log(Object.keys(spec.paths)); // [ '/api/v1/history/{search_type}/{value}', ... ]
 ```
 
 Read one verdict with `curl`:
 
 ```sh
-curl "https://account.shieldlabs.ai/api/v1/history/request_id/02f1d973-84db-4156-a7f7-e799e6bf389b?limit=1" \
+curl "https://account.shieldlabs.ai/api/v1/history/request_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
   -H "Authorization: Bearer $SHIELDLABS_API_KEY"
 ```
 
@@ -216,6 +216,10 @@ npm run bundle   # rebuild dist/ after editing spec/
 Runnable scripts that use the published files live in [`examples/`](./examples/README.md): listing
 every operation with its server, and verifying plus validating a webhook delivery. See
 [CONTRIBUTING.md](./CONTRIBUTING.md) for the layout of `spec/` and how to add examples.
+
+[`contract/`](./contract/README.md) holds the test fixtures every official server SDK passes,
+with a manifest of their SHA-256. Each release tag publishes them; the SDK repositories sync them
+with `scripts/sync_contract.py` and test against the same bytes.
 
 Documentation: https://docs.shieldlabs.ai · Analytics dashboard (Start free): https://app.shieldlabs.ai · Support: contact@shieldlabs.ai
 

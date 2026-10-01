@@ -11,6 +11,6 @@ trim_trailing_whitespace = true
 [*.md]
 trim_trailing_whitespace = false
 
-[test/fixtures/**]
+[contract/*.{json,txt}]
 insert_final_newline = unset
 trim_trailing_whitespace = unset

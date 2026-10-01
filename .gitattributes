@@ -1,4 +1,4 @@
 # Keep LF line endings on every platform: dist/ and the generated examples are compared byte for
-# byte with a fresh build, and the webhook fixtures are signed over their exact bytes.
+# byte with a fresh build, and the contract files are signed and hashed over their exact bytes.
 * text=auto eol=lf
-test/fixtures/** -text
+contract/** -text

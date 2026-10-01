@@ -8,6 +8,8 @@ node_modules/
 .env.*
 
 # Logs, coverage, editor and OS files
+__pycache__/
+*.pyc
 *.log
 coverage/
 .history/

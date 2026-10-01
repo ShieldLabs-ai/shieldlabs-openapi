@@ -16,7 +16,7 @@ schema:
 examples:
   identificationScored:
     summary: Signature of the identification.scored example
-    value: sha256=c4d44b7873625bdfda98cdb7a02d460f8492ca6a68fad8d147a5f30ad16f92a9
+    value: sha256=397ff9bd26888e9e86addc2d920a8c5b2037251a3a1181f3b4810ca6c5f78062
   webhookPing:
     summary: Signature of the webhook.ping example
     value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8
