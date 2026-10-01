@@ -1,0 +1,8 @@
+description: Points to the replacement endpoint with `rel="successor-version"`.
+schema:
+  type: string
+  const: <https://account.shieldlabs.ai/api/v1/history>; rel="successor-version"
+examples:
+  successor:
+    summary: Successor endpoint
+    value: <https://account.shieldlabs.ai/api/v1/history>; rel="successor-version"

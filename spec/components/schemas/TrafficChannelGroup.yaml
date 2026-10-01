@@ -1,0 +1,16 @@
+type: string
+description: >-
+  Group of the marketing channel. Known values: `Paid Search`, `Paid Social`, `Organic`, `Bot`,
+  `Social`, `Referral`, `Direct` and `Other`. History API only; not part of the webhook. The set
+  is open: keep values added in later versions and treat them as `Other`.
+x-extensible-enum:
+  - Paid Search
+  - Paid Social
+  - Organic
+  - Bot
+  - Social
+  - Referral
+  - Direct
+  - Other
+examples:
+  - Paid Search

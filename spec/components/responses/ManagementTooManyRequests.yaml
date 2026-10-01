@@ -1,0 +1,11 @@
+description: >-
+  More than 15 requests in the current minute from your IP, or a 10-minute block is active. The
+  request that exceeds the limit starts the block, and every request during it gets this answer.
+  Do not retry: wait for the block to end and cache results to stay under the limit.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorBody.yaml
+    examples:
+      tooManyRequests:
+        $ref: ../examples/ManagementTooManyRequests.yaml

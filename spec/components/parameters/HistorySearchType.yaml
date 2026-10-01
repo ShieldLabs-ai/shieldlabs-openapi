@@ -1,0 +1,32 @@
+name: search_type
+in: path
+required: true
+description: |-
+  Identifier to search by. Only these seven values are supported:
+  - `request_id`: one identification (read a verdict);
+  - `device_id`: every identification of one device;
+  - `user_hid`: every identification of one account;
+  - `visitor_id`: every identification of one visitor;
+  - `ip`: every identification from one public IPv4 address;
+  - `session_id`: every identification of one visit;
+  - `cookie_id`: every identification with one browser cookie.
+
+  The server does not reject other values: it ignores them and returns the latest identifications
+  of the whole domain, so restrict the value on your side.
+schema:
+  type: string
+  enum:
+    - request_id
+    - device_id
+    - user_hid
+    - visitor_id
+    - ip
+    - session_id
+    - cookie_id
+examples:
+  requestId:
+    summary: Read one verdict
+    value: request_id
+  deviceId:
+    summary: All identifications of one device
+    value: device_id

@@ -1,0 +1,59 @@
+{
+  "name": "@shieldlabs/openapi",
+  "version": "1.0.0",
+  "description": "OpenAPI 3.1 description and JSON Schemas of the ShieldLabs API: History API, Management API, Health and webhooks.",
+  "license": "MIT",
+  "author": "ShieldLabs Inc. <contact@shieldlabs.ai>",
+  "homepage": "https://docs.shieldlabs.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShieldLabs-ai/shieldlabs-openapi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ShieldLabs-ai/shieldlabs-openapi/issues",
+    "email": "contact@shieldlabs.ai"
+  },
+  "keywords": [
+    "shieldlabs",
+    "openapi",
+    "openapi-3.1",
+    "json-schema",
+    "webhooks",
+    "risk-score",
+    "device-intelligence",
+    "fraud-detection"
+  ],
+  "type": "module",
+  "main": "./dist/shieldlabs-api.json",
+  "exports": {
+    ".": "./dist/shieldlabs-api.json",
+    "./shieldlabs-api.json": "./dist/shieldlabs-api.json",
+    "./shieldlabs-api.yaml": "./dist/shieldlabs-api.yaml",
+    "./schemas/*": "./dist/schemas/*",
+    "./dist/*": "./dist/*",
+    "./spec/*": "./spec/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "spec/",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "lint": "node scripts/lint.mjs",
+    "bundle": "node scripts/build.mjs",
+    "test": "node --test --test-reporter=spec test/*.test.mjs",
+    "check:live": "node scripts/check-live.mjs",
+    "sync:fixtures": "node scripts/sync-fixtures.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.55.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "yaml": "2.9.1"
+  }
+}

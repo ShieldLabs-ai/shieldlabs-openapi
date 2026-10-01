@@ -1,0 +1,194 @@
+// Shared fixture catalogue: which fixture files this repository vendors, and which OpenAPI
+// examples are generated from them. Used by scripts/sync-fixtures.mjs and by the tests, so the
+// examples in spec/components/examples/ can never drift from test/fixtures/.
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures');
+export const EXAMPLES_DIR = path.join(ROOT, 'spec', 'components', 'examples');
+
+/** Fixture files copied verbatim from the shared SDK fixture set into test/fixtures/. */
+export const FIXTURE_FILES = [
+  'error-responses.json',
+  'history-empty.json',
+  'history-page.json',
+  'management-profile.json',
+  'normalization-cases.json',
+  'risk-band-cases.json',
+  'webhook-identification-scored.json',
+  'webhook-identification-scored.raw.txt',
+  'webhook-ping.json',
+  'webhook-ping.raw.txt',
+  'webhook-rate-limited.json',
+  'webhook-signature-vectors.json',
+  'webhook-test-delivery.json',
+];
+
+/**
+ * OpenAPI examples generated from fixtures. `file` is the fixture; `errorCase` selects one case of
+ * error-responses.json (by surface, status, content type and a body substring).
+ */
+export const FIXTURE_EXAMPLES = [
+  {
+    name: 'HistoryPage',
+    file: 'history-page.json',
+    summary: 'Five identifications',
+    description:
+      'One page of five identifications out of 37 matches: a dangerous paid click through a proxy ' +
+      'with an anti-detect browser, a trusted anonymous visit, a VPN visit with a local network ' +
+      'leak and a late network correction, a rate-limit marker (999) and a search-engine crawler.',
+  },
+  {
+    name: 'HistoryPageEmpty',
+    file: 'history-empty.json',
+    summary: 'Nothing matched',
+    description:
+      'No identification matched. When searching by `request_id` right after a protected action, ' +
+      'this means "not scored yet" (or an invalid request ID), never "clean".',
+  },
+  {
+    name: 'IdentificationScored',
+    file: 'webhook-identification-scored.json',
+    summary: 'Dangerous identification from a paid click',
+    description:
+      'Risk Score 80 from a proxy, a datacenter IP and an anti-detect browser, on a visit from a ' +
+      'Google Ads click.',
+  },
+  {
+    name: 'IdentificationScoredRateLimited',
+    file: 'webhook-rate-limited.json',
+    summary: 'Rate-limit marker (999)',
+    description:
+      'The 999 rate-limit marker: one `rate_limited` signal, nil identifiers and no attribution. ' +
+      'It is not a Risk Score.',
+  },
+  {
+    name: 'IdentificationScoredTestDelivery',
+    file: 'webhook-test-delivery.json',
+    summary: 'Test delivery from the analytics dashboard',
+    description:
+      'The fixed sample sent by the Test button: keys sorted alphabetically, second-precision ' +
+      'timestamps, two-letter country values and only 17 detection flags (`browser_automation` ' +
+      'and `search_bot` are missing). It differs from the schema in exactly those two flags: ' +
+      'parse missing flags as `false`.',
+  },
+  {
+    name: 'WebhookPing',
+    file: 'webhook-ping.json',
+    summary: 'Endpoint verification',
+    description: 'The ping sent when you verify an endpoint. It has no `data`.',
+  },
+  {
+    name: 'DomainProfile',
+    file: 'management-profile.json',
+    summary: 'Profile of example.com',
+    description: 'A domain with 148,230 remaining included identifications and masked keys.',
+  },
+  {
+    name: 'HistoryUnauthorizedMissingHeader',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 401, contentType: 'text/plain', match: 'missing or invalid' },
+    summary: 'Missing or malformed Authorization header',
+    description: 'JSON text sent as `text/plain`, followed by a newline.',
+  },
+  {
+    name: 'HistoryUnauthorizedInvalidKey',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 401, contentType: 'text/plain', match: 'invalid api key' },
+    summary: 'Unknown, deleted or disabled key',
+    description: 'JSON text sent as `text/plain`, followed by a newline.',
+  },
+  {
+    name: 'HistoryTooManyRequests',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 429, contentType: 'application/json', match: 'too many requests' },
+    summary: 'Soft rate limit reached',
+    description: 'More than about 15 requests in the current second for this domain. Retry after about a second.',
+  },
+  {
+    name: 'HistoryInvalidValue',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 500, contentType: 'application/json', match: 'Cannot convert' },
+    summary: 'Malformed UUID value',
+    description:
+      'The raw database error for a value that is not a UUID. It repeats for the same request: ' +
+      'validate the value instead of retrying.',
+  },
+  {
+    name: 'HistoryKeyLookupFailed',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 500, contentType: 'text/plain', match: 'internal error' },
+    summary: 'Key lookup failed',
+    description: 'A transient error while checking the key, sent as JSON text. Retry with backoff.',
+  },
+  {
+    name: 'NotFoundText',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 404, contentType: 'text/plain', match: '404 page not found' },
+    summary: 'No route matched',
+    description: 'Plain text body of an unrouted path.',
+  },
+  {
+    name: 'BadGatewayHtml',
+    file: 'error-responses.json',
+    errorCase: { surface: 'history', status: 502, contentType: 'text/html', match: '502' },
+    summary: 'Bad gateway',
+    description: 'HTML page from the edge proxy.',
+  },
+  {
+    name: 'ManagementTooManyRequests',
+    file: 'error-responses.json',
+    errorCase: { surface: 'management', status: 429, contentType: 'application/json', match: 'too many requests' },
+    summary: 'Rate limit reached or block active',
+    description: 'Do not retry: every request gets this answer until the 10-minute block ends.',
+  },
+  {
+    name: 'ManagementServerBusy',
+    file: 'error-responses.json',
+    errorCase: { surface: 'management', status: 503, contentType: 'application/json', match: 'server is busy' },
+    summary: 'Too many requests in flight',
+    description: 'Retry with backoff.',
+  },
+  {
+    name: 'ManagementBadRequestNull',
+    file: 'error-responses.json',
+    errorCase: { surface: 'management', status: 400, contentType: 'application/json', match: 'null' },
+    summary: 'Database error',
+    description: 'The JSON literal `null`, for example for an IPv6 `ip` value.',
+  },
+];
+
+/** Reads a vendored fixture (JSON files are parsed, text files returned as strings). */
+export function readFixture(file, dir = FIXTURES_DIR) {
+  const text = readFileSync(path.join(dir, file), 'utf8');
+  return file.endsWith('.json') ? JSON.parse(text) : text;
+}
+
+/** Finds the single error-responses.json case selected by an `errorCase` spec. */
+export function findErrorCase(errorResponses, spec) {
+  const matches = errorResponses.cases.filter(
+    (c) =>
+      c.surface === spec.surface &&
+      c.status === spec.status &&
+      (c.content_type ?? '').split(';')[0].trim() === spec.contentType &&
+      c.body.includes(spec.match),
+  );
+  if (matches.length !== 1) {
+    throw new Error(`Expected exactly one error case for ${JSON.stringify(spec)}, found ${matches.length}`);
+  }
+  return matches[0];
+}
+
+/** The body of an error case as an OpenAPI example value: parsed for JSON, raw text otherwise. */
+export function errorCaseValue(errorCase) {
+  const mediaType = (errorCase.content_type ?? '').split(';')[0].trim();
+  return mediaType === 'application/json' ? JSON.parse(errorCase.body) : errorCase.body;
+}
+
+/** The example value a catalogue entry must carry, computed from the fixtures in `dir`. */
+export function fixtureExampleValue(entry, dir = FIXTURES_DIR) {
+  const fixture = readFixture(entry.file, dir);
+  return entry.errorCase ? errorCaseValue(findErrorCase(fixture, entry.errorCase)) : fixture;
+}

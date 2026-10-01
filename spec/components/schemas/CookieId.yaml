@@ -1,0 +1,7 @@
+type: string
+format: uuid
+description: >-
+  First-party browser identifier kept by the ShieldLabs agent (UUID v4). A missing or malformed
+  value is stored as the nil UUID.
+examples:
+  - 4449bb58-590c-444c-ae1f-d1ddc768dbdd

@@ -1,0 +1,13 @@
+description: >-
+  The `Authorization` header is missing or is not a Bearer token, or the Private API Key is
+  unknown, deleted or belongs to a disabled domain. The body is JSON text sent with
+  `Content-Type: text/plain; charset=utf-8`: parse it as JSON anyway. Do not retry.
+content:
+  text/plain:
+    schema:
+      $ref: ../schemas/ErrorBodyText.yaml
+    examples:
+      missingHeader:
+        $ref: ../examples/HistoryUnauthorizedMissingHeader.yaml
+      invalidKey:
+        $ref: ../examples/HistoryUnauthorizedInvalidKey.yaml

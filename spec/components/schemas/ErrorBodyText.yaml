@@ -1,0 +1,10 @@
+type: string
+contentMediaType: application/json
+contentSchema:
+  $ref: ./ErrorBody.yaml
+description: >-
+  JSON text followed by a newline, sent with `Content-Type: text/plain; charset=utf-8`. Parse it
+  as JSON: it holds `{"error": "..."}`.
+examples:
+  - |
+    {"error":"invalid api key"}

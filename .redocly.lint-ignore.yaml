@@ -1,0 +1,10 @@
+# Known, intentional lint exception (the only one).
+#
+# The Test button in the analytics dashboard sends a fixed sample event whose detection_flags
+# lack browser_automation and search_bot. The spec keeps that sample as an example because
+# receivers get it, while the schema keeps all 19 flags required because production events always
+# carry them. test/examples.test.mjs asserts that this example fails validation on exactly these
+# two missing flags and nothing else.
+spec/components/examples/IdentificationScoredTestDelivery.yaml:
+  no-invalid-media-type-examples:
+    - '#/value/data/detection_flags'

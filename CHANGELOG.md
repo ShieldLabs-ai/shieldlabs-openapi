@@ -1,5 +1,89 @@
 # Changelog
 
-## 2026-09-06
+All notable changes to this project are documented in this file. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
+[semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-- Minor improvements and bug fixes
+## [1.0.0] - 2026-09-30
+
+First release as the npm package `@shieldlabs/openapi`. It replaces the previous public file
+(`openapi.yaml`, spec version 1.2) with split sources under `spec/`, a bundle in `dist/` and JSON
+Schema exports. Every point below is a change against that file.
+
+### Fixed
+
+- **`/api/api` server bug.** The History API server was `https://account.shieldlabs.ai/api` while
+  its path already started with `/api/v1/`, so generated clients called `/api/api/v1/...` and got
+  a `404`. The server is now the host root, `https://account.shieldlabs.ai`.
+- **Per-operation servers.** Each path declares its own server, so `/v1/profile` and the
+  deprecated `/v1/history` go to `https://api.shieldlabs.ai` instead of the first root server.
+- **`X-Shield-Domain`.** The header is now a required parameter on every Management API
+  operation; without it the server answers `401`.
+- **19 detection flags.** `check_incomplete` was missing. All 19 flags are listed and required,
+  because the server always sends every key.
+- **Webhook `data`.** All 18 keys are required (none is ever omitted), with `user_hid` nullable.
+  `public_ip`, `local_ip` and `traffic_source` list their keys as required too.
+- **999 rate-limit marker.** `risk_score` no longer has `maximum: 100`: 999 marks a rate-limited
+  identification and arrives with the single `rate_limited` signal.
+- **Country names.** `country` values are documented as English country names (`Germany`,
+  `United States`), not ISO codes; examples now use names.
+- **Error bodies as sent.** History API `401` is JSON text sent as `text/plain`; `429` and `500`
+  are JSON objects. Management API `401` has an empty body, `400` can be a bare JSON string or
+  `null`, `429` and `503` are JSON objects. `404` (`text/plain`) and edge proxy `502`/`504` (HTML)
+  are documented too.
+- **History row fields.** The row documents the identifiers, `domain` and `site_domain`, `ip` and
+  `country`, the local IP fields, `os`, `browser`, `device_type`, `connection_type`, `score`,
+  `score_details` (a JSON-encoded string), `created_at` with its real format
+  (`YYYY-MM-DD HH:MM:SS.mmm` in UTC) and a pattern, `ver`, every `is_*` flag column with
+  `check_incomplete`, and the traffic fields. Rows stay open for diagnostic network fields.
+- `connection_type` includes `browser_vpn_proxy` everywhere; signal weights can be negative;
+  `user_hid` documents `anonymous` and the other markers; `observed_at` equals `created_at`.
+- The Test delivery from the analytics dashboard is an `identification.scored` sample (not a
+  `webhook.ping`), with 17 flags and second-precision timestamps. It is kept as an example.
+
+### Added
+
+- `webhook.ping` as its own webhook entry, and the `X-Shield-Signature` header with its exact
+  algorithm (key = full signing secret including `whsec_`, message = raw body, lowercase hex,
+  `sha256=` prefix) and verifiable example signatures.
+- `GET /health` on both API hosts (`getHealth`).
+- Deprecation metadata on `searchHistoryDeprecated`: `deprecated: true`, the Sunset date
+  (Sat, 01 Jan 2027 00:00:00 GMT), the successor link and the `Deprecation`, `Sunset` and `Link`
+  response headers.
+- Rich descriptions of the asynchronous model, rate limits, identifiers, risk bands, timestamps
+  and webhook deliveries, plus `curl` samples.
+- The exact encoding the History API expects for a User HID in the path, and a `pattern` on the
+  `value` parameter that rejects values it cannot search (a `/`, or exactly `.` or `..`).
+- Examples for every response and request body, taken from the shared SDK test fixtures,
+  including the rate-limit marker and the Test delivery.
+- JSON Schema 2020-12 exports in `dist/schemas/`: the scored event, the ping event, any webhook
+  event, the History row, the History page and the normalized `Identification` model.
+- A rendered reference page (`docs/index.html`), `npm run check:live` against the live API, and
+  tests that keep `dist/`, the examples and the fixtures in sync with the spec.
+- `examples/`: Node.js scripts that list every operation with its server and that verify and
+  validate a webhook delivery with the published JSON Schema.
+
+### Changed
+
+- Operation IDs: `searchHistoryAccount` is now `searchHistory`, `getProfileV1` is now
+  `getDomainProfile`, `searchHistoryV1` is now `searchHistoryDeprecated`. The webhook is
+  `identificationScored`.
+- Security schemes: `PrivateApiKey` is now `historyApiKey`, `SecretKeyHeader` is now
+  `managementSecretKey`.
+- Tags: `History API`, `Management API`, `Health` and `Webhooks`.
+- Response fields with a known set of values (`connection_type`, `device_type`, the traffic
+  source fields and the local network fields of History rows) are open strings: the descriptions
+  and `x-extensible-enum` list the known values, so a value added later fails neither validation
+  nor a generated client. `schema_version` accepts any non-empty string instead of the constant
+  `2026-06-01`.
+- `info.version` follows the package version (`1.0.0`); the contact address is
+  contact@shieldlabs.ai.
+
+### Removed
+
+- The unused `OutOfRequests` (`402`) response: none of these endpoints uses included
+  identifications.
+- The root `openapi.yaml` (now `dist/shieldlabs-api.yaml`), the `webhooks/` folder (superseded by
+  the `webhooks` section and `dist/schemas/`) and the drift notes.
+
+[1.0.0]: https://github.com/ShieldLabs-ai/shieldlabs-openapi/releases/tag/v1.0.0

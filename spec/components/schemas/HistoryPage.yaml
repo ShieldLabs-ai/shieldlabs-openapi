@@ -1,0 +1,19 @@
+type: object
+description: One page of identifications, newest first.
+required:
+  - data
+  - total
+properties:
+  data:
+    type: array
+    description: Identifications on this page, ordered by `created_at` descending. Empty when nothing matched.
+    items:
+      $ref: ./HistoryRow.yaml
+  total:
+    type: integer
+    minimum: 0
+    description: >-
+      Number of identifications that match the search in total, across all pages. Page with
+      `offset` while it is below `total`.
+    examples:
+      - 37

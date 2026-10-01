@@ -1,0 +1,17 @@
+type: string
+description: >-
+  Ad click identifier found in the landing URL. Known values: `gclid`, `gbraid`, `wbraid`,
+  `msclkid`, `ttclid`, `fbclid` and the empty string when there is none. `fbclid` counts only
+  together with a Meta referrer or a Meta `utm_source`. The set is open: keep values added in
+  later versions.
+x-extensible-enum:
+  - gclid
+  - gbraid
+  - wbraid
+  - msclkid
+  - ttclid
+  - fbclid
+  - ''
+examples:
+  - gclid
+  - ''

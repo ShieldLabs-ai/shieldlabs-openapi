@@ -1,0 +1,37 @@
+post:
+  operationId: webhookPing
+  tags:
+    - Webhooks
+  summary: Endpoint verification
+  description: |-
+    Sent when you verify an endpoint in the analytics dashboard. It carries no `data`. A 2xx
+    answer within 5 seconds marks the endpoint as verified; anything else marks the verification
+    as failed.
+
+    The body is signed exactly like `identification.scored`. Its keys are sorted alphabetically
+    and `created_at` has second precision. Worked example with the test secret
+    `whsec_00112233445566778899aabbccddeeff`: the body
+
+    ```json
+    {"created_at":"2026-09-30T12:34:56Z","event_type":"webhook.ping","schema_version":"2026-06-01"}
+    ```
+
+    arrives with `X-Shield-Signature: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8`.
+  security: []
+  parameters:
+    - $ref: ../components/parameters/ShieldSignature.yaml
+  requestBody:
+    required: true
+    description: The ping as compact JSON with sorted keys.
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/WebhookPingEvent.yaml
+        examples:
+          ping:
+            $ref: ../components/examples/WebhookPing.yaml
+  responses:
+    2XX:
+      description: Endpoint verified. The response body is ignored.
+    4XX:
+      description: Verification failed. Any status other than 2xx, and a timeout after 5 seconds, fails it.

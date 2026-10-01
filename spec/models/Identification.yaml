@@ -1,0 +1,135 @@
+# The normalized Identification model. It is not an HTTP payload, so it is not part of the
+# OpenAPI document; scripts/build.mjs exports it as dist/schemas/identification.schema.json.
+title: Identification
+type: object
+additionalProperties: true
+description: |-
+  One identification in the shape the official ShieldLabs server SDKs return, whether it was read
+  from the History API or received in an `identification.scored` webhook. Field names follow the
+  webhook `data` object. Conversion rules from a History row:
+  - `user_hid`: an empty string becomes `null`; `anonymous` and the other markers stay strings;
+  - `domain`: `site_domain` when present, otherwise `domain`;
+  - `public_ip`: `ip` (`0.0.0.0` becomes `""`) and `country`;
+  - `local_ip`: `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not
+    `none`, otherwise `web_rtc_ip` and `web_rtc_country` (`0.0.0.0` becomes `""`);
+  - `traffic_source`: `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type` and the
+    `utm_*` fields, `""` when omitted;
+  - `risk_score`: `score`;
+  - `signals`: the `score_details` entries with a non-zero `Value`, in order, each with a signal
+    name derived from its description, the weight and the original description;
+  - `detection_flags`: the `is_*` columns and `check_incomplete`; `browser_vpn_proxy` is
+    `connection_type == "browser_vpn_proxy"`; `ip_mismatch` is true (except for search-engine
+    crawlers) when a score detail starts with `IP ≠ leakIP` or when the public and the local IP
+    are both known and differ; `suspicious_paid_click` is `false` when omitted;
+  - `observed_at`: `created_at` read as UTC.
+
+  From a webhook, the fields are copied; a missing detection flag is `false` and `description` of
+  every signal is `null`. In JSON, `observed_at` is RFC 3339 in UTC with millisecond precision
+  (truncated, never rounded).
+required:
+  - request_id
+  - visitor_id
+  - device_id
+  - session_id
+  - cookie_id
+  - user_hid
+  - domain
+  - public_ip
+  - local_ip
+  - connection_type
+  - os
+  - browser
+  - device_type
+  - traffic_source
+  - risk_score
+  - signals
+  - detection_flags
+  - observed_at
+  - source
+properties:
+  request_id:
+    $ref: ../components/schemas/RequestId.yaml
+  visitor_id:
+    $ref: ../components/schemas/VisitorId.yaml
+  device_id:
+    $ref: ../components/schemas/DeviceId.yaml
+  session_id:
+    $ref: ../components/schemas/SessionId.yaml
+  cookie_id:
+    $ref: ../components/schemas/CookieId.yaml
+  user_hid:
+    $ref: ../components/schemas/UserHid.yaml
+  domain:
+    type: string
+    description: Registered domain of your site.
+    examples:
+      - example.com
+  public_ip:
+    $ref: ../components/schemas/IpInfo.yaml
+    description: Public IPv4 address of the HTTP request and its country.
+  local_ip:
+    $ref: ../components/schemas/IpInfo.yaml
+    description: Local IP address found by the browser network check and its country.
+  connection_type:
+    $ref: ../components/schemas/ConnectionType.yaml
+  os:
+    $ref: ../components/schemas/OperatingSystem.yaml
+  browser:
+    $ref: ../components/schemas/Browser.yaml
+  device_type:
+    $ref: ../components/schemas/DeviceType.yaml
+  traffic_source:
+    $ref: ../components/schemas/TrafficSource.yaml
+  risk_score:
+    $ref: ../components/schemas/RiskScore.yaml
+  signals:
+    type: array
+    description: Weighted risk signals behind `risk_score`, in scoring order.
+    items:
+      type: object
+      required:
+        - name
+        - weight
+        - description
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Signal name (open set, see the webhook `signals`).
+          examples:
+            - proxy
+        weight:
+          type: integer
+          description: Points the signal contributed; can be negative.
+          examples:
+            - 10
+        description:
+          type:
+            - string
+            - 'null'
+          description: The original score detail text for History rows; `null` for webhooks.
+          examples:
+            - Is proxy
+            - null
+  detection_flags:
+    $ref: ../components/schemas/DetectionFlags.yaml
+  observed_at:
+    type: string
+    format: date-time
+    pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$'
+    description: >-
+      When the identification was observed, in UTC: the webhook `observed_at` or the History
+      `created_at`. RFC 3339 with millisecond precision in JSON.
+    examples:
+      - '2026-09-30T12:34:56.123Z'
+  source:
+    type: string
+    enum:
+      - webhook
+      - history
+    description: Where the identification was read from.
+    examples:
+      - history
+  raw:
+    type: object
+    description: The original webhook `data` object or History row, including fields the model omits.

@@ -1,0 +1,60 @@
+post:
+  operationId: identificationScored
+  tags:
+    - Webhooks
+  summary: Identification scored
+  description: |-
+    Sent to every enabled webhook endpoint of your domain once for each identification, when its
+    scoring is final: usually about 300 ms after the browser check, and at most about 10 seconds
+    later when follow-up network checks run.
+
+    **Verify, then parse.** Compute HMAC-SHA256 over the raw request body and compare it with
+    `X-Shield-Signature` before you parse the JSON:
+    - key: the endpoint's signing secret as UTF-8 bytes, including the `whsec_` prefix (not hex-
+      or base64-decoded, not stripped);
+    - message: the exact bytes received; re-serializing parsed JSON changes them (for example, `&`
+      arrives escaped as `\u0026`);
+    - expected header: `sha256=` followed by the lowercase hex digest, compared in constant time.
+
+    There is no timestamp, delivery ID or event-type header. Rotating a secret replaces it at
+    once, so accept both the old and the new secret until your deployment has switched.
+
+    **Respond fast.** Answer any 2xx status within 1 second and process the event asynchronously;
+    do not redirect. Today each identification is delivered once per endpoint, with no retries. A
+    later release adds retries that resend identical bytes, so make your handler idempotent on
+    `data.request_id`.
+
+    **Latest state.** The event is a snapshot taken when scoring finished. The History row can
+    still be refined afterwards (its `ver` increases) and no second event is sent. Use the History
+    API for guaranteed reads and for the latest state.
+
+    **Test deliveries.** The Test button in the analytics dashboard sends a fixed sample with keys
+    sorted alphabetically, second-precision timestamps and two-letter country values. Its
+    `detection_flags` lack `browser_automation` and `search_bot`: parse missing flags as `false`.
+
+    Deliveries are free and do not use your included identifications.
+  security: []
+  parameters:
+    - $ref: ../components/parameters/ShieldSignature.yaml
+  requestBody:
+    required: true
+    description: The event as compact JSON. Verify the signature over these exact bytes.
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/IdentificationScoredEvent.yaml
+        examples:
+          scored:
+            $ref: ../components/examples/IdentificationScored.yaml
+          rateLimited:
+            $ref: ../components/examples/IdentificationScoredRateLimited.yaml
+          testDelivery:
+            $ref: ../components/examples/IdentificationScoredTestDelivery.yaml
+  responses:
+    2XX:
+      description: Delivery accepted. The response body is ignored.
+    4XX:
+      description: >-
+        Delivery rejected, for example with `401` when the signature does not verify. Any status
+        other than 2xx, and a timeout after 1 second, counts as a failed delivery; failed
+        deliveries are not retried today.

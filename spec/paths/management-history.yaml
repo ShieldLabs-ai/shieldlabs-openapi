@@ -1,0 +1,118 @@
+servers:
+  - url: https://api.shieldlabs.ai
+    description: Management API
+get:
+  operationId: searchHistoryDeprecated
+  tags:
+    - Management API
+  summary: Search history by identifier (deprecated)
+  deprecated: true
+  x-sunset: '2027-01-01'
+  description: |-
+    **Deprecated.** This endpoint stops working after Sat, 01 Jan 2027 00:00:00 GMT. Use
+    `searchHistory` on the History API instead: `https://account.shieldlabs.ai/api/v1/history`.
+    Every answer of this route except `429` and `503` carries `Deprecation: true`, a `Sunset`
+    header and a `Link` header with `rel="successor-version"` pointing there. The plain-text `404`
+    for a path that matches no route and the edge proxy errors do not carry them.
+
+    Differences from the History API: the answer is a bare array of PascalCase objects; only rows
+    whose request host equals `X-Shield-Domain` are returned (no subdomain traffic); `limit`
+    defaults to 100 and there is no `offset`. It uses the Management API credentials and rate limit
+    (15 requests per minute per client IP, then a 10-minute block). The call is free.
+  security:
+    - managementSecretKey: []
+  parameters:
+    - $ref: ../components/parameters/ShieldDomain.yaml
+    - $ref: ../components/parameters/DeprecatedHistoryType.yaml
+    - $ref: ../components/parameters/DeprecatedHistoryValue.yaml
+    - $ref: ../components/parameters/DeprecatedHistoryLimit.yaml
+  responses:
+    '200':
+      description: Matching identifications, newest first.
+      headers:
+        Deprecation:
+          $ref: ../components/headers/Deprecation.yaml
+        Sunset:
+          $ref: ../components/headers/Sunset.yaml
+        Link:
+          $ref: ../components/headers/Link.yaml
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas/LegacySnapshot.yaml
+          examples:
+            list:
+              $ref: ../components/examples/LegacySnapshotList.yaml
+            empty:
+              $ref: ../components/examples/LegacySnapshotListEmpty.yaml
+    '400':
+      description: >-
+        The value failed validation (a bare JSON string) or the query failed (the JSON literal
+        `null`, for example for an IPv6 `ip` value). Do not retry.
+      headers:
+        Deprecation:
+          $ref: ../components/headers/Deprecation.yaml
+        Sunset:
+          $ref: ../components/headers/Sunset.yaml
+        Link:
+          $ref: ../components/headers/Link.yaml
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/LegacyErrorMessage.yaml
+          examples:
+            invalidUuid:
+              $ref: ../components/examples/ManagementBadRequestUuid.yaml
+            invalidIp:
+              $ref: ../components/examples/ManagementBadRequestIp.yaml
+            emptyValue:
+              $ref: ../components/examples/ManagementBadRequestEmpty.yaml
+            queryFailed:
+              $ref: ../components/examples/ManagementBadRequestNull.yaml
+    '401':
+      description: >-
+        Empty body, no `Content-Type`. Missing or malformed headers, unknown or disabled domain, or
+        a wrong Secret Key. Do not retry.
+      headers:
+        Deprecation:
+          $ref: ../components/headers/Deprecation.yaml
+        Sunset:
+          $ref: ../components/headers/Sunset.yaml
+        Link:
+          $ref: ../components/headers/Link.yaml
+    '404':
+      description: >-
+        `application/json`: the `type` is not supported (a bare JSON string); this answer carries
+        the deprecation headers. `text/plain`: no route matches the path, for example because the
+        value is empty or contains `/`; this answer comes from the router and carries no
+        deprecation headers. Do not retry.
+      headers:
+        Deprecation:
+          $ref: ../components/headers/Deprecation.yaml
+        Sunset:
+          $ref: ../components/headers/Sunset.yaml
+        Link:
+          $ref: ../components/headers/Link.yaml
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/LegacyErrorMessage.yaml
+          examples:
+            unsupportedType:
+              $ref: ../components/examples/ManagementUnsupportedType.yaml
+        text/plain:
+          schema:
+            $ref: ../components/schemas/PlainText.yaml
+          examples:
+            notFound:
+              $ref: ../components/examples/NotFoundText.yaml
+    '429':
+      $ref: ../components/responses/ManagementTooManyRequests.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '503':
+      $ref: ../components/responses/ManagementServerBusy.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml

@@ -1,0 +1,79 @@
+type: object
+additionalProperties: true
+description: >-
+  One identification as returned by the deprecated Management API history endpoint (PascalCase
+  keys). Also carries diagnostic network fields that are not part of the stable contract. Use the
+  History API row instead.
+required:
+  - RequestID
+  - SessionID
+  - CookieID
+  - DeviceID
+  - VisitorID
+  - IP
+  - ConnectionType
+  - WebRtcHIP
+  - WebRtcCountry
+  - WebRtcConnectionType
+  - OS
+  - Browser
+  - DeviceType
+  - Country
+  - UserHID
+  - Score
+  - Details
+  - LastRequestTime
+properties:
+  RequestID:
+    $ref: ./RequestId.yaml
+  SessionID:
+    $ref: ./SessionId.yaml
+  CookieID:
+    $ref: ./CookieId.yaml
+  DeviceID:
+    $ref: ./DeviceId.yaml
+  VisitorID:
+    $ref: ./VisitorId.yaml
+  IP:
+    $ref: ./Ipv4.yaml
+    description: Public IPv4 address of the HTTP request.
+  ConnectionType:
+    $ref: ./ConnectionType.yaml
+  WebRtcHIP:
+    $ref: ./Ipv4.yaml
+    description: Local IP address observed by the ShieldLabs network check (not hashed); `0.0.0.0` when none.
+  WebRtcCountry:
+    $ref: ./Country.yaml
+    description: Country of `WebRtcHIP`, or an empty string.
+  WebRtcConnectionType:
+    $ref: ./NetworkClass.yaml
+    description: Connection class of `WebRtcHIP`, or an empty string.
+  OS:
+    $ref: ./OperatingSystem.yaml
+  Browser:
+    $ref: ./Browser.yaml
+  DeviceType:
+    $ref: ./DeviceType.yaml
+  Country:
+    $ref: ./Country.yaml
+    description: Country of `IP` as an English country name, or an empty string.
+  UserHID:
+    type: string
+    description: User HID as passed to the agent; `anonymous` for anonymous checks.
+    examples:
+      - 9f86d081884c7d659a2feaa0c55ad015
+  Score:
+    $ref: ./RiskScore.yaml
+  Details:
+    type: array
+    description: >-
+      Every entry behind `Score`, informational entries with `Value` 0 included (unlike the
+      History API, this is a parsed array, not a string).
+    items:
+      $ref: ./ScoreDetail.yaml
+  LastRequestTime:
+    type: string
+    format: date-time
+    description: Time of the identification, RFC 3339 with fractional seconds.
+    examples:
+      - '2026-09-30T12:34:56.123Z'

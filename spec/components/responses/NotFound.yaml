@@ -1,0 +1,10 @@
+description: >-
+  No route matches the method and path, for example because the base URL repeats part of the path
+  or a path value is empty or contains `/`. Plain text body. Check the URL; do not retry.
+content:
+  text/plain:
+    schema:
+      $ref: ../schemas/PlainText.yaml
+    examples:
+      notFound:
+        $ref: ../examples/NotFoundText.yaml

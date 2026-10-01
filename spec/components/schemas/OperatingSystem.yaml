@@ -1,0 +1,8 @@
+type: string
+description: >-
+  Operating system name, for example `Windows`, `Mac OS X`, `Linux`, `Android`, `IOS (iPhone)`,
+  `IOS (iPad)`, `ChromeOS` or `Unknown`. Open set: display it, do not branch on it.
+examples:
+  - Windows
+  - Mac OS X
+  - Android

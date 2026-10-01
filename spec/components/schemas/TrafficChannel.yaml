@@ -1,0 +1,26 @@
+type: string
+description: >-
+  Marketing channel of the visit. Known values: `Google Ads`, `Meta`, `TikTok`, `LinkedIn`, `X`,
+  `Pinterest`, `Microsoft Ads`, `Organic Search`, `Search bot`, `Referral`, `Direct`, `Other` and
+  the empty string. Resolved in this order: a click ID, then UTM parameters, then the referrer
+  (search engines give `Organic Search`, social networks give the platform name, other sites give
+  `Referral`), otherwise `Direct`. Search-engine crawlers get `Search bot`. Empty string on
+  identifications without attribution, such as rate-limit marker rows. The set is open: keep
+  values added in later versions and treat them as `Other`.
+x-extensible-enum:
+  - Google Ads
+  - Meta
+  - TikTok
+  - LinkedIn
+  - X
+  - Pinterest
+  - Microsoft Ads
+  - Organic Search
+  - Search bot
+  - Referral
+  - Direct
+  - Other
+  - ''
+examples:
+  - Google Ads
+  - Direct

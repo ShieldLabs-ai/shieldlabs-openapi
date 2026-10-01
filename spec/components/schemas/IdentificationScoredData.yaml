@@ -1,0 +1,78 @@
+type: object
+description: >-
+  The scored identification. Every key is always present (no key is ever omitted); only
+  `user_hid` can be `null`.
+required:
+  - request_id
+  - visitor_id
+  - device_id
+  - session_id
+  - cookie_id
+  - user_hid
+  - domain
+  - public_ip
+  - local_ip
+  - connection_type
+  - os
+  - browser
+  - device_type
+  - traffic_source
+  - risk_score
+  - signals
+  - detection_flags
+  - observed_at
+properties:
+  request_id:
+    $ref: ./RequestId.yaml
+  visitor_id:
+    $ref: ./VisitorId.yaml
+  device_id:
+    $ref: ./DeviceId.yaml
+  session_id:
+    $ref: ./SessionId.yaml
+  cookie_id:
+    $ref: ./CookieId.yaml
+  user_hid:
+    $ref: ./UserHid.yaml
+  domain:
+    type: string
+    description: Registered domain of your site (the request host when no registered domain matched).
+    examples:
+      - example.com
+  public_ip:
+    $ref: ./IpInfo.yaml
+    description: >-
+      Public IPv4 address of the HTTP request and its country. `ip` is empty when the request did
+      not arrive over IPv4.
+  local_ip:
+    $ref: ./IpInfo.yaml
+    description: >-
+      Local IP address found by the browser network check (WebRTC): the leaked address when a
+      local network leak was found, otherwise the address ShieldLabs observed. Both keys are empty
+      when the check found nothing.
+  connection_type:
+    $ref: ./ConnectionType.yaml
+  os:
+    $ref: ./OperatingSystem.yaml
+  browser:
+    $ref: ./Browser.yaml
+  device_type:
+    $ref: ./DeviceType.yaml
+  traffic_source:
+    $ref: ./TrafficSource.yaml
+  risk_score:
+    $ref: ./RiskScore.yaml
+  signals:
+    type: array
+    description: >-
+      Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit
+      marker carries exactly one entry, `{"name":"rate_limited","weight":999}`.
+    items:
+      $ref: ./Signal.yaml
+  detection_flags:
+    $ref: ./DetectionFlags.yaml
+  observed_at:
+    $ref: ./Rfc3339Timestamp.yaml
+    description: >-
+      When scoring finished and the event was built (not the page view time); identical to the
+      envelope `created_at`. RFC 3339 in UTC with up to 9 fractional digits.

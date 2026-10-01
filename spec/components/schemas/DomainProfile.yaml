@@ -1,0 +1,45 @@
+type: object
+description: >-
+  Profile of the registered domain. The keys are PascalCase on the wire. Ignore keys you do not
+  know.
+required:
+  - Domain
+  - Weight
+  - Callback
+  - PublicKey
+  - Secret
+  - CreatedAt
+properties:
+  Domain:
+    type: string
+    description: The registered domain, as sent in `X-Shield-Domain`.
+    examples:
+      - example.com
+  Weight:
+    type: integer
+    description: >-
+      Remaining included identifications of the account (shared by its domains). Can be negative
+      when the account is over its included volume.
+    examples:
+      - 148230
+  Callback:
+    type: string
+    description: >-
+      Legacy field kept for compatibility, normally an empty string. Webhook deliveries do not use
+      it: configure webhook endpoints in the analytics dashboard.
+    examples:
+      - ''
+  PublicKey:
+    $ref: ./MaskedKey.yaml
+    description: The domain's Public Key, masked.
+  Secret:
+    $ref: ./MaskedKey.yaml
+    description: The domain's Secret Key, masked.
+  CreatedAt:
+    type: string
+    format: date-time
+    description: >-
+      When the domain was registered, RFC 3339 in UTC with second precision.
+      `0001-01-01T00:00:00Z` when unknown.
+    examples:
+      - '2026-01-15T09:00:00Z'

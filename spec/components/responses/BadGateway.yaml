@@ -1,0 +1,8 @@
+description: The edge proxy could not reach the service. HTML body. Retry with backoff.
+content:
+  text/html:
+    schema:
+      $ref: ../schemas/HtmlText.yaml
+    examples:
+      badGateway:
+        $ref: ../examples/BadGatewayHtml.yaml

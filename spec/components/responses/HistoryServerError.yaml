@@ -1,0 +1,19 @@
+description: |-
+  Server error.
+  - `application/json`: the query failed. A malformed UUID or IPv4 value always ends here with the
+    raw database message, so validate the path before sending and do not retry such a request.
+    Other failures are transient.
+  - `text/plain` (JSON text): the key lookup failed. Transient: retry with backoff.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorBody.yaml
+    examples:
+      invalidValue:
+        $ref: ../examples/HistoryInvalidValue.yaml
+  text/plain:
+    schema:
+      $ref: ../schemas/ErrorBodyText.yaml
+    examples:
+      keyLookupFailed:
+        $ref: ../examples/HistoryKeyLookupFailed.yaml

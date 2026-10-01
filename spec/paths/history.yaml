@@ -1,0 +1,76 @@
+servers:
+  - url: https://account.shieldlabs.ai
+    description: History API
+get:
+  operationId: searchHistory
+  tags:
+    - History API
+  summary: Search identifications
+  description: |-
+    Returns the identifications of your domain that match one identifier, newest first, together
+    with the total number of matches. The Private API Key selects the domain; identifications from
+    its subdomains are included (`domain` holds the host, `site_domain` the registered domain).
+
+    **Read one verdict.** After a protected action, search by `request_id` with `limit=1`. The row
+    appears about 1-3 seconds after the browser call and can be refined for up to about 10 seconds
+    as follow-up network checks finish, so start the identification when the user begins the
+    action (for example when the signup form opens), not when the form is submitted. An empty
+    `data` array means "not scored yet", never "clean". Poll with backoff (first try at once, then
+    wait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as
+    "wait longer". The official server SDKs do this for you.
+
+    **Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how
+    many accounts share a device, how many devices one account uses, or what else came from one
+    IP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values
+    that do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.
+
+    **Validate before sending.** The server does not validate the path: an unknown `search_type`
+    returns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4
+    value returns `500`, and a `limit` outside 1-100 silently becomes 20.
+
+    **Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`
+    only, so paging while new identifications arrive can repeat or skip rows: deduplicate on
+    `request_id`.
+
+    **Latest state.** A row can be refined after the webhook was sent, for example when late
+    network data re-scores it; its `ver` then increases. The History API always returns the latest
+    version, which makes it the guaranteed read path.
+
+    Reads are free: they do not use your included identifications.
+  security:
+    - historyApiKey: []
+  parameters:
+    - $ref: ../components/parameters/HistorySearchType.yaml
+    - $ref: ../components/parameters/HistoryValue.yaml
+    - $ref: ../components/parameters/HistoryLimit.yaml
+    - $ref: ../components/parameters/HistoryOffset.yaml
+  responses:
+    '200':
+      description: Matching identifications, newest first. `data` is empty when nothing matched.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/HistoryPage.yaml
+          examples:
+            page:
+              $ref: ../components/examples/HistoryPage.yaml
+            empty:
+              $ref: ../components/examples/HistoryPageEmpty.yaml
+    '401':
+      $ref: ../components/responses/HistoryUnauthorized.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '429':
+      $ref: ../components/responses/HistoryTooManyRequests.yaml
+    '500':
+      $ref: ../components/responses/HistoryServerError.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml
+  x-codeSamples:
+    - lang: Shell
+      label: curl
+      source: |
+        curl "https://account.shieldlabs.ai/api/v1/history/request_id/02f1d973-84db-4156-a7f7-e799e6bf389b?limit=1" \
+          -H "Authorization: Bearer $SHIELDLABS_API_KEY"

@@ -1,0 +1,8 @@
+type: string
+description: >-
+  English country name from IP intelligence, for example `Germany` or `United States` (not an
+  ISO code). Empty string when the country is unknown.
+examples:
+  - Netherlands
+  - United States
+  - ''

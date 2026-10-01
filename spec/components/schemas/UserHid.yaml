@@ -1,0 +1,18 @@
+type:
+  - string
+  - 'null'
+description: |-
+  User HID: your hashed or pseudonymous account identifier, exactly as it was passed to the
+  ShieldLabs agent. Pass a hashed value, never a raw email address or database ID.
+
+  Values that do not identify a user:
+  - `anonymous`: an anonymous check;
+  - `fail`: the agent sent no value;
+  - `-1` and `unknown`: rows created by ShieldLabs itself, such as rate-limit marker rows.
+
+  `null` only when the stored value is an empty string. Leave `null` and the values above out
+  when you count the accounts of one device, visitor or IP address.
+examples:
+  - 9f86d081884c7d659a2feaa0c55ad015
+  - anonymous
+  - null

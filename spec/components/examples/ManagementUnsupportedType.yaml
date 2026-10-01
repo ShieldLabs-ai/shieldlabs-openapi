@@ -1,0 +1,3 @@
+summary: Unsupported identifier type
+description: A bare JSON string naming the type that was sent.
+value: "auto is not supported"

@@ -1,0 +1,8 @@
+type: http
+scheme: bearer
+bearerFormat: sec_xxxxxxxx-xxxxxxxx-xxxxxxxx
+description: >-
+  Private API Key of one domain, sent as `Authorization: Bearer <key>`. Keys look like
+  `sec_` followed by three groups of eight lowercase letters or digits separated by `-`. Create
+  and rotate it in the analytics dashboard. It reads the History API of that domain only; keep it
+  on your server.

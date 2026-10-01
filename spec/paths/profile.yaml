@@ -1,0 +1,54 @@
+servers:
+  - url: https://api.shieldlabs.ai
+    description: Management API
+get:
+  operationId: getDomainProfile
+  tags:
+    - Management API
+  summary: Get the domain profile
+  description: |-
+    Returns the registered domain, the remaining included identifications of the account and the
+    masked keys.
+
+    **Credentials.** Send the Secret Key as a Bearer token and the registered domain in
+    `X-Shield-Domain`. The domain is matched exactly: send it lowercase, without scheme, path,
+    trailing slash or a leading `www.`.
+
+    **Rate limit.** 15 requests per minute per client IP. The request that goes over the limit
+    starts a 10-minute block during which every request to the Management API gets `429`. Call
+    this endpoint sparingly, cache the profile, and never retry a `429`.
+
+    `Weight` can be negative when the account is over its included volume. The call is free.
+  security:
+    - managementSecretKey: []
+  parameters:
+    - $ref: ../components/parameters/ShieldDomain.yaml
+  responses:
+    '200':
+      description: The domain profile.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/DomainProfile.yaml
+          examples:
+            profile:
+              $ref: ../components/examples/DomainProfile.yaml
+    '401':
+      $ref: ../components/responses/ManagementUnauthorized.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '429':
+      $ref: ../components/responses/ManagementTooManyRequests.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '503':
+      $ref: ../components/responses/ManagementServerBusy.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml
+  x-codeSamples:
+    - lang: Shell
+      label: curl
+      source: |
+        curl "https://api.shieldlabs.ai/v1/profile" \
+          -H "X-Shield-Domain: $SHIELDLABS_DOMAIN" \
+          -H "Authorization: Bearer $SHIELDLABS_SECRET_KEY"

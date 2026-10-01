@@ -1,0 +1,46 @@
+servers:
+  - url: https://account.shieldlabs.ai
+    description: History API host
+  - url: https://api.shieldlabs.ai
+    description: Management API host
+get:
+  operationId: getHealth
+  tags:
+    - Health
+  summary: Check service health
+  description: |-
+    Liveness check. Returns `{"status":"ok"}` while the service answers. Available on both API
+    hosts: `https://account.shieldlabs.ai/health` for the History API and
+    `https://api.shieldlabs.ai/health` for the Management API. No authentication, not rate
+    limited, not billed.
+  security: []
+  responses:
+    '200':
+      description: The service is up.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/HealthStatus.yaml
+          examples:
+            ok:
+              $ref: ../components/examples/HealthOk.yaml
+    '404':
+      description: >-
+        No route matches the path. The health check lives at the host root, so `/api/health`
+        gets this answer. Plain text body.
+      content:
+        text/plain:
+          schema:
+            $ref: ../components/schemas/PlainText.yaml
+          examples:
+            notFound:
+              $ref: ../components/examples/NotFoundText.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml
+  x-codeSamples:
+    - lang: Shell
+      label: curl
+      source: |
+        curl "https://account.shieldlabs.ai/health"

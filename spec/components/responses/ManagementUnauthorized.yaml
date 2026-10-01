@@ -1,0 +1,3 @@
+description: >-
+  Empty body, no `Content-Type`. `X-Shield-Domain` or `Authorization` is missing or malformed,
+  the domain is unknown or disabled, or the Secret Key is wrong. Do not retry.

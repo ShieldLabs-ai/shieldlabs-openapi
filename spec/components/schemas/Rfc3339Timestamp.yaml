@@ -1,0 +1,9 @@
+type: string
+format: date-time
+pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?Z$'
+description: >-
+  RFC 3339 timestamp in UTC with up to 9 fractional digits (trailing zeros trimmed), for example
+  `2026-09-30T12:34:57.482913041Z`. Parse it with a parser that accepts nanoseconds.
+examples:
+  - '2026-09-30T12:34:57.482913041Z'
+  - '2026-09-30T12:34:56Z'

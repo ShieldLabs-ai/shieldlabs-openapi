@@ -1,0 +1,9 @@
+type: string
+format: uuid
+description: >-
+  Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The
+  nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were
+  collected (for example on rate-limit marker rows): never group identifications by it.
+examples:
+  - ac7c303d-971b-41d1-8e25-cd5b46b46aed
+  - 00000000-0000-0000-0000-000000000000

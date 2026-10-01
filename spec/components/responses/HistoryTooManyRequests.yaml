@@ -1,0 +1,10 @@
+description: >-
+  More than about 15 requests in the current second for this domain (all callers of the domain
+  share the limit). There is no ban: retry after about a second, with backoff.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorBody.yaml
+    examples:
+      tooManyRequests:
+        $ref: ../examples/HistoryTooManyRequests.yaml

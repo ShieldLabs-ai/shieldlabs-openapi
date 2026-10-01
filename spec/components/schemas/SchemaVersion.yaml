@@ -1,0 +1,7 @@
+type: string
+minLength: 1
+description: >-
+  Version of the webhook payload contract. Every event sent today carries `2026-06-01`. Accept
+  other values, so that a future version does not break your handler.
+examples:
+  - '2026-06-01'

@@ -1,0 +1,7 @@
+type: string
+pattern: '^(\*+.{4}|.{0,4})$'
+description: >-
+  A key with every character except the last four replaced by `*`, keeping the original length.
+  Keys of four characters or fewer are returned as they are.
+examples:
+  - '****************************a3f8'
