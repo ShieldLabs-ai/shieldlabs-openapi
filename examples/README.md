@@ -5,7 +5,7 @@ Small Node.js scripts that use the published files. Run them from the repository
 
 | Example | What it shows |
 |---|---|
-| [`node-list-operations`](./node-list-operations/index.mjs) | Loads `@shieldlabs/openapi` and prints every operation with the server it must be sent to |
+| [`node-list-operations`](./node-list-operations/index.mjs) | Loads `@shieldlabs-ai/openapi` and prints every operation with the server it must be sent to |
 | [`node-validate-webhook`](./node-validate-webhook/index.mjs) | Verifies `X-Shield-Signature` over the raw body, then validates the event with `dist/schemas/webhook-event.schema.json` |
 
 ```sh

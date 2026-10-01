@@ -207,8 +207,8 @@ describe('examples', () => {
 });
 
 describe('package', () => {
-  it('is @shieldlabs/openapi 1.0.0 and ships dist/ and spec/', () => {
-    assert.equal(pkg.name, '@shieldlabs/openapi');
+  it('is @shieldlabs-ai/openapi 1.0.0 and ships dist/ and spec/', () => {
+    assert.equal(pkg.name, '@shieldlabs-ai/openapi');
     assert.equal(pkg.version, '1.0.0');
     assert.equal(pkg.license, 'MIT');
     assert.ok(pkg.files.includes('dist/'));

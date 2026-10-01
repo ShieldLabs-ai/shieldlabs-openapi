@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/webhook-event.schema.json",
+  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs-ai/openapi@1/dist/schemas/webhook-event.schema.json",
   "title": "ShieldLabs webhook event",
   "type": "object",
   "description": "Any body ShieldLabs posts to a webhook endpoint. `identification.scored` and `webhook.ping` events must match their own schema; events with another `event_type` only need the envelope, so a new event type never breaks validation.",

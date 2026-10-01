@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import schema from '@shieldlabs/openapi/schemas/webhook-event.schema.json' with { type: 'json' };
+import schema from '@shieldlabs-ai/openapi/schemas/webhook-event.schema.json' with { type: 'json' };
 
 const SAMPLE = {
   body: fileURLToPath(new URL('../../test/fixtures/webhook-identification-scored.raw.txt', import.meta.url)),
