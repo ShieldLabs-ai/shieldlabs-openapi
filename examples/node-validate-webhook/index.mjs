@@ -15,8 +15,8 @@ import addFormats from 'ajv-formats';
 import schema from '@shieldlabs-ai/openapi/schemas/webhook-event.schema.json' with { type: 'json' };
 
 const SAMPLE = {
-  body: fileURLToPath(new URL('../../test/fixtures/webhook-identification-scored.raw.txt', import.meta.url)),
-  header: 'sha256=c4d44b7873625bdfda98cdb7a02d460f8492ca6a68fad8d147a5f30ad16f92a9',
+  body: fileURLToPath(new URL('../../contract/webhook-identification-scored.raw.txt', import.meta.url)),
+  header: 'sha256=397ff9bd26888e9e86addc2d920a8c5b2037251a3a1181f3b4810ca6c5f78062',
   secret: 'whsec_00112233445566778899aabbccddeeff',
 };
 

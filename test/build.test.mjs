@@ -47,11 +47,11 @@ describe('dist/', () => {
 });
 
 describe('document', () => {
-  it('describes the ShieldLabs API 1.0.0 in OpenAPI 3.1', () => {
+  it('describes the ShieldLabs API 1.0.1 in OpenAPI 3.1', () => {
     const { doc } = freshBuild();
     assert.equal(doc.openapi, '3.1.0');
     assert.equal(doc.info.title, 'ShieldLabs API');
-    assert.equal(doc.info.version, '1.0.0');
+    assert.equal(doc.info.version, '1.0.1');
     assert.equal(doc.info.contact.email, 'contact@shieldlabs.ai');
     assert.equal(doc.info.license.identifier, 'MIT');
     assert.equal(doc.externalDocs.url, 'https://docs.shieldlabs.ai');
@@ -298,7 +298,7 @@ describe('schemas', () => {
     assert.match(value.description, /`A-Z a-z 0-9 - \. _ ~ \$ & \+ , : ; = @` unescaped/);
     assert.match(value.description, /uppercase `%XX`/);
     const pattern = new RegExp(value.schema.pattern);
-    for (const ok of ['anonymous', '02f1d973-84db-4156-a7f7-e799e6bf389b', '203.0.113.24', 'a@b', 'x y', '...', '.a', 'a.b', '-1']) {
+    for (const ok of ['anonymous', 'a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d', '203.0.113.24', 'a@b', 'x y', '...', '.a', 'a.b', '-1']) {
       assert.ok(pattern.test(ok), ok);
     }
     for (const bad of ['.', '..', 'a/b', '/', '']) assert.ok(!pattern.test(bad), JSON.stringify(bad));

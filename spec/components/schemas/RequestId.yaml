@@ -5,4 +5,4 @@ description: >-
   it is the join key between the browser, the webhook and the History API. The nil UUID appears
   only on rate-limit marker rows that arrived with a malformed request ID.
 examples:
-  - 02f1d973-84db-4156-a7f7-e799e6bf389b
+  - a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
