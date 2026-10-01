@@ -47,7 +47,7 @@ jobs:
             CHANGELOG.md > release/release-notes.md
           test -s release/release-notes.md
           npm pack --pack-destination release
-          test -f "release/shieldlabs-openapi-${version}.tgz"
+          test -f "release/shieldlabs-ai-openapi-${version}.tgz"
           cp dist/shieldlabs-api.yaml dist/shieldlabs-api.json dist/schemas/*.schema.json release/
           (cd dist && zip -qr ../release/shieldlabs-openapi-dist.zip .)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -58,7 +58,7 @@ jobs:
           overwrite: true
 
   npm:
-    name: Publish @shieldlabs/openapi to npm
+    name: Publish @shieldlabs-ai/openapi to npm
     needs: build
     runs-on: ubuntu-latest
     environment: npm
@@ -79,10 +79,10 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          if npm view "@shieldlabs/openapi@${version}" version >/dev/null 2>&1; then
-            echo "@shieldlabs/openapi@${version} is already on npm; nothing to publish."
+          if npm view "@shieldlabs-ai/openapi@${version}" version >/dev/null 2>&1; then
+            echo "@shieldlabs-ai/openapi@${version} is already on npm; nothing to publish."
           else
-            npm publish "release/shieldlabs-openapi-${version}.tgz" --provenance --access public
+            npm publish "release/shieldlabs-ai-openapi-${version}.tgz" --provenance --access public
           fi
 
   github-release:

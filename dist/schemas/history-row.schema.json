@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/history-row.schema.json",
+  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs-ai/openapi@1/dist/schemas/history-row.schema.json",
   "title": "ShieldLabs History API row",
   "type": "object",
   "additionalProperties": true,

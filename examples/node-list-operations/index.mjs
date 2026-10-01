@@ -3,7 +3,7 @@
 // Useful when a client generator ignores per-operation servers and you configure base URLs by hand.
 //
 //   node examples/node-list-operations/index.mjs
-import spec from '@shieldlabs/openapi' with { type: 'json' };
+import spec from '@shieldlabs-ai/openapi' with { type: 'json' };
 
 const METHODS = ['get', 'put', 'post', 'delete', 'patch', 'head', 'options', 'trace'];
 

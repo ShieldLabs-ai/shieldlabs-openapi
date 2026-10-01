@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/identification-scored-event.schema.json",
+  "$id": "https://cdn.jsdelivr.net/npm/@shieldlabs-ai/openapi@1/dist/schemas/identification-scored-event.schema.json",
   "title": "ShieldLabs identification.scored webhook event",
   "type": "object",
   "description": "Body of an `identification.scored` delivery. The signature is not part of the body: it arrives in the `X-Shield-Signature` header.",

@@ -5,7 +5,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
-export const SCHEMA_ID_BASE = 'https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/schemas/';
+export const SCHEMA_ID_BASE = 'https://cdn.jsdelivr.net/npm/@shieldlabs-ai/openapi@1/dist/schemas/';
 
 /** JSON Schema exports written to dist/schemas/ (source paths are relative to the repo root). */
 export const SCHEMA_EXPORTS = [

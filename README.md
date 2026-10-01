@@ -4,7 +4,7 @@ The OpenAPI 3.1 description and JSON Schemas of the ShieldLabs API: History API,
 
 [![CI](https://github.com/ShieldLabs-ai/shieldlabs-openapi/actions/workflows/ci.yml/badge.svg)](https://github.com/ShieldLabs-ai/shieldlabs-openapi/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![npm](https://img.shields.io/npm/v/@shieldlabs/openapi.svg)](https://www.npmjs.com/package/@shieldlabs/openapi)
+[![npm](https://img.shields.io/npm/v/@shieldlabs-ai/openapi.svg)](https://www.npmjs.com/package/@shieldlabs-ai/openapi)
 
 ## How it fits
 
@@ -17,10 +17,10 @@ This repository describes steps 2 and 3 exactly as they happen on the wire: ever
 ## Install
 
 ```sh
-npm install @shieldlabs/openapi
+npm install @shieldlabs-ai/openapi
 ```
 
-Use `npm install --save-dev @shieldlabs/openapi` instead when you only generate code or validate payloads in tests. A webhook handler that validates events with the JSON Schemas at runtime needs the package as a regular dependency.
+Use `npm install --save-dev @shieldlabs-ai/openapi` instead when you only generate code or validate payloads in tests. A webhook handler that validates events with the JSON Schemas at runtime needs the package as a regular dependency.
 
 Or download the files you need:
 
@@ -37,7 +37,7 @@ Or download the files you need:
 
 Stable download URLs:
 
-- `https://cdn.jsdelivr.net/npm/@shieldlabs/openapi@1/dist/shieldlabs-api.yaml` (any file of the package, latest 1.x)
+- `https://cdn.jsdelivr.net/npm/@shieldlabs-ai/openapi@1/dist/shieldlabs-api.yaml` (any file of the package, latest 1.x)
 - `https://raw.githubusercontent.com/ShieldLabs-ai/shieldlabs-openapi/main/dist/shieldlabs-api.yaml`
 - every [GitHub release](https://github.com/ShieldLabs-ai/shieldlabs-openapi/releases) attaches the `dist/` files
 
@@ -46,8 +46,8 @@ Stable download URLs:
 Load the document in Node.js 20.10 or later: save this as `index.mjs` next to your `node_modules` and run `node index.mjs`.
 
 ```js
-import spec from '@shieldlabs/openapi' with { type: 'json' };
-// CommonJS: const spec = require('@shieldlabs/openapi');
+import spec from '@shieldlabs-ai/openapi' with { type: 'json' };
+// CommonJS: const spec = require('@shieldlabs-ai/openapi');
 
 console.log(spec.info.version); // "1.0.0"
 console.log(Object.keys(spec.paths)); // [ '/api/v1/history/{search_type}/{value}', ... ]
@@ -71,14 +71,14 @@ python3 -m http.server 8080
 
 ### Use the official SDKs first
 
-The server SDKs wrap this contract with typed models, History polling with backoff, webhook verification and risk helpers: [`@shieldlabs/node`](https://github.com/ShieldLabs-ai/shieldlabs-node), [`shieldlabs` for Python](https://github.com/ShieldLabs-ai/shieldlabs-python), [`shieldlabs-go`](https://github.com/ShieldLabs-ai/shieldlabs-go), [`shieldlabs/shieldlabs-php`](https://github.com/ShieldLabs-ai/shieldlabs-php), [`ai.shieldlabs:shieldlabs-java`](https://github.com/ShieldLabs-ai/shieldlabs-java) and [`ShieldLabs` for .NET](https://github.com/ShieldLabs-ai/shieldlabs-dotnet). Use this repository directly when you generate a client for another language, validate payloads in your own tests, or render the reference.
+The server SDKs wrap this contract with typed models, History polling with backoff, webhook verification and risk helpers: [`@shieldlabs-ai/node`](https://github.com/ShieldLabs-ai/shieldlabs-node), [`shieldlabs` for Python](https://github.com/ShieldLabs-ai/shieldlabs-python), [`shieldlabs-go`](https://github.com/ShieldLabs-ai/shieldlabs-go), [`shieldlabs/shieldlabs-php`](https://github.com/ShieldLabs-ai/shieldlabs-php), [`ai.shieldlabs:shieldlabs-java`](https://github.com/ShieldLabs-ai/shieldlabs-java) and [`ShieldLabs` for .NET](https://github.com/ShieldLabs-ai/shieldlabs-dotnet). Use this repository directly when you generate a client for another language, validate payloads in your own tests, or render the reference.
 
 ### Generate a client
 
 Any generator that reads OpenAPI 3.1 can use `dist/shieldlabs-api.yaml`. For example, TypeScript types for every path, operation and schema:
 
 ```sh
-npx openapi-typescript@7 node_modules/@shieldlabs/openapi/dist/shieldlabs-api.yaml -o shieldlabs-api.d.ts
+npx openapi-typescript@7 node_modules/@shieldlabs-ai/openapi/dist/shieldlabs-api.yaml -o shieldlabs-api.d.ts
 ```
 
 Keep these points in mind with any generator:
@@ -94,7 +94,7 @@ Keep these points in mind with any generator:
 Install the package and the validator as regular dependencies:
 
 ```sh
-npm install @shieldlabs/openapi ajv ajv-formats
+npm install @shieldlabs-ai/openapi ajv ajv-formats
 ```
 
 Verify the signature over the raw body first, then parse, then validate (an ES module, for example `shieldlabs-webhook.mjs`):
@@ -103,7 +103,7 @@ Verify the signature over the raw body first, then parse, then validate (an ES m
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import schema from '@shieldlabs/openapi/schemas/webhook-event.schema.json' with { type: 'json' };
+import schema from '@shieldlabs-ai/openapi/schemas/webhook-event.schema.json' with { type: 'json' };
 
 const ajv = new Ajv2020({ allErrors: true, allowUnionTypes: true });
 addFormats(ajv);
@@ -172,10 +172,10 @@ Header: `X-Shield-Signature: sha256=<lowercase hex HMAC-SHA256(key = signing sec
 
 | Import | File |
 |---|---|
-| `@shieldlabs/openapi` | `dist/shieldlabs-api.json` |
-| `@shieldlabs/openapi/shieldlabs-api.json`, `@shieldlabs/openapi/shieldlabs-api.yaml` | the bundle |
-| `@shieldlabs/openapi/schemas/<name>.schema.json` | `dist/schemas/<name>.schema.json` |
-| `@shieldlabs/openapi/spec/...` | the split sources |
+| `@shieldlabs-ai/openapi` | `dist/shieldlabs-api.json` |
+| `@shieldlabs-ai/openapi/shieldlabs-api.json`, `@shieldlabs-ai/openapi/shieldlabs-api.yaml` | the bundle |
+| `@shieldlabs-ai/openapi/schemas/<name>.schema.json` | `dist/schemas/<name>.schema.json` |
+| `@shieldlabs-ai/openapi/spec/...` | the split sources |
 
 ### Risk Score and risk bands
 

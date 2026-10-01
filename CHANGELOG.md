@@ -6,7 +6,7 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [1.0.0] - 2026-09-30
 
-First release as the npm package `@shieldlabs/openapi`. It replaces the previous public file
+First release as the npm package `@shieldlabs-ai/openapi`. It replaces the previous public file
 (`openapi.yaml`, spec version 1.2) with split sources under `spec/`, a bundle in `dist/` and JSON
 Schema exports. Every point below is a change against that file.
 
