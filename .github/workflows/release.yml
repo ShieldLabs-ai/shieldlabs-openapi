@@ -35,8 +35,6 @@ jobs:
           fi
       - run: npm run lint
       - run: npm test
-      - name: contract/manifest.json matches contract/ and the spec version
-        run: python3 scripts/contract_manifest.py
       - name: dist/ matches spec/
         run: |
           npm run bundle
@@ -111,43 +109,3 @@ jobs:
             gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
               --notes-file release-notes.md "${files[@]}"
           fi
-
-  notify-sdks:
-    name: Tell the SDK repositories about the new contract
-    needs: github-release
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      # Optional: without the CONTRACT_DISPATCH_TOKEN secret the SDK repositories still pick the
-      # tag up on their daily contract-sync run. The token needs Contents read and write on them.
-      - name: Send a contract-release dispatch to each SDK repository
-        env:
-          GH_TOKEN: ${{ secrets.CONTRACT_DISPATCH_TOKEN }}
-          SDK_REPOS: >-
-            ShieldLabs-ai/shieldlabs-node
-            ShieldLabs-ai/shieldlabs-python
-            ShieldLabs-ai/shieldlabs-go
-            ShieldLabs-ai/shieldlabs-php
-            ShieldLabs-ai/shieldlabs-java
-            ShieldLabs-ai/shieldlabs-dotnet
-            ShieldLabs-ai/shieldlabs-mcp
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "CONTRACT_DISPATCH_TOKEN is not set; the SDK repositories pick up ${GITHUB_REF_NAME} on their daily sync."
-            exit 0
-          fi
-          if ! [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "${GITHUB_REF_NAME} is not a vX.Y.Z tag; no dispatch."
-            exit 0
-          fi
-          failed=0
-          for repo in $SDK_REPOS; do
-            if gh api --method POST "repos/${repo}/dispatches" \
-              -f event_type=contract-release -f "client_payload[ref]=${GITHUB_REF_NAME}" >/dev/null; then
-              echo "Sent contract-release ${GITHUB_REF_NAME} to ${repo}"
-            else
-              echo "::error::Could not send contract-release to ${repo}"
-              failed=1
-            fi
-          done
-          exit "$failed"

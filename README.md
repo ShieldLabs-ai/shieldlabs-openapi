@@ -217,10 +217,6 @@ Runnable scripts that use the published files live in [`examples/`](./examples/R
 every operation with its server, and verifying plus validating a webhook delivery. See
 [CONTRIBUTING.md](./CONTRIBUTING.md) for the layout of `spec/` and how to add examples.
 
-[`contract/`](./contract/README.md) holds the test fixtures every official server SDK passes,
-with a manifest of their SHA-256. Each release tag publishes them; the SDK repositories sync them
-with `scripts/sync_contract.py` and test against the same bytes.
-
 Documentation: https://docs.shieldlabs.ai · Analytics dashboard (Start free): https://app.shieldlabs.ai · Support: contact@shieldlabs.ai
 
 ## License

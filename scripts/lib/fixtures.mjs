@@ -1,15 +1,14 @@
-// Contract catalogue: the shared SDK test fixtures published in contract/, and the OpenAPI
-// examples generated from them. Used by scripts/sync-fixtures.mjs and by the tests, so the
-// examples in spec/components/examples/ can never drift from contract/.
+// Test fixtures of this repository and the OpenAPI examples generated from them.
+// The spec in spec/ is the API. These files are not a package other repositories sync.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const FIXTURES_DIR = path.join(ROOT, 'contract');
+export const FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures');
 export const EXAMPLES_DIR = path.join(ROOT, 'spec', 'components', 'examples');
 
-/** Fixture files of the contract: every file in contract/ except README.md and manifest.json. */
+/** Fixture files under test/fixtures/. */
 export const FIXTURE_FILES = [
   'error-responses.json',
   'history-empty.json',
@@ -162,7 +161,7 @@ export const FIXTURE_EXAMPLES = [
   },
 ];
 
-/** Reads a contract fixture (JSON files are parsed, text files returned as strings). */
+/** Reads a test fixture (JSON files are parsed, text files returned as strings). */
 export function readFixture(file, dir = FIXTURES_DIR) {
   const text = readFileSync(path.join(dir, file), 'utf8');
   return file.endsWith('.json') ? JSON.parse(text) : text;

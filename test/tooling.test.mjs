@@ -191,7 +191,7 @@ describe('examples', () => {
   });
 
   it('node-validate-webhook rejects a wrong secret', async () => {
-    const body = path.join(ROOT, 'contract', 'webhook-ping.raw.txt');
+    const body = path.join(ROOT, 'test', 'fixtures', 'webhook-ping.raw.txt');
     const header = 'sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8';
     const good = await runExample('node-validate-webhook', [body, header], {
       SHIELDLABS_WEBHOOK_SECRET: 'whsec_old_secret_value_0000000000, whsec_00112233445566778899aabbccddeeff',
