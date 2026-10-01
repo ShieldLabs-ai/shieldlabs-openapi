@@ -1,10 +1,10 @@
-// The contract fixtures (contract/) match the spec, the JSON Schema exports and contract/manifest.json.
+// The fixtures in test/fixtures/ match the spec and the JSON Schema exports.
 import assert from 'node:assert/strict';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import { FIXTURE_FILES, FIXTURES_DIR, readFixture } from '../scripts/lib/fixtures.mjs';
+import { FIXTURES_DIR, readFixture } from '../scripts/lib/fixtures.mjs';
 import { createAjv, describeErrors } from '../scripts/lib/validator.mjs';
 import {
   DIAGNOSTIC_HISTORY_FIELDS,
@@ -311,27 +311,5 @@ describe('JSON Schema exports', () => {
       created_at: '2026-09-30T12:34:56Z',
     };
     assert.equal(any(scoredWithoutData), false);
-  });
-});
-
-describe('contract manifest', () => {
-  const manifest = JSON.parse(readFileSync(path.join(FIXTURES_DIR, 'manifest.json'), 'utf8'));
-  const fix = 'run `python3 scripts/contract_manifest.py --write`';
-
-  it('lists every contract file with its SHA-256', () => {
-    const onDisk = readdirSync(FIXTURES_DIR)
-      .filter((file) => file !== 'README.md' && file !== 'manifest.json')
-      .sort();
-    assert.deepEqual(onDisk, [...FIXTURE_FILES].sort(), 'contract/ and FIXTURE_FILES differ');
-    assert.deepEqual(Object.keys(manifest.files).sort(), onDisk, `manifest file list is stale: ${fix}`);
-    for (const file of onDisk) {
-      const digest = createHash('sha256').update(readFileSync(path.join(FIXTURES_DIR, file))).digest('hex');
-      assert.equal(manifest.files[file], digest, `${file} changed: ${fix}`);
-    }
-  });
-
-  it('carries the spec version as contract_version', () => {
-    const { doc } = freshBuild();
-    assert.equal(manifest.contract_version, doc.info.version, fix);
   });
 });

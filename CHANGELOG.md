@@ -6,30 +6,16 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [1.0.1] - 2026-10-01
 
-The shared SDK test fixtures become the published contract of the API. No operation, schema or
-webhook changes.
-
-### Added
-
-- `contract/`: the test fixtures every official server SDK passes, now maintained here, with
-  `contract/manifest.json` (`contract_version` = `info.version`, and the SHA-256 of each file) and
-  a README describing every file. `signal-slug-cases.json` and
-  `management-profile-expected.json` join the set.
-- `scripts/sync_contract.py` (Python 3.9+, standard library only): copies the contract files of a
-  release tag into an SDK repository, verifies each one against the manifest and records the
-  release in `.shieldlabs-contract.lock`; `--check` compares committed files with the lock
-  offline. `scripts/contract_manifest.py` checks or rewrites the manifest.
-- CI checks the manifest and runs the unit tests of both scripts on Python 3.9 and 3.13. The
-  release workflow tells the SDK repositories about a new tag when `CONTRACT_DISPATCH_TOKEN` is
-  set.
+No operation, schema or webhook changes. The description of the API stays in `spec/` and `dist/`.
 
 ### Changed
 
 - Examples and fixtures use synthetic identifiers: the request, session, cookie, device and
   visitor IDs of the dangerous example are new UUIDs, and the `X-Shield-Signature` example of
   the `identification.scored` body changed with them.
-- `test/fixtures/` moved to `contract/`; `npm run sync:fixtures` now only regenerates the
-  examples from it.
+- Test fixtures live in `test/fixtures/`. `npm run sync:fixtures` regenerates the examples in
+  `spec/components/examples/` from those files. There is no separate pack for other repositories
+  to copy.
 
 ## [1.0.0] - 2026-09-30
 
