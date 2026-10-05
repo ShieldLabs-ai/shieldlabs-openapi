@@ -1,0 +1,22 @@
+type: object
+required:
+  - outcome
+  - rules_version
+properties:
+  outcome:
+    type: string
+  record_id:
+    type: string
+  hardware_id:
+    type: string
+    description: FP21 hardware identity, distinct from device_id.
+  rules_version:
+    type: string
+  sharing:
+    type: object
+  takeover:
+    type: object
+  travel:
+    type: object
+description: FP21 for tracked users. Legacy sharing/takeover/travel mirrors are
+  retained; prefer data.hre. Absent on anonymous checks.

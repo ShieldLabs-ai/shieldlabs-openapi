@@ -20,6 +20,7 @@ post:
   security: []
   parameters:
     - $ref: ../components/parameters/ShieldSignature.yaml
+    - $ref: ../components/parameters/ShieldEventId.yaml
   requestBody:
     required: true
     description: The ping as compact JSON with sorted keys.
@@ -34,4 +35,5 @@ post:
     2XX:
       description: Endpoint verified. The response body is ignored.
     4XX:
-      description: Verification failed. Any status other than 2xx, and a timeout after 5 seconds, fails it.
+      description: Verification failed. Any status other than 2xx, and a timeout after
+        5 seconds, fails it.

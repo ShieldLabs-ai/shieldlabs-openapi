@@ -1,7 +1,7 @@
 type: object
-description: >-
-  Body of a `webhook.ping` delivery, sent when you verify an endpoint. It has no `data`. The keys
-  arrive sorted alphabetically and `created_at` has second precision.
+description: Body of a `webhook.ping` delivery, sent when you verify an
+  endpoint. It has no `data`. The keys arrive sorted alphabetically and
+  `created_at` has second precision.
 required:
   - event_type
   - schema_version
@@ -16,3 +16,6 @@ properties:
   created_at:
     $ref: ./Rfc3339Timestamp.yaml
     description: When the ping was sent, with second precision.
+  event_id:
+    type: string
+    minLength: 1

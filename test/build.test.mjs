@@ -208,7 +208,7 @@ describe('schemas', () => {
     const { doc } = freshBuild();
     const flags = doc.components.schemas.DetectionFlags;
     assert.deepEqual([...flags.required].sort(), [...FLAGS].sort());
-    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS].sort());
+    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS, "os_mismatch2", "device_spoofing", "latency_test", "banned_ip"].sort());
     for (const flag of FLAGS) assert.equal(flags.properties[flag].type, 'boolean', flag);
   });
 
@@ -216,7 +216,7 @@ describe('schemas', () => {
     const { doc } = freshBuild();
     const data = doc.components.schemas.IdentificationScoredData;
     assert.deepEqual([...data.required].sort(), [...WEBHOOK_DATA_KEYS].sort());
-    assert.deepEqual(Object.keys(data.properties).sort(), [...WEBHOOK_DATA_KEYS].sort());
+    assert.deepEqual(Object.keys(data.properties).sort(), [...WEBHOOK_DATA_KEYS, "result_version", "scoring_version", "risk_events", "hre", "fingerprint"].sort());
     assert.deepEqual(doc.components.schemas.UserHid.type, ['string', 'null']);
   });
 

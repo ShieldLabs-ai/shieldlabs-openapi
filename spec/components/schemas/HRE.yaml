@@ -1,0 +1,17 @@
+type: object
+required:
+  - account_sharing
+  - account_takeover
+  - impossible_travel
+properties:
+  rules_version:
+    type: string
+  account_sharing:
+    $ref: ./HREResult.yaml
+  account_takeover:
+    $ref: ./HREResult.yaml
+  impossible_travel:
+    $ref: ./HREResult.yaml
+description: Three completed on-demand handler results. Technical errors block
+  emission; no_history/skipped are explicit not_evaluated results. Anonymous
+  checks are not_applicable. Multiaccount is separate.
