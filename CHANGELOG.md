@@ -8,6 +8,11 @@ All notable changes to this project are documented in this file. The format foll
 
 No operation, schema or webhook changes. The description of the API stays in `spec/` and `dist/`.
 
+### Fixed
+
+- The release workflow publishes the downloaded local tarball instead of treating its path
+  as a GitHub repository address. A missing archive stops publication before npm runs.
+
 ### Changed
 
 - Examples and fixtures use synthetic identifiers: the request, session, cookie, device and

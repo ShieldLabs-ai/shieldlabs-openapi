@@ -82,7 +82,9 @@ jobs:
           if npm view "@shieldlabs-ai/openapi@${version}" version >/dev/null 2>&1; then
             echo "@shieldlabs-ai/openapi@${version} is already on npm; nothing to publish."
           else
-            npm publish "release/shieldlabs-ai-openapi-${version}.tgz" --provenance --access public
+            archive="./release/shieldlabs-ai-openapi-${version}.tgz"
+            test -f "$archive"
+            npm publish "$archive" --provenance --access public
           fi
 
   github-release:
