@@ -129,8 +129,8 @@ export function parseEvent(rawBody) {
 ```
 
 - The key is the whole signing secret, `whsec_` prefix included, as UTF-8 bytes. The message is the raw body: re-serialized JSON does not match (for example, `&` arrives as `\u0026`).
-- Deliveries are made once per identification and endpoint, with a 1-second timeout and no retries today; a later release adds retries that resend identical bytes. Answer 2xx fast, make the handler idempotent on `data.request_id`, and use the History API for guaranteed reads.
-- Log validation failures rather than rejecting the delivery. The analytics dashboard's Test button sends a sample whose `detection_flags` lack `browser_automation` and `search_bot`, so it fails the strict schema: treat missing flags as `false`.
+- Delivery attempts have a 1-second timeout. Network errors, timeout, 429 and 5xx retry with backoff within a bounded window (8 failed sends or 15-minute retry age); worker/Redis waits can extend wall time. Retries preserve signed bytes and `event_id`, and duplicate deliveries remain possible. Verify the raw-body signature, durably store by signed `event_id` (legacy fallback: `data.request_id`), then acknowledge 2xx and process asynchronously. Redirects are not followed.
+- Current Portal Test sends a complete `2026-10-06` Core-generated sample with fp21/HRE and a distinct event ID per click. Vendored historical Test fixtures retain their two missing flags as explicit legacy compatibility cases.
 - A History row can be refined after its webhook was sent; the webhook is not sent again. Read the History API when you need the latest state.
 
 ### Read identifications from the History API
@@ -200,7 +200,7 @@ Branch on the status first, then try to parse the body as JSON whatever its cont
 ## Compatibility
 
 - OpenAPI 3.1.0; the JSON Schemas use JSON Schema 2020-12 and compile with a strict validator.
-- `info.version` follows the package version (semantic versioning). Webhook payloads carry `schema_version` (`2026-06-01` today).
+- `info.version` follows the package version (semantic versioning). Webhook payloads carry `schema_version` (`2026-10-06` current, `2026-06-01` legacy).
 - Parse tolerantly: ignore unknown fields, keep unknown values of string fields and accept other `schema_version` values. Response fields with a known set of values are open strings in the spec and in the JSON Schemas, so a value added later never fails validation.
 - Tooling requires Node.js 20.19 or later; CI runs on Node.js 20, 22 and 24.
 

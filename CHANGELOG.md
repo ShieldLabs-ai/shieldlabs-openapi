@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Align the API introduction and README with bounded retries, signed event-ID deduplication and complete current Portal Test payloads.
+
 ## [1.0.1] - 2026-10-01
 
 No operation, schema or webhook changes. The description of the API stays in `spec/` and `dist/`.
