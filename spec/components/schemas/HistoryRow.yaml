@@ -60,6 +60,8 @@ required:
   - is_incognito
   - is_search_bot
 properties:
+  client_identity:
+    $ref: ./ClientIdentity.yaml
   request_id:
     $ref: ./RequestId.yaml
   session_id:

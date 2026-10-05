@@ -197,6 +197,14 @@ The Risk Score is an integer from 0 to 100; bands are computed on your side: tru
 
 Branch on the status first, then try to parse the body as JSON whatever its content type.
 
+When present, `client_identity` contains the stored ingest attribution. `claims`
+are observed names, while each `verified` entry proves only its named subject
+(provider, service or infrastructure) through referenced evidence. A verified
+provider does not verify the claimed agent name or AI mode, and attribution does
+not change the Risk Score or detection flags. An absent object means no stored
+identity data. Older SDK models can retain this additive field in their raw
+History row or webhook data; typed convenience fields require an SDK update.
+
 ## Compatibility
 
 - OpenAPI 3.1.0; the JSON Schemas use JSON Schema 2020-12 and compile with a strict validator.
