@@ -21,6 +21,10 @@
     "created_at": {
       "$ref": "#/$defs/Rfc3339Timestamp",
       "description": "When the ping was sent, with second precision."
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "$defs": {
@@ -37,8 +41,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Version of the webhook payload contract. Every event sent today carries `2026-06-01`. Accept other values, so that a future version does not break your handler.",
+      "description": "Webhook contract version. Current release 2026-10-06; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-06",
         "2026-06-01"
       ]
     }

@@ -189,7 +189,7 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. Always all 19 keys. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the four extension flags are present in schema 2026-10-06. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
       "required": [
         "vpn",
         "privacy_relay",
@@ -287,6 +287,18 @@
         "check_incomplete": {
           "type": "boolean",
           "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+        },
+        "os_mismatch2": {
+          "type": "boolean"
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "latency_test": {
+          "type": "boolean"
+        },
+        "banned_ip": {
+          "type": "boolean"
         }
       }
     },

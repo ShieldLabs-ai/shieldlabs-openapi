@@ -1,7 +1,6 @@
 type: object
-description: >-
-  Body of an `identification.scored` delivery. The signature is not part of the body: it arrives
-  in the `X-Shield-Signature` header.
+description: "Body of an `identification.scored` delivery. The signature is not
+  part of the body: it arrives in the `X-Shield-Signature` header."
 required:
   - event_type
   - schema_version
@@ -16,6 +15,43 @@ properties:
     $ref: ./SchemaVersion.yaml
   created_at:
     $ref: ./Rfc3339Timestamp.yaml
-    description: When the event was built. Equal to `data.observed_at`.
+    description: When the event envelope was created, distinct from data.observed_at
+      (scan time).
   data:
     $ref: ./IdentificationScoredData.yaml
+  event_id: &a1
+    type: string
+    minLength: 1
+    description: Logical site/request/final-result-version/type identity. Stable
+      across retries and endpoints.
+  site_id:
+    type: integer
+    minimum: 1
+    description: Site scope when available; legacy domain-only accounts omit it.
+allOf:
+  - if:
+      properties:
+        schema_version:
+          const: 2026-10-06
+      required:
+        - schema_version
+    then:
+      required:
+        - event_id
+      properties:
+        data:
+          required:
+            - result_version
+            - scoring_version
+            - risk_events
+            - hre
+          type: object
+          additionalProperties: true
+          properties:
+            result_version: {}
+            scoring_version: {}
+            risk_events: {}
+            hre: {}
+        event_id: *a1
+      type: object
+      additionalProperties: true

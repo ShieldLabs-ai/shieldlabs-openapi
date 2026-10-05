@@ -100,7 +100,7 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. Always all 19 keys. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the four extension flags are present in schema 2026-10-06. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
       "required": [
         "vpn",
         "privacy_relay",
@@ -198,6 +198,18 @@
         "check_incomplete": {
           "type": "boolean",
           "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+        },
+        "os_mismatch2": {
+          "type": "boolean"
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "latency_test": {
+          "type": "boolean"
+        },
+        "banned_ip": {
+          "type": "boolean"
         }
       }
     },
@@ -217,9 +229,104 @@
         "desktop"
       ]
     },
+    "Fingerprint": {
+      "type": "object",
+      "required": [
+        "outcome",
+        "rules_version"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string"
+        },
+        "record_id": {
+          "type": "string"
+        },
+        "hardware_id": {
+          "type": "string",
+          "description": "FP21 hardware identity, distinct from device_id."
+        },
+        "rules_version": {
+          "type": "string"
+        },
+        "sharing": {
+          "type": "object"
+        },
+        "takeover": {
+          "type": "object"
+        },
+        "travel": {
+          "type": "object"
+        }
+      },
+      "description": "FP21 for tracked users. Legacy sharing/takeover/travel mirrors are retained; prefer data.hre. Absent on anonymous checks."
+    },
+    "HRE": {
+      "type": "object",
+      "required": [
+        "account_sharing",
+        "account_takeover",
+        "impossible_travel"
+      ],
+      "properties": {
+        "rules_version": {
+          "type": "string"
+        },
+        "account_sharing": {
+          "$ref": "#/$defs/HREResult"
+        },
+        "account_takeover": {
+          "$ref": "#/$defs/HREResult"
+        },
+        "impossible_travel": {
+          "$ref": "#/$defs/HREResult"
+        }
+      },
+      "description": "Three completed on-demand handler results. Technical errors block emission; no_history/skipped are explicit not_evaluated results. Anonymous checks are not_applicable. Multiaccount is separate."
+    },
+    "HREResult": {
+      "type": "object",
+      "required": [
+        "status",
+        "level",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "examples": [
+            "evaluated",
+            "not_evaluated",
+            "not_applicable"
+          ]
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "examples": [
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_devices": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "IdentificationScoredData": {
       "type": "object",
-      "description": "The scored identification. Every key is always present (no key is ever omitted); only `user_hid` can be `null`.",
+      "description": "Final identification. risk_score is this scan only; no all-time entity risk. New extension fields are required by version 2026-10-06; legacy bodies remain accepted.",
       "required": [
         "request_id",
         "visitor_id",
@@ -304,7 +411,27 @@
         },
         "observed_at": {
           "$ref": "#/$defs/Rfc3339Timestamp",
-          "description": "When scoring finished and the event was built (not the page view time); identical to the envelope `created_at`. RFC 3339 in UTC with up to 9 fractional digits."
+          "description": "Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits."
+        },
+        "result_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scoring_version": {
+          "type": "string",
+          "description": "Core build source revision; core:unversioned on local builds."
+        },
+        "risk_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiskEvent"
+          }
+        },
+        "hre": {
+          "$ref": "#/$defs/HRE"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/Fingerprint"
         }
       }
     },
@@ -328,12 +455,66 @@
         },
         "created_at": {
           "$ref": "#/$defs/Rfc3339Timestamp",
-          "description": "When the event was built. Equal to `data.observed_at`."
+          "description": "When the event envelope was created, distinct from data.observed_at (scan time)."
         },
         "data": {
           "$ref": "#/$defs/IdentificationScoredData"
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Logical site/request/final-result-version/type identity. Stable across retries and endpoints."
+        },
+        "site_id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Site scope when available; legacy domain-only accounts omit it."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "schema_version": {
+                "const": "2026-10-06"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          },
+          "then": {
+            "required": [
+              "event_id"
+            ],
+            "properties": {
+              "data": {
+                "required": [
+                  "result_version",
+                  "scoring_version",
+                  "risk_events",
+                  "hre"
+                ],
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "result_version": {},
+                  "scoring_version": {},
+                  "risk_events": {},
+                  "hre": {}
+                }
+              },
+              "event_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Logical site/request/final-result-version/type identity. Stable across retries and endpoints."
+              }
+            },
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      ]
     },
     "IpInfo": {
       "type": "object",
@@ -387,6 +568,40 @@
         "2026-09-30T12:34:56Z"
       ]
     },
+    "RiskEvent": {
+      "type": "object",
+      "required": [
+        "code",
+        "detected",
+        "weight",
+        "contribution",
+        "status"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "detected": {
+          "type": "boolean",
+          "description": "Final scoring flag. false does not assert that every underlying probe completed."
+        },
+        "weight": {
+          "type": "integer",
+          "description": "Catalogue weight, not an additive score. Banned IP 999 is a marker."
+        },
+        "contribution": {
+          "type": "integer",
+          "description": "Matching score details, may contain corrections. Never recompute risk_score by summing."
+        },
+        "status": {
+          "type": "string",
+          "description": "The final scoring flag has been evaluated. Probe incompleteness is reported by dedicated risk events.",
+          "examples": [
+            "evaluated"
+          ]
+        }
+      }
+    },
     "RiskScore": {
       "type": "integer",
       "minimum": 0,
@@ -401,8 +616,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Version of the webhook payload contract. Every event sent today carries `2026-06-01`. Accept other values, so that a future version does not break your handler.",
+      "description": "Webhook contract version. Current release 2026-10-06; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-06",
         "2026-06-01"
       ]
     },
@@ -561,6 +777,10 @@
         "created_at": {
           "$ref": "#/$defs/Rfc3339Timestamp",
           "description": "When the ping was sent, with second precision."
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

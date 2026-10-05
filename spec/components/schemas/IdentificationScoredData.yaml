@@ -1,7 +1,7 @@
 type: object
-description: >-
-  The scored identification. Every key is always present (no key is ever omitted); only
-  `user_hid` can be `null`.
+description: Final identification. risk_score is this scan only; no all-time
+  entity risk. New extension fields are required by version 2026-10-06; legacy
+  bodies remain accepted.
 required:
   - request_id
   - visitor_id
@@ -36,20 +36,19 @@ properties:
     $ref: ./UserHid.yaml
   domain:
     type: string
-    description: Registered domain of your site (the request host when no registered domain matched).
+    description: Registered domain of your site (the request host when no registered
+      domain matched).
     examples:
       - example.com
   public_ip:
     $ref: ./IpInfo.yaml
-    description: >-
-      Public IPv4 address of the HTTP request and its country. `ip` is empty when the request did
-      not arrive over IPv4.
+    description: Public IPv4 address of the HTTP request and its country. `ip` is
+      empty when the request did not arrive over IPv4.
   local_ip:
     $ref: ./IpInfo.yaml
-    description: >-
-      Local IP address found by the browser network check (WebRTC): the leaked address when a
-      local network leak was found, otherwise the address ShieldLabs observed. Both keys are empty
-      when the check found nothing.
+    description: "Local IP address found by the browser network check (WebRTC): the
+      leaked address when a local network leak was found, otherwise the address
+      ShieldLabs observed. Both keys are empty when the check found nothing."
   connection_type:
     $ref: ./ConnectionType.yaml
   os:
@@ -64,15 +63,28 @@ properties:
     $ref: ./RiskScore.yaml
   signals:
     type: array
-    description: >-
-      Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit
-      marker carries exactly one entry, `{"name":"rate_limited","weight":999}`.
+    description: Weighted risk signals behind `risk_score`, in scoring order. Can be
+      empty. The rate-limit marker carries exactly one entry,
+      `{"name":"rate_limited","weight":999}`.
     items:
       $ref: ./Signal.yaml
   detection_flags:
     $ref: ./DetectionFlags.yaml
   observed_at:
     $ref: ./Rfc3339Timestamp.yaml
-    description: >-
-      When scoring finished and the event was built (not the page view time); identical to the
-      envelope `created_at`. RFC 3339 in UTC with up to 9 fractional digits.
+    description: Original snapshot scan clock, distinct from envelope created_at.
+      RFC 3339 in UTC with up to 9 fractional digits.
+  result_version:
+    type: string
+    minLength: 1
+  scoring_version:
+    type: string
+    description: Core build source revision; core:unversioned on local builds.
+  risk_events:
+    type: array
+    items:
+      $ref: ./RiskEvent.yaml
+  hre:
+    $ref: ./HRE.yaml
+  fingerprint:
+    $ref: ./Fingerprint.yaml

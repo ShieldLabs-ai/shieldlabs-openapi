@@ -1,9 +1,15 @@
 type: object
-description: |-
-  Stable yes/no verdicts for the identification. Always all 19 keys. Branch on these flags and on
+description: >-
+  Stable yes/no verdicts for the identification. Legacy 19 keys are always
+  present; the four extension flags are present in schema 2026-10-06. Branch on
+  these flags and on
+
   the Risk Score; signal names are for display and logging.
 
-  When `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and
+
+  When `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch`
+  and
+
   `javascript_disabled` are always `false`.
 required:
   - vpn
@@ -34,9 +40,8 @@ properties:
     description: A privacy relay such as iCloud Private Relay was detected.
   browser_vpn_proxy:
     type: boolean
-    description: >-
-      A VPN or proxy built into the browser or one of its extensions. `true` exactly when
-      `connection_type` is `browser_vpn_proxy`.
+    description: A VPN or proxy built into the browser or one of its extensions.
+      `true` exactly when `connection_type` is `browser_vpn_proxy`.
   tor:
     type: boolean
     description: The request came through the Tor network.
@@ -51,10 +56,12 @@ properties:
     description: The public IP has a record of abuse in IP intelligence.
   os_mismatch:
     type: boolean
-    description: The operating system seen on the network differs from the one the browser reports.
+    description: The operating system seen on the network differs from the one the
+      browser reports.
   os_not_detected:
     type: boolean
-    description: The operating system could not be determined from the User-Agent or the network.
+    description: The operating system could not be determined from the User-Agent or
+      the network.
   timezone_mismatch:
     type: boolean
     description: The browser timezone differs from the timezone of the IP location.
@@ -63,12 +70,12 @@ properties:
     description: An anti-detect browser was detected.
   browser_automation:
     type: boolean
-    description: Browser automation was detected, for example a WebDriver-controlled browser.
+    description: Browser automation was detected, for example a WebDriver-controlled
+      browser.
   ip_mismatch:
     type: boolean
-    description: >-
-      The public IP differs from the local IP found by the browser network check. Informational:
-      it does not add to the score.
+    description: "The public IP differs from the local IP found by the browser
+      network check. Informational: it does not add to the score."
   incognito:
     type: boolean
     description: The browser runs in a private window.
@@ -77,18 +84,25 @@ properties:
     description: A search-engine crawler. Its Risk Score is always 0.
   suspicious_paid_click:
     type: boolean
-    description: >-
-      The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn,
-      Pinterest or X) and the Risk Score is 60 or more (the 999 marker included).
+    description: The visit came from a paid ad click (Google Ads, Meta, TikTok,
+      Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more
+      (the 999 marker included).
   javascript_disabled:
     type: boolean
     description: JavaScript, or the browser APIs the checks need, were unavailable.
   stun_not_checked:
     type: boolean
-    description: >-
-      The browser network (STUN) check did not complete. Cleared again when a late network result
-      arrives.
+    description: The browser network (STUN) check did not complete. Cleared again
+      when a late network result arrives.
   check_incomplete:
     type: boolean
-    description: >-
-      Part of the browser checks timed out, so the verdict rests on partial data. Informational.
+    description: Part of the browser checks timed out, so the verdict rests on
+      partial data. Informational.
+  os_mismatch2:
+    type: boolean
+  device_spoofing:
+    type: boolean
+  latency_test:
+    type: boolean
+  banned_ip:
+    type: boolean

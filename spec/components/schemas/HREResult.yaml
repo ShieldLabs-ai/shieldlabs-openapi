@@ -1,0 +1,28 @@
+type: object
+required:
+  - status
+  - level
+  - reason
+properties:
+  status:
+    type: string
+    examples:
+      - evaluated
+      - not_evaluated
+      - not_applicable
+  level:
+    type:
+      - string
+      - "null"
+    examples:
+      - medium
+      - high
+      - null
+  reason:
+    type: string
+  devices:
+    type: integer
+    minimum: 0
+  min_devices:
+    type: integer
+    minimum: 1

@@ -1,0 +1,12 @@
+name: X-Shield-Event-Id
+in: header
+required: false
+description: Convenience mirror of signed body event_id. Trust the body after
+  HMAC verification. Absent on older bodies. Retries reuse the logical ID across
+  attempts; it is not a separate delivery-attempt identity.
+schema:
+  type: string
+examples:
+  event:
+    summary: Logical event identity
+    value: 79e23184cd0b5aae43125e3b14910f13b107a54b
