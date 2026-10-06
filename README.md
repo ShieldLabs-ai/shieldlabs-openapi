@@ -203,7 +203,9 @@ are observed names, while each `verified` entry proves only its named subject
 provider does not verify the claimed agent name or AI mode, and attribution does
 not change the Risk Score or detection flags. An absent object means no stored
 identity data. Older SDK models can retain this additive field in their raw
-History row or webhook data; typed convenience fields require an SDK update.
+History row or webhook data. Companion SDK changes add typed optional fields in
+Node, Go, Python, PHP, Java and .NET; use a version containing those changes to
+access the typed field.
 
 ## Compatibility
 
