@@ -22,6 +22,8 @@ required:
   - detection_flags
   - observed_at
 properties:
+  client_identity:
+    $ref: ./ClientIdentity.yaml
   request_id:
     $ref: ./RequestId.yaml
   visitor_id:

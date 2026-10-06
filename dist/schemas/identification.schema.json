@@ -27,6 +27,9 @@
     "source"
   ],
   "properties": {
+    "client_identity": {
+      "$ref": "#/$defs/ClientIdentity"
+    },
     "request_id": {
       "$ref": "#/$defs/RequestId"
     },
@@ -162,6 +165,196 @@
         "gclid",
         ""
       ]
+    },
+    "ClientIdentity": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema_version",
+        "classification_revision",
+        "classifier_version",
+        "registry_revision",
+        "availability",
+        "observed_at",
+        "decided_at",
+        "claims",
+        "verified",
+        "assessments",
+        "evidence"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "description": "Open version identifier. Version 1 is currently emitted."
+        },
+        "classification_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "classifier_version": {
+          "type": "string"
+        },
+        "registry_revision": {
+          "type": "string"
+        },
+        "availability": {
+          "type": "string",
+          "description": "available or input_unavailable. Missing object means no stored identity data; it does not mean human."
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "profile_id",
+              "provider_id",
+              "provider_name",
+              "agent_name",
+              "client_kind",
+              "purpose",
+              "source"
+            ],
+            "properties": {
+              "profile_id": {
+                "type": "string"
+              },
+              "provider_id": {
+                "type": "string"
+              },
+              "provider_name": {
+                "type": "string"
+              },
+              "agent_name": {
+                "type": "string"
+              },
+              "client_kind": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "verified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "subject",
+              "value_id",
+              "evidence_ids"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string",
+                "description": "The proved attribute: provider, service or infrastructure. Proof does not extend to other attributes."
+              },
+              "value_id": {
+                "type": "string"
+              },
+              "evidence_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "assessments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "status",
+              "reason"
+            ],
+            "properties": {
+              "candidate_profile_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "method",
+              "source_id",
+              "source_revision",
+              "checked_at",
+              "evaluated_at",
+              "covered_attributes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": "string"
+              },
+              "source_revision": {
+                "type": "string"
+              },
+              "checked_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "evaluated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "covered_attributes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "covered_components": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "request_binding": {
+                "type": "string"
+              },
+              "replay_policy": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "description": "Stored ingest attribution, independent of risk score and browser automation. Claimed names are unverified. A verified provider does not verify the agent name, service or AI mode. Read proof scope from each attribution and its referenced evidence. Unknown string values and fields must be accepted."
     },
     "ConnectionType": {
       "type": "string",

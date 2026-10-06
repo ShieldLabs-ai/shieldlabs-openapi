@@ -47,6 +47,8 @@ required:
   - observed_at
   - source
 properties:
+  client_identity:
+    $ref: ../components/schemas/ClientIdentity.yaml
   request_id:
     $ref: ../components/schemas/RequestId.yaml
   visitor_id:
