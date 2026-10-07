@@ -2,7 +2,7 @@
 
 `openapi.json` is the first executable H1 contract candidate, version
 2.0.0-alpha.1. It is not a description of a deployed API. It describes mandatory
-UUID/all domain paths on public and MCP surfaces, identifications/user lists,
+Concrete UUID-only domain paths on public and MCP surfaces, identifications/user lists,
 five entity detail types, opaque pagination, atomic filters and closed DTOs.
 
 Fixtures in `test/history-entities/` are shared migration inputs for the four
@@ -17,3 +17,5 @@ no compatibility adapter or version negotiation is introduced.
 
 See the authoritative target and execution gates:
 https://github.com/ShieldLabs-ai/shield.ssot/tree/main/design/history-api
+
+`all` is disabled on both surfaces for list/detail/relations (403 domain_scope_not_supported). Multi-domain support remains a future requirement in SSOT F1; existing multi-domain DTO fixtures describe future grain, not an enabled capability.
