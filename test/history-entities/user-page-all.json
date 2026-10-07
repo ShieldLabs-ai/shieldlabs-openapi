@@ -1,0 +1,86 @@
+{
+  "data": [
+    {
+      "type": "user",
+      "id": "same",
+      "domain_id": "00000000-0000-4000-8000-000000000031",
+      "domain": "a.test",
+      "first_seen": "2026-10-07T10:00:00Z",
+      "last_seen": "2026-10-07T10:00:00Z",
+      "identifications": 1,
+      "risk": {
+        "band": "trusted",
+        "state": "ok",
+        "as_of": "2026-10-07T10:00:00Z"
+      },
+      "signals": {
+        "state": "ok",
+        "items": []
+      },
+      "high_risk_events": {
+        "state": "fresh",
+        "as_of": "2026-10-07T10:00:00Z",
+        "items": []
+      },
+      "related_counts": {
+        "visitors": 1,
+        "devices": 1,
+        "public_ips": 1,
+        "cookies": 1,
+        "sessions": 1
+      },
+      "attributes": {
+        "countries": [
+          "US"
+        ],
+        "local_countries": [],
+        "browser": null,
+        "os": null,
+        "device_type": null,
+        "connection_type": null
+      }
+    },
+    {
+      "type": "user",
+      "id": "same",
+      "domain_id": "00000000-0000-4000-8000-000000000032",
+      "domain": "b.test",
+      "first_seen": "2026-10-07T10:00:00Z",
+      "last_seen": "2026-10-07T10:00:00Z",
+      "identifications": 1,
+      "risk": {
+        "band": "trusted",
+        "state": "ok",
+        "as_of": "2026-10-07T10:00:00Z"
+      },
+      "signals": {
+        "state": "ok",
+        "items": []
+      },
+      "high_risk_events": {
+        "state": "fresh",
+        "as_of": "2026-10-07T10:00:00Z",
+        "items": []
+      },
+      "related_counts": {
+        "visitors": 1,
+        "devices": 1,
+        "public_ips": 1,
+        "cookies": 1,
+        "sessions": 1
+      },
+      "attributes": {
+        "countries": [
+          "US"
+        ],
+        "local_countries": [],
+        "browser": null,
+        "os": null,
+        "device_type": null,
+        "connection_type": null
+      }
+    }
+  ],
+  "next_page_token": null,
+  "total": 2
+}
