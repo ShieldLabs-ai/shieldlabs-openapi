@@ -216,7 +216,7 @@ describe('schemas', () => {
     const { doc } = freshBuild();
     const data = doc.components.schemas.IdentificationScoredData;
     assert.deepEqual([...data.required].sort(), [...WEBHOOK_DATA_KEYS].sort());
-    assert.deepEqual(Object.keys(data.properties).sort(), [...WEBHOOK_DATA_KEYS, "result_version", "scoring_version", "risk_events", "hre", "fingerprint", "client_identity"].sort());
+    assert.deepEqual(Object.keys(data.properties).sort(), [...WEBHOOK_DATA_KEYS, "result_version", "scoring_version", "risk_events", "hre", "client_identity"].sort());
     assert.deepEqual(doc.components.schemas.UserHid.type, ['string', 'null']);
   });
 

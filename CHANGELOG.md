@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Changed
+
+- Remove the public `fingerprint` device-card block from webhook schemas and examples. Account sharing, takeover and travel remain available through `hre`; `device_id` remains the public device identity.
+
 ### Fixed
 
 - Align the API introduction and README with bounded retries, signed event-ID deduplication and complete current Portal Test payloads.

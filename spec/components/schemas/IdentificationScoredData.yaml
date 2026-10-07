@@ -88,5 +88,3 @@ properties:
       $ref: ./RiskEvent.yaml
   hre:
     $ref: ./HRE.yaml
-  fingerprint:
-    $ref: ./Fingerprint.yaml
