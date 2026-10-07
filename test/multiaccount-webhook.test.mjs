@@ -27,3 +27,14 @@ test('known multi-account events cannot bypass result validation',()=>{
   const bad=structuredClone(e);mutate(bad);assert.equal(union(bad),false);
  }
 });
+test('transition ancestry distinguishes a new episode from an existing group',()=>{
+ for (const action of ['detected','updated','resolved']) {
+  const event=JSON.parse(readFileSync(new URL('./fixtures/webhook-multiaccount-'+action+'.json',import.meta.url)));
+  event.data.previous_revision=action==='detected'?'1':null;
+  assert.equal(validate(event),false,action+' accepted invalid transition ancestry');
+  assert.equal(union(event),false,action+' bypassed union validation');
+ }
+ const baseline=JSON.parse(readFileSync(new URL('./fixtures/webhook-multiaccount-resolved.json',import.meta.url)));
+ baseline.data.previous_revision='0';
+ assert.ok(validate(baseline),JSON.stringify(validate.errors));
+});

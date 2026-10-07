@@ -2190,6 +2190,34 @@
             "if": {
               "properties": {
                 "action": {
+                  "const": "detected"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            },
+            "then": {
+              "additionalProperties": true,
+              "properties": {
+                "previous_revision": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "additionalProperties": true,
+              "properties": {
+                "previous_revision": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "action": {
                   "const": "resolved"
                 }
               },
