@@ -1,7 +1,7 @@
 type: object
-description: Final identification. risk_score is this scan only; no all-time
-  entity risk. New extension fields are required by version 2026-10-06; legacy
-  bodies remain accepted.
+description: Final identification. risk_score is this scan only. Version 2026-10-07
+  uses signals for score contributions, detection_flags for final decisions,
+  and hre for account results. Older bodies remain accepted.
 required:
   - request_id
   - visitor_id
@@ -83,8 +83,22 @@ properties:
     type: string
     description: Core build source revision; core:unversioned on local builds.
   risk_events:
+    deprecated: true
+    description: Legacy 2026-10-06 only; absent from current scored events.
     type: array
     items:
       $ref: ./RiskEvent.yaml
   hre:
     $ref: ./HRE.yaml
+
+  search_bot_owner:
+    type: string
+    description: Owner label from accepted search-bot detection; omitted when unknown or inactive.
+    examples: [Google]
+  ai_bot_owner:
+    type: string
+    description: Provider company label from accepted AI-bot detection; omitted when unknown or inactive.
+    examples: [OpenAI]
+  ai_browser_owner:
+    type: string
+    description: Owner label from accepted AI-browser detection; omitted when unknown or inactive.

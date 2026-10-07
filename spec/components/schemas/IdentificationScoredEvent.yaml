@@ -55,3 +55,77 @@ allOf:
         event_id: *a1
       type: object
       additionalProperties: true
+  - if:
+      type: object
+      required:
+        - schema_version
+      properties:
+        schema_version:
+          const: 2026-10-07
+      additionalProperties: true
+    then:
+      type: object
+      required:
+        - event_id
+      properties:
+        event_id: *a1
+        data:
+          type: object
+          required:
+            - result_version
+            - scoring_version
+            - hre
+          properties:
+            result_version: {}
+            scoring_version: {}
+            risk_events: {}
+            fingerprint: {}
+            detection_flags:
+              type: object
+              not:
+                type: object
+                required:
+                  - os_mismatch2
+                properties:
+                  os_mismatch2: {}
+                additionalProperties: true
+            hre:
+              type: object
+              properties:
+                account_sharing:
+                  type: object
+                  required:
+                    - cluster_id
+                  properties:
+                    cluster_id: {}
+                  additionalProperties: true
+                account_takeover:
+                  type: object
+                  required:
+                    - cluster_id
+                  properties:
+                    cluster_id: {}
+                  additionalProperties: true
+                impossible_travel:
+                  type: object
+                  required:
+                    - cluster_id
+                  properties:
+                    cluster_id: {}
+                  additionalProperties: true
+          additionalProperties: true
+          not:
+            anyOf:
+              - type: object
+                required:
+                  - risk_events
+                properties:
+                  risk_events: {}
+                additionalProperties: true
+              - type: object
+                required:
+                  - fingerprint
+                properties:
+                  fingerprint: {}
+                additionalProperties: true
+      additionalProperties: true

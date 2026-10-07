@@ -2,149 +2,15 @@
   "event_id": "ce256c0f66536957adc5f719250f5b10ce331bd1",
   "site_id": 7,
   "event_type": "identification.scored",
-  "schema_version": "2026-10-06",
+  "schema_version": "2026-10-07",
   "created_at": "2026-10-06T00:00:02Z",
   "data": {
     "result_version": "2026-10-06T00:00:01Z",
     "scoring_version": "core:fixture",
-    "risk_events": [
-      {
-        "code": "vpn",
-        "detected": false,
-        "weight": 30,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "proxy",
-        "detected": false,
-        "weight": 30,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "privacy_relay",
-        "detected": false,
-        "weight": 30,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "check_incomplete",
-        "detected": false,
-        "weight": 0,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "network_check_incomplete",
-        "detected": false,
-        "weight": 30,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "os_not_detected",
-        "detected": false,
-        "weight": 30,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "timezone_mismatch",
-        "detected": false,
-        "weight": 10,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "javascript_disabled",
-        "detected": false,
-        "weight": 90,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "os_mismatch",
-        "detected": false,
-        "weight": 60,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "os_mismatch2",
-        "detected": false,
-        "weight": 60,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "ip_mismatch",
-        "detected": false,
-        "weight": 45,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "latency_test",
-        "detected": false,
-        "weight": 60,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "anti_detect_browser",
-        "detected": false,
-        "weight": 60,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "device_spoofing",
-        "detected": false,
-        "weight": 90,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "banned_ip",
-        "detected": false,
-        "weight": 999,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "incognito",
-        "detected": true,
-        "weight": 0,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "search_bot",
-        "detected": false,
-        "weight": 0,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "browser_automation",
-        "detected": false,
-        "weight": 60,
-        "contribution": 0,
-        "status": "evaluated"
-      },
-      {
-        "code": "tor",
-        "detected": false,
-        "weight": 99,
-        "contribution": 0,
-        "status": "evaluated"
-      }
-    ],
     "hre": {
       "rules_version": "fp21-fixture",
       "account_sharing": {
+        "cluster_id": null,
         "status": "evaluated",
         "level": null,
         "reason": "",
@@ -152,11 +18,13 @@
         "min_devices": 4
       },
       "account_takeover": {
+        "cluster_id": null,
         "status": "not_evaluated",
         "level": null,
         "reason": "no_history"
       },
       "impossible_travel": {
+        "cluster_id": null,
         "status": "not_evaluated",
         "level": null,
         "reason": "skipped"
@@ -195,7 +63,6 @@
     "risk_score": 0,
     "signals": [],
     "detection_flags": {
-      "os_mismatch2": false,
       "device_spoofing": false,
       "latency_test": false,
       "banned_ip": false,
@@ -214,6 +81,8 @@
       "ip_mismatch": false,
       "incognito": true,
       "search_bot": false,
+      "ai_bot": false,
+      "ai_browser": false,
       "suspicious_paid_click": false,
       "javascript_disabled": false,
       "stun_not_checked": false,
