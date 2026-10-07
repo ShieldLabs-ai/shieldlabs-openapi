@@ -1,0 +1,45 @@
+post:
+  operationId: multiaccountChanged
+  tags: [Webhooks]
+  summary: A multi-account group changed
+  description: |-
+    Opt-in notification when a complete background detector publication detects, updates, or
+    resolves an exact group of accounts. Enable `multiaccount: true` on the webhook endpoint.
+    The default is false; existing identification.scored subscriptions are preserved.
+
+    A repeated build with unchanged membership, level, and rules does not produce a new event.
+    A membership change produces resolved for the previous exact group and detected for the new
+    exact group. Resolved means the group is no longer supported by the current complete source
+    cut, including evidence expiry; it does not certify that its accounts are safe.
+
+    Delivery is at least once, with no global ordering guarantee. Save event_id atomically with
+    your business operation. Within a site, publication epoch, and cluster_id, compare revision
+    as an integer and ignore older transitions. Verify HMAC-SHA256 over the raw received bytes;
+    X-Shield-Event-Id is a convenience header, and the signed body is authoritative.
+
+    This event has no request_id or risk_score. Its source identifies the published group result;
+    it does not mutate an earlier identification.scored body or an already pinned Console view.
+  security: []
+  parameters:
+    - $ref: ../components/parameters/ShieldSignature.yaml
+    - $ref: ../components/parameters/ShieldEventId.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/MultiaccountChangedEvent.yaml
+        examples:
+          detected:
+            $ref: ../components/examples/MultiaccountDetected.yaml
+          updated:
+            $ref: ../components/examples/MultiaccountUpdated.yaml
+          resolved:
+            $ref: ../components/examples/MultiaccountResolved.yaml
+  responses:
+    2XX:
+      description: Durably accepted by the receiver. The response body is ignored.
+    4XX:
+      description: Terminal delivery failure, except 429 which is retried.
+    5XX:
+      description: Retried within the delivery attempt and age limits.

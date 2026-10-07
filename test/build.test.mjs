@@ -68,6 +68,7 @@ describe('document', () => {
       ['path', '/v1/history/{type}/{value}', 'get', 'searchHistoryDeprecated'],
       ['path', '/v1/profile', 'get', 'getDomainProfile'],
       ['webhook', 'identification.scored', 'post', 'identificationScored'],
+      ['webhook','multi-account-changed','post','multiaccountChanged'],
       ['webhook', 'webhook.ping', 'post', 'webhookPing'],
     ].sort());
 
@@ -139,7 +140,7 @@ describe('document', () => {
 
   it('documents the webhook signature header with the exact format', () => {
     const { doc } = freshBuild();
-    for (const id of ['identificationScored', 'webhookPing']) {
+    for (const id of ['identificationScored', 'webhookPing','multiaccountChanged']) {
       const { operation } = operationById(doc, id);
       const header = operation.parameters.map((p) => deref(doc, p)).find((p) => p.name === 'X-Shield-Signature');
       assert.ok(header, id);
@@ -247,7 +248,11 @@ describe('schemas', () => {
     const open = [];
     const visit = (label, schema) => {
       if (!schema || typeof schema !== 'object') return;
-      assert.equal(schema.enum, undefined, `${label} is a closed enum`);
+      // The dated group-transition protocol has a finite state machine. Network,
+      // device and classification response values remain extensible.
+      const finite = {'MultiaccountChangedData.action':['detected','updated','resolved'], 'MultiaccountChangedData.level':['medium','high',null]};
+      if (finite[label]) assert.deepEqual(schema.enum,finite[label],label);
+      else assert.equal(schema.enum, undefined, `${label} is a closed enum`);
       if (schema['x-extensible-enum']) {
         open.push(label);
         assert.equal(schema.type, 'string', label);
