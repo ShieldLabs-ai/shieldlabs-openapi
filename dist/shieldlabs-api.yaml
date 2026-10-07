@@ -1872,7 +1872,7 @@ components:
               for anti-detect browsers;
             - `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier
               identification of the same device and IP;
-            - `browser_automation`: browser automation, for example a WebDriver-controlled browser;
+            - `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);
             - `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;
             - `os_mismatch`: the operating system seen on the network differs from the one the browser
               reports;
@@ -1898,7 +1898,7 @@ components:
     DetectionFlags:
       type: object
       description: |-
-        Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the four extension flags are present in schema 2026-10-06. Branch on these flags and on
+        Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on
         the Risk Score; signal names are for display and logging.
 
         When `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and
@@ -1959,7 +1959,7 @@ components:
           description: An anti-detect browser was detected.
         browser_automation:
           type: boolean
-          description: Browser automation was detected, for example a WebDriver-controlled browser.
+          description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
         ip_mismatch:
           type: boolean
           description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
@@ -1989,6 +1989,12 @@ components:
           type: boolean
         banned_ip:
           type: boolean
+        ai_bot:
+          type: boolean
+          description: An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk.
+        ai_browser:
+          type: boolean
+          description: A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative.
     RiskEvent:
       type: object
       required:
@@ -2000,6 +2006,7 @@ components:
       properties:
         code:
           type: string
+          description: Open catalogue of independent source signals. ai_bot and ai_browser carry weight 0; search_bot remains separate. browser_automation carries weight 90 in task 204 releases. UI Good bot and Bad bot groups are not risk event codes. Keep unknown codes and use the payload scoring_version/result_version for historical interpretation.
         detected:
           type: boolean
           description: Final scoring flag. false does not assert that every underlying probe completed.
