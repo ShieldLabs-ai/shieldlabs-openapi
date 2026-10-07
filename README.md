@@ -232,3 +232,7 @@ Documentation: https://docs.shieldlabs.ai · Analytics dashboard (Start free): h
 ## License
 
 [MIT](./LICENSE) © 2026 ShieldLabs Inc.
+
+## Entity History API candidate
+
+[#202 contract and fixtures](spec/history-entities/README.md) prepare the next major release. They are tested separately from the deployed 1.x schema; physical retained-read and release gates remain open.

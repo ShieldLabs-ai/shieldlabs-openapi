@@ -1,0 +1,3004 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ShieldLabs entity History API (H1 candidate)",
+    "version": "2.0.0-alpha.1",
+    "description": "Implementation candidate for #202. Separate from the deployed v1 document until H2-H7 gates pass. It replaces legacy History at cutover; no version header."
+  },
+  "servers": [
+    {
+      "url": "https://account.shieldlabs.ai"
+    }
+  ],
+  "paths": {
+    "/api/v1/domains/{domain_scope}/history/identifications": {
+      "get": {
+        "operationId": "apiListIdentifications",
+        "summary": "List identifications",
+        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "security": [
+          {
+            "historyApiKey": []
+          },
+          {
+            "historyUserBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "-created_at",
+                "created_at",
+                "-risk_score",
+                "risk_score"
+              ],
+              "default": "-created_at"
+            }
+          },
+          {
+            "name": "include_total",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Filter"
+                    },
+                    {
+                      "not": {
+                        "required": [
+                          "entity"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentificationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/domains/{domain_scope}/history/user": {
+      "get": {
+        "operationId": "apiListUsers",
+        "summary": "List user",
+        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "security": [
+          {
+            "historyApiKey": []
+          },
+          {
+            "historyUserBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "-last_seen",
+                "last_seen",
+                "-risk",
+                "risk",
+                "-identifications",
+                "identifications"
+              ],
+              "default": "-last_seen"
+            }
+          },
+          {
+            "name": "include_total",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Filter"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/domains/{domain_scope}/history/{resource}/{id}": {
+      "get": {
+        "operationId": "apiGetHistoryEntity",
+        "summary": "Get one entity or a bounded relation page",
+        "description": "all detail: no match 404, unique match single DTO, multiple domains 409 ambiguous_entity_id. All relations require a successful detail snapshot. This candidate is not deployed.",
+        "security": [
+          {
+            "historyApiKey": []
+          },
+          {
+            "historyUserBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "device_id_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "fp21_record",
+                "legacy"
+              ]
+            }
+          },
+          {
+            "name": "hre_min_accounts",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 9
+            }
+          },
+          {
+            "name": "hre_min_devices",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 9
+            }
+          },
+          {
+            "name": "relation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "visitors",
+                "devices",
+                "users",
+                "public_ips",
+                "sessions",
+                "cookies",
+                "local_ips",
+                "countries",
+                "local_countries",
+                "browsers",
+                "os",
+                "device_types",
+                "connection_types",
+                "risk_signals",
+                "high_risk_events"
+              ]
+            }
+          },
+          {
+            "name": "relation_limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "relation_page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IdentificationDetail"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IdentityDetail"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    },
+                    {
+                      "$ref": "#/components/schemas/RelationPage"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp/v1/domains/{domain_scope}/history/identifications": {
+      "get": {
+        "operationId": "mcpListIdentifications",
+        "summary": "List identifications",
+        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "security": [
+          {
+            "mcpBearer": [],
+            "gatewaySignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "-created_at",
+                "created_at",
+                "-risk_score",
+                "risk_score"
+              ],
+              "default": "-created_at"
+            }
+          },
+          {
+            "name": "include_total",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Filter"
+                    },
+                    {
+                      "not": {
+                        "required": [
+                          "entity"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentificationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp/v1/domains/{domain_scope}/history/user": {
+      "get": {
+        "operationId": "mcpListUsers",
+        "summary": "List user",
+        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "security": [
+          {
+            "mcpBearer": [],
+            "gatewaySignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "-last_seen",
+                "last_seen",
+                "-risk",
+                "risk",
+                "-identifications",
+                "identifications"
+              ],
+              "default": "-last_seen"
+            }
+          },
+          {
+            "name": "include_total",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Filter"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp/v1/domains/{domain_scope}/history/{resource}/{id}": {
+      "get": {
+        "operationId": "mcpGetHistoryEntity",
+        "summary": "Get one entity or a bounded relation page",
+        "description": "all detail: no match 404, unique match single DTO, multiple domains 409 ambiguous_entity_id. All relations require a successful detail snapshot. This candidate is not deployed.",
+        "security": [
+          {
+            "mcpBearer": [],
+            "gatewaySignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain_scope",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DomainScope"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "snapshot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "device_id_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "fp21_record",
+                "legacy"
+              ]
+            }
+          },
+          {
+            "name": "hre_min_accounts",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 9
+            }
+          },
+          {
+            "name": "hre_min_devices",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 9
+            }
+          },
+          {
+            "name": "relation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "visitors",
+                "devices",
+                "users",
+                "public_ips",
+                "sessions",
+                "cookies",
+                "local_ips",
+                "countries",
+                "local_countries",
+                "browsers",
+                "os",
+                "device_types",
+                "connection_types",
+                "risk_signals",
+                "high_risk_events"
+              ]
+            }
+          },
+          {
+            "name": "relation_limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "relation_page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact entity data at one complete retained admin cut.",
+            "headers": {
+              "History-Snapshot": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Snapshot-Expires-At": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-From": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              },
+              "History-Window-To": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retained read context; never log opaque handles."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IdentificationDetail"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IdentityDetail"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    },
+                    {
+                      "$ref": "#/components/schemas/RelationPage"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "414": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Typed contract error; no legacy fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DomainScope": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          {
+            "const": "all"
+          }
+        ]
+      },
+      "Risk": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "band": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "trusted",
+                  "suspicious",
+                  "dangerous"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ]
+          },
+          "as_of": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "band",
+          "state",
+          "as_of"
+        ]
+      },
+      "Signals": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "state",
+          "items"
+        ]
+      },
+      "HighRiskEvents": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "enum": [
+              "fresh",
+              "stale",
+              "unavailable",
+              "history_unavailable",
+              "not_applicable"
+            ]
+          },
+          "as_of": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "enum": [
+                    "multi_accounting",
+                    "account_sharing",
+                    "impossible_travel",
+                    "account_takeover"
+                  ]
+                },
+                "confidence": {
+                  "enum": [
+                    "medium",
+                    "high"
+                  ]
+                }
+              },
+              "required": [
+                "code",
+                "confidence"
+              ]
+            }
+          }
+        },
+        "required": [
+          "state",
+          "as_of",
+          "items"
+        ]
+      },
+      "RelatedCounts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "visitors": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "devices": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "users": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "public_ips": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cookies": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sessions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "visitors",
+          "devices",
+          "public_ips",
+          "cookies",
+          "sessions"
+        ]
+      },
+      "Attributes": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "local_countries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "browser": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "os": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connection_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "countries",
+          "local_countries",
+          "browser",
+          "os",
+          "device_type",
+          "connection_type"
+        ]
+      },
+      "BandSplit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "trusted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "suspicious": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "dangerous": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "trusted",
+          "suspicious",
+          "dangerous"
+        ]
+      },
+      "Identification": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "identification"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "x-max-utf8-bytes": 512
+          },
+          "domain_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/Risk"
+          },
+          "signals": {
+            "$ref": "#/components/schemas/Signals"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "visitor_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_hid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "public_ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "browser": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "os": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connection_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_id_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "fp21_record",
+              "legacy",
+              null
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "domain_id",
+          "domain",
+          "risk",
+          "signals",
+          "created_at",
+          "visitor_id",
+          "user_hid",
+          "device_id",
+          "public_ip",
+          "country",
+          "browser",
+          "os",
+          "device_type",
+          "connection_type",
+          "device_id_source"
+        ]
+      },
+      "Identity": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "enum": [
+              "user",
+              "visitor",
+              "device",
+              "ip"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "x-max-utf8-bytes": 512
+          },
+          "domain_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/Risk"
+          },
+          "signals": {
+            "$ref": "#/components/schemas/Signals"
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "identifications": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "related_counts": {
+            "$ref": "#/components/schemas/RelatedCounts"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/Attributes"
+          },
+          "high_risk_events": {
+            "$ref": "#/components/schemas/HighRiskEvents"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "domain_id",
+          "domain",
+          "risk",
+          "signals",
+          "first_seen",
+          "last_seen",
+          "identifications",
+          "related_counts",
+          "attributes",
+          "high_risk_events"
+        ]
+      },
+      "IdentificationDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "identification"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "x-max-utf8-bytes": 512
+          },
+          "domain_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/Risk"
+          },
+          "signals": {
+            "$ref": "#/components/schemas/Signals"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "visitor_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_hid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "public_ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "browser": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "os": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connection_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_id_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "fp21_record",
+              "legacy",
+              null
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cookie_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local_ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local_country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "traffic": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "channel": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "referrer_domain": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entry_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "click_id_type": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "utm_source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "utm_medium": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "utm_campaign": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "utm_content": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "utm_term": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "channel",
+              "referrer_domain",
+              "entry_url",
+              "click_id_type",
+              "utm_source",
+              "utm_medium",
+              "utm_campaign",
+              "utm_content",
+              "utm_term"
+            ]
+          },
+          "identity_risk": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "visitor": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Risk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "device": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Risk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "user": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Risk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ip": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Risk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "visitor",
+              "device",
+              "user",
+              "ip"
+            ]
+          },
+          "high_risk_events": {
+            "$ref": "#/components/schemas/HighRiskEvents"
+          },
+          "device_identity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "hardware_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "legacy_device_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "hardware_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "legacy_device_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "record_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "state": {
+                "type": "string"
+              }
+            },
+            "required": []
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "domain_id",
+          "domain",
+          "risk",
+          "signals",
+          "created_at",
+          "visitor_id",
+          "user_hid",
+          "device_id",
+          "public_ip",
+          "country",
+          "browser",
+          "os",
+          "device_type",
+          "connection_type",
+          "device_id_source",
+          "session_id",
+          "cookie_id",
+          "local_ip",
+          "local_country",
+          "traffic",
+          "identity_risk",
+          "high_risk_events",
+          "device_identity"
+        ]
+      },
+      "IdentityDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "enum": [
+              "user",
+              "visitor",
+              "device",
+              "ip"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "x-max-utf8-bytes": 512
+          },
+          "domain_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/Risk"
+          },
+          "signals": {
+            "$ref": "#/components/schemas/Signals"
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "identifications": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "related_counts": {
+            "$ref": "#/components/schemas/RelatedCounts"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/Attributes"
+          },
+          "high_risk_events": {
+            "$ref": "#/components/schemas/HighRiskEvents"
+          },
+          "band_split": {
+            "$ref": "#/components/schemas/BandSplit"
+          },
+          "device_id_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "fp21_record",
+              "legacy",
+              null
+            ]
+          },
+          "device_identity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "hardware_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "legacy_device_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "hardware_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "legacy_device_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "record_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "state": {
+                "type": "string"
+              }
+            },
+            "required": []
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "domain_id",
+          "domain",
+          "risk",
+          "signals",
+          "first_seen",
+          "last_seen",
+          "identifications",
+          "related_counts",
+          "attributes",
+          "high_risk_events",
+          "band_split"
+        ]
+      },
+      "AtomicSignalCode": {
+        "type": "string",
+        "enum": [
+          "abuser",
+          "anti_detect_browser",
+          "browser_automation",
+          "browser_vpn_proxy",
+          "check_incomplete",
+          "datacenter_ip",
+          "device_spoofing",
+          "incognito",
+          "ip_mismatch",
+          "javascript_disabled",
+          "os_mismatch",
+          "os_mismatch2",
+          "os_not_detected",
+          "privacy_relay",
+          "proxy",
+          "rate_limited",
+          "search_bot",
+          "stun_not_checked",
+          "suspicious_paid_click",
+          "timezone_mismatch",
+          "tor",
+          "vpn",
+          "ws_tcp_latency"
+        ]
+      },
+      "Filter": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identification": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ids": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "visitor_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "user_hid": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "ip": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "cookie_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "required": []
+              },
+              "device_id_source": {
+                "enum": [
+                  "fp21_record",
+                  "legacy"
+                ]
+              },
+              "risk_bands": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "trusted",
+                    "suspicious",
+                    "dangerous"
+                  ]
+                }
+              },
+              "chips": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "dimension": {
+                      "enum": [
+                        "country",
+                        "channel",
+                        "browser",
+                        "os",
+                        "device_type",
+                        "connection_type",
+                        "domain",
+                        "source",
+                        "campaign",
+                        "entry_page",
+                        "risk_signal",
+                        "high_risk_event"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    }
+                  },
+                  "required": [
+                    "dimension",
+                    "value"
+                  ],
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "dimension": {
+                            "const": "risk_signal"
+                          }
+                        },
+                        "required": [
+                          "dimension"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "$ref": "#/components/schemas/AtomicSignalCode"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "dimension": {
+                            "const": "high_risk_event"
+                          }
+                        },
+                        "required": [
+                          "dimension"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "enum": [
+                              "multi_accounting",
+                              "account_sharing",
+                              "impossible_travel",
+                              "account_takeover"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-max-distinct-items": 8,
+                "description": "At most 8 distinct chips after canonical deduplication; OR across chips."
+              },
+              "hre_min_accounts": {
+                "type": "integer",
+                "minimum": 3,
+                "maximum": 9
+              },
+              "hre_min_devices": {
+                "type": "integer",
+                "minimum": 4,
+                "maximum": 9
+              }
+            },
+            "required": []
+          },
+          "entity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "maxItems": 100
+              },
+              "risk_bands": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "trusted",
+                    "suspicious",
+                    "dangerous"
+                  ]
+                }
+              }
+            },
+            "required": []
+          }
+        },
+        "required": []
+      },
+      "IdentificationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Identification"
+            }
+          },
+          "next_page_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4096
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "data",
+          "next_page_token"
+        ]
+      },
+      "UserPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            }
+          },
+          "next_page_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4096
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "data",
+          "next_page_token"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "RelationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "domain_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "relation": {
+                "enum": [
+                  "visitors",
+                  "devices",
+                  "users",
+                  "public_ips",
+                  "sessions",
+                  "cookies",
+                  "local_ips",
+                  "countries",
+                  "local_countries",
+                  "browsers",
+                  "os",
+                  "device_types",
+                  "connection_types",
+                  "risk_signals",
+                  "high_risk_events"
+                ]
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "identifications": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "risk": {
+                      "$ref": "#/components/schemas/Risk"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "next_page_token": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "id",
+              "domain_id",
+              "domain",
+              "relation",
+              "items",
+              "next_page_token"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "historyApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Site-scoped key: concrete domain only; all returns 403."
+      },
+      "historyUserBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Direct user-scoped verifier is H-10 pending; credentials are not interchangeable with MCP/cabinet."
+      },
+      "mcpBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "gatewaySignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Shield-Gateway"
+      }
+    }
+  }
+}
