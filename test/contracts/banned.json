@@ -224,25 +224,6 @@
       "stun_not_checked": false,
       "check_incomplete": false
     },
-    "observed_at": "2026-10-06T00:00:00Z",
-    "fingerprint": {
-      "outcome": "new_record",
-      "record_id": "sample-record",
-      "hardware_id": "sample-hardware",
-      "rules_version": "fp21-fixture",
-      "sharing": {
-        "level": "high",
-        "devices": 4,
-        "min_devices": 4
-      },
-      "takeover": {
-        "level": "medium",
-        "reason": "fixture"
-      },
-      "travel": {
-        "level": "",
-        "reason": "below_distance"
-      }
-    }
+    "observed_at": "2026-10-06T00:00:00Z"
   }
 }

@@ -673,21 +673,6 @@ webhooks:
                       stun_not_checked: false
                       check_incomplete: false
                     observed_at: '2026-10-06T00:00:00Z'
-                    fingerprint:
-                      outcome: new_record
-                      record_id: sample-record
-                      hardware_id: sample-hardware
-                      rules_version: fp21-fixture
-                      sharing:
-                        level: high
-                        devices: 4
-                        min_devices: 4
-                      takeover:
-                        level: medium
-                        reason: fixture
-                      travel:
-                        level: ''
-                        reason: below_distance
       responses:
         2XX:
           description: Delivery accepted. The response body is ignored.
@@ -2066,28 +2051,6 @@ components:
         impossible_travel:
           $ref: '#/components/schemas/HREResult'
       description: Three completed on-demand handler results. Technical errors block emission; no_history/skipped are explicit not_evaluated results. Anonymous checks are not_applicable. Multiaccount is separate.
-    Fingerprint:
-      type: object
-      required:
-        - outcome
-        - rules_version
-      properties:
-        outcome:
-          type: string
-        record_id:
-          type: string
-        hardware_id:
-          type: string
-          description: FP21 hardware identity, distinct from device_id.
-        rules_version:
-          type: string
-        sharing:
-          type: object
-        takeover:
-          type: object
-        travel:
-          type: object
-      description: FP21 for tracked users. Legacy sharing/takeover/travel mirrors are retained; prefer data.hre. Absent on anonymous checks.
     IdentificationScoredData:
       type: object
       description: Final identification. risk_score is this scan only; no all-time entity risk. New extension fields are required by version 2026-10-06; legacy bodies remain accepted.
@@ -2170,8 +2133,6 @@ components:
             $ref: '#/components/schemas/RiskEvent'
         hre:
           $ref: '#/components/schemas/HRE'
-        fingerprint:
-          $ref: '#/components/schemas/Fingerprint'
     IdentificationScoredEvent:
       type: object
       description: 'Body of an `identification.scored` delivery. The signature is not part of the body: it arrives in the `X-Shield-Signature` header.'
