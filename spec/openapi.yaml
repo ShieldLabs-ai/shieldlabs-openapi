@@ -194,6 +194,8 @@ paths:
   /health:
     $ref: ./paths/health.yaml
 webhooks:
+  multi-account-changed:
+    $ref: ./webhooks/multiaccount-changed.yaml
   identification.scored:
     $ref: ./webhooks/identification-scored.yaml
   webhook.ping:

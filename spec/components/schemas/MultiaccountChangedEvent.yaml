@@ -1,0 +1,20 @@
+type: object
+description: An immutable opt-in notification of a complete multi-account group transition.
+additionalProperties: false
+required: [event_id, event_type, schema_version, site_id, created_at, data]
+properties:
+  event_id:
+    type: string
+    pattern: '^[a-f0-9]{40}$'
+    description: Stable logical event ID. Delivery retries preserve this ID and the signed body.
+  event_type:
+    const: hre.multi_account.changed
+  schema_version:
+    const: '2026-10-07'
+  site_id:
+    type: integer
+    minimum: 1
+  created_at:
+    $ref: ./Rfc3339Timestamp.yaml
+  data:
+    $ref: ./MultiaccountChangedData.yaml

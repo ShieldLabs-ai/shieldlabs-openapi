@@ -9,6 +9,7 @@ export const SCHEMA_ID_BASE = 'https://cdn.jsdelivr.net/npm/@shieldlabs-ai/opena
 
 /** JSON Schema exports written to dist/schemas/ (source paths are relative to the repo root). */
 export const SCHEMA_EXPORTS = [
+  { file: 'multiaccount-changed-event.schema.json', source: 'spec/components/schemas/MultiaccountChangedEvent.yaml', title: 'ShieldLabs multi-account group webhook event' },
   { file: 'identification-scored-event.schema.json', source: 'spec/components/schemas/IdentificationScoredEvent.yaml', title: 'ShieldLabs identification.scored webhook event' },
   { file: 'webhook-ping-event.schema.json', source: 'spec/components/schemas/WebhookPingEvent.yaml', title: 'ShieldLabs webhook.ping event' },
   { file: 'webhook-event.schema.json', source: 'spec/models/WebhookEvent.yaml' },

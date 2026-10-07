@@ -236,3 +236,19 @@ Documentation: https://docs.shieldlabs.ai · Analytics dashboard (Start free): h
 ## Entity History API candidate
 
 [#202 contract and fixtures](spec/history-entities/README.md) prepare the next major release. They are tested separately from the deployed 1.x schema; physical retained-read and release gates remain open.
+
+### Multi-account group notifications
+
+Endpoints may opt in with `multiaccount: true` (default false). The new signed
+`hre.multi_account.changed` body describes the whole group, not an originating
+request. `detected` and `updated` include the full active group; `resolved` includes
+its previous member set and `detected=false, level=null`. A changed member set has a
+new cluster ID. Ignore older numeric revisions per site/epoch/group and deduplicate
+`event_id` atomically with your business action before acknowledging 2xx.
+
+The standalone schema is exported as
+`@shieldlabs-ai/openapi/schemas/multiaccount-changed-event.schema.json` after release.
+Existing SDK signature helpers preserve raw-byte verification and their unknown-event
+parsers can carry this event; consumers must add their group-event handler before
+opting in. The package is not published by this PR. Core emission stays off until
+its trusted original group-set proof and operational budgets pass their release gates.

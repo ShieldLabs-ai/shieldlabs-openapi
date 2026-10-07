@@ -726,7 +726,7 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Current release 2026-10-06; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-06; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
         "2026-10-06",
         "2026-06-01"
