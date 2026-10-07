@@ -208,7 +208,7 @@ describe('schemas', () => {
     const { doc } = freshBuild();
     const flags = doc.components.schemas.DetectionFlags;
     assert.deepEqual([...flags.required].sort(), [...FLAGS].sort());
-    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS, "os_mismatch2", "device_spoofing", "latency_test", "banned_ip"].sort());
+    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS, "os_mismatch2", "device_spoofing", "latency_test", "banned_ip", "ai_bot", "ai_browser"].sort());
     for (const flag of FLAGS) assert.equal(flags.properties[flag].type, 'boolean', flag);
   });
 

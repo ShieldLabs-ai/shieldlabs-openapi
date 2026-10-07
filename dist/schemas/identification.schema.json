@@ -382,7 +382,7 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the four extension flags are present in schema 2026-10-06. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
       "required": [
         "vpn",
         "privacy_relay",
@@ -451,7 +451,7 @@
         },
         "browser_automation": {
           "type": "boolean",
-          "description": "Browser automation was detected, for example a WebDriver-controlled browser."
+          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
         },
         "ip_mismatch": {
           "type": "boolean",
@@ -492,6 +492,14 @@
         },
         "banned_ip": {
           "type": "boolean"
+        },
+        "ai_bot": {
+          "type": "boolean",
+          "description": "An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk."
+        },
+        "ai_browser": {
+          "type": "boolean",
+          "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
         }
       }
     },

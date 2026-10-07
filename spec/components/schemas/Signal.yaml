@@ -24,7 +24,7 @@ properties:
         for anti-detect browsers;
       - `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier
         identification of the same device and IP;
-      - `browser_automation`: browser automation, for example a WebDriver-controlled browser;
+      - `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);
       - `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;
       - `os_mismatch`: the operating system seen on the network differs from the one the browser
         reports;
