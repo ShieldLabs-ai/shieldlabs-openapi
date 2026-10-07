@@ -880,6 +880,8 @@
         "revision",
         "previous_revision",
         "user_hids",
+        "added_user_hids",
+        "removed_user_hids",
         "users_count",
         "members_complete",
         "evaluated_at",
@@ -924,7 +926,7 @@
         "cluster_id": {
           "type": "string",
           "format": "uuid",
-          "description": "ID of the exact sorted user set within this site. A membership change resolves the old group and detects a new group."
+          "description": "Persistent site-qualified group identity. Unambiguous expansion or contraction preserves this ID; ambiguous split/merge starts new identities."
         },
         "revision": {
           "type": "string",
@@ -955,6 +957,24 @@
                 "00000000-0000-0000-0000-000000000000"
               ]
             }
+          }
+        },
+        "added_user_hids": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Sorted members added since the previous transition; all current members for detected.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "removed_user_hids": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Sorted members removed since the previous transition; all previous members for resolved.",
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "users_count": {
