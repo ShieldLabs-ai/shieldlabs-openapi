@@ -15,7 +15,7 @@
       "get": {
         "operationId": "apiListIdentifications",
         "summary": "List identifications",
-        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "historyApiKey": []
@@ -281,7 +281,7 @@
       "get": {
         "operationId": "apiListUsers",
         "summary": "List user",
-        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "historyApiKey": []
@@ -538,7 +538,7 @@
       "get": {
         "operationId": "apiGetHistoryEntity",
         "summary": "Get one entity or a bounded relation page",
-        "description": "all detail: no match 404, unique match single DTO, multiple domains 409 ambiguous_entity_id. All relations require a successful detail snapshot. This candidate is not deployed.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "historyApiKey": []
@@ -865,7 +865,7 @@
       "get": {
         "operationId": "mcpListIdentifications",
         "summary": "List identifications",
-        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "mcpBearer": [],
@@ -1129,7 +1129,7 @@
       "get": {
         "operationId": "mcpListUsers",
         "summary": "List user",
-        "description": "domain_scope is a public UUID or all. site api_key cannot request all. Same HID in different domains produces separate rows. Requires H2 retained reader; this candidate is not a deployed contract.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "mcpBearer": [],
@@ -1384,7 +1384,7 @@
       "get": {
         "operationId": "mcpGetHistoryEntity",
         "summary": "Get one entity or a bounded relation page",
-        "description": "all detail: no match 404, unique match single DTO, multiple domains 409 ambiguous_entity_id. All relations require a successful detail snapshot. This candidate is not deployed.",
+        "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
             "mcpBearer": [],
@@ -1709,16 +1709,9 @@
   "components": {
     "schemas": {
       "DomainScope": {
-        "oneOf": [
-          {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-          },
-          {
-            "const": "all"
-          }
-        ]
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^(?!00000000-0000-0000-0000-000000000000$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       },
       "Risk": {
         "type": "object",

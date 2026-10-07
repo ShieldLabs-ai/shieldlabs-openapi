@@ -37,3 +37,14 @@ test('atomic filter accepts browser-vpn independently and rejects grouped-only a
 test('all candidate schemas compile and references resolve',()=>{
  for(const name of Object.keys(doc.components.schemas))assert.equal(typeof ajv.compile({$ref:root.$id+'#/components/schemas/'+name}),'function');
 });
+
+test('every History operation accepts only concrete non-nil public domain UUID',()=>{
+ for(const [path,item] of Object.entries(doc.paths)) {
+  const param=item.get.parameters.find(p=>p.name==='domain_scope');
+  assert.ok(param,path);
+  const fn=ajv.compile({$ref:root.$id+'#/components/schemas/DomainScope'});
+  assert.equal(fn('00000000-0000-4000-8000-000000000031'),true,path);
+  for(const bad of ['all','ALL','example.test','00000000-0000-0000-0000-000000000000',''])assert.equal(fn(bad),false,path);
+  assert.ok(item.get.responses['403'],path);
+ }
+});
