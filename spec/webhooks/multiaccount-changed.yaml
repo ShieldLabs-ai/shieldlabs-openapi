@@ -8,8 +8,8 @@ post:
     The default is false; existing identification.scored subscriptions are preserved.
 
     A repeated build with unchanged membership, level, and rules does not produce a new event.
-    A membership change produces resolved for the previous exact group and detected for the new
-    exact group. Resolved means the group is no longer supported by the current complete source
+    An unambiguous membership expansion or contraction preserves cluster_id and produces updated.
+    Ambiguous splits or merges resolve replaced groups and detect new identities. Resolved means the group is no longer supported by the current complete source
     cut, including evidence expiry; it does not certify that its accounts are safe.
 
     Delivery is at least once, with no global ordering guarantee. Save event_id atomically with
