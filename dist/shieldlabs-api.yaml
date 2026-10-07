@@ -2153,7 +2153,7 @@ components:
           description: The public IP has a record of abuse in IP intelligence.
         os_mismatch:
           type: boolean
-          description: The operating system seen on the network differs from the one the browser reports.
+          description: Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks.
         os_not_detected:
           type: boolean
           description: The operating system could not be determined from the User-Agent or the network.
@@ -2187,8 +2187,6 @@ components:
         check_incomplete:
           type: boolean
           description: Part of the browser checks timed out, so the verdict rests on partial data. Informational.
-        os_mismatch2:
-          type: boolean
         device_spoofing:
           type: boolean
         latency_test:
@@ -2201,6 +2199,10 @@ components:
         ai_browser:
           type: boolean
           description: A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative.
+        os_mismatch2:
+          type: boolean
+          deprecated: true
+          description: Legacy 2026-10-06 only; current payloads combine this check into os_mismatch.
     RiskEvent:
       type: object
       required:
@@ -2256,6 +2258,11 @@ components:
         min_devices:
           type: integer
           minimum: 1
+        cluster_id:
+          type:
+            - string
+            - 'null'
+          description: Authoritative cluster ID for this HRE result. Null when no cluster was published for the result, including old stored verdicts; never a device ID. Reused on retries.
     HRE:
       type: object
       required:
@@ -2274,7 +2281,7 @@ components:
       description: Three completed on-demand handler results. Technical errors block emission; no_history/skipped are explicit not_evaluated results. Anonymous checks are not_applicable. Multiaccount is separate.
     IdentificationScoredData:
       type: object
-      description: Final identification. risk_score is this scan only; no all-time entity risk. New extension fields are required by version 2026-10-06; legacy bodies remain accepted.
+      description: Final identification. risk_score is this scan only. Version 2026-10-07 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.
       required:
         - request_id
         - visitor_id
@@ -2349,11 +2356,26 @@ components:
           type: string
           description: Core build source revision; core:unversioned on local builds.
         risk_events:
+          deprecated: true
+          description: Legacy 2026-10-06 only; absent from current scored events.
           type: array
           items:
             $ref: '#/components/schemas/RiskEvent'
         hre:
           $ref: '#/components/schemas/HRE'
+        search_bot_owner:
+          type: string
+          description: Owner label from accepted search-bot detection; omitted when unknown or inactive.
+          examples:
+            - Google
+        ai_bot_owner:
+          type: string
+          description: Provider company label from accepted AI-bot detection; omitted when unknown or inactive.
+          examples:
+            - OpenAI
+        ai_browser_owner:
+          type: string
+          description: Owner label from accepted AI-browser detection; omitted when unknown or inactive.
     IdentificationScoredEvent:
       type: object
       description: 'Body of an `identification.scored` delivery. The signature is not part of the body: it arrives in the `X-Shield-Signature` header.'
@@ -2411,6 +2433,83 @@ components:
                 minLength: 1
                 description: Logical site/request/final-result-version/type identity. Stable across retries and endpoints.
             type: object
+            additionalProperties: true
+        - if:
+            type: object
+            required:
+              - schema_version
+            properties:
+              schema_version:
+                const: '2026-10-07'
+            additionalProperties: true
+          then:
+            type: object
+            required:
+              - event_id
+            properties:
+              event_id:
+                type: string
+                minLength: 1
+                description: Logical site/request/final-result-version/type identity. Stable across retries and endpoints.
+              data:
+                type: object
+                required:
+                  - result_version
+                  - scoring_version
+                  - hre
+                properties:
+                  result_version: {}
+                  scoring_version: {}
+                  risk_events: {}
+                  fingerprint: {}
+                  detection_flags:
+                    type: object
+                    not:
+                      type: object
+                      required:
+                        - os_mismatch2
+                      properties:
+                        os_mismatch2: {}
+                      additionalProperties: true
+                  hre:
+                    type: object
+                    properties:
+                      account_sharing:
+                        type: object
+                        required:
+                          - cluster_id
+                        properties:
+                          cluster_id: {}
+                        additionalProperties: true
+                      account_takeover:
+                        type: object
+                        required:
+                          - cluster_id
+                        properties:
+                          cluster_id: {}
+                        additionalProperties: true
+                      impossible_travel:
+                        type: object
+                        required:
+                          - cluster_id
+                        properties:
+                          cluster_id: {}
+                        additionalProperties: true
+                additionalProperties: true
+                not:
+                  anyOf:
+                    - type: object
+                      required:
+                        - risk_events
+                      properties:
+                        risk_events: {}
+                      additionalProperties: true
+                    - type: object
+                      required:
+                        - fingerprint
+                      properties:
+                        fingerprint: {}
+                      additionalProperties: true
             additionalProperties: true
     WebhookPingEvent:
       type: object

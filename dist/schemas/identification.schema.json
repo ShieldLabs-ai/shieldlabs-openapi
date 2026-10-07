@@ -435,7 +435,7 @@
         },
         "os_mismatch": {
           "type": "boolean",
-          "description": "The operating system seen on the network differs from the one the browser reports."
+          "description": "Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks."
         },
         "os_not_detected": {
           "type": "boolean",
@@ -481,9 +481,6 @@
           "type": "boolean",
           "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
         },
-        "os_mismatch2": {
-          "type": "boolean"
-        },
         "device_spoofing": {
           "type": "boolean"
         },
@@ -500,6 +497,11 @@
         "ai_browser": {
           "type": "boolean",
           "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
+        },
+        "os_mismatch2": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
         }
       }
     },

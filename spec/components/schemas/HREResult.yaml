@@ -26,3 +26,7 @@ properties:
   min_devices:
     type: integer
     minimum: 1
+
+  cluster_id:
+    type: [string, "null"]
+    description: Authoritative cluster ID for this HRE result. Null when no cluster was published for the result, including old stored verdicts; never a device ID. Reused on retries.
