@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Webhook client_identity and every nested field are optional and nullable. Attribution is best-effort; receivers must work without it.
+
+## Unreleased
+
 - Scored webhook 2026-10-08 removes browser_vpn_proxy, datacenter_ip, abuser and suspicious_paid_click flags. vpn includes Browser VPN/Proxy in flags, connection type and signals; site_id remains. Legacy schemas remain readable.
 
 # Changelog
