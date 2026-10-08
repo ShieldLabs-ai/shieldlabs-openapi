@@ -302,196 +302,6 @@
         ""
       ]
     },
-    "ClientIdentity": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "schema_version",
-        "classification_revision",
-        "classifier_version",
-        "registry_revision",
-        "availability",
-        "observed_at",
-        "decided_at",
-        "claims",
-        "verified",
-        "assessments",
-        "evidence"
-      ],
-      "properties": {
-        "schema_version": {
-          "type": "string",
-          "description": "Open version identifier. Version 1 is currently emitted."
-        },
-        "classification_revision": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "classifier_version": {
-          "type": "string"
-        },
-        "registry_revision": {
-          "type": "string"
-        },
-        "availability": {
-          "type": "string",
-          "description": "available or input_unavailable. Missing object means no stored identity data; it does not mean human."
-        },
-        "observed_at": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "decided_at": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "claims": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true,
-            "required": [
-              "profile_id",
-              "provider_id",
-              "provider_name",
-              "agent_name",
-              "client_kind",
-              "purpose",
-              "source"
-            ],
-            "properties": {
-              "profile_id": {
-                "type": "string"
-              },
-              "provider_id": {
-                "type": "string"
-              },
-              "provider_name": {
-                "type": "string"
-              },
-              "agent_name": {
-                "type": "string"
-              },
-              "client_kind": {
-                "type": "string"
-              },
-              "purpose": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "verified": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true,
-            "required": [
-              "subject",
-              "value_id",
-              "evidence_ids"
-            ],
-            "properties": {
-              "subject": {
-                "type": "string",
-                "description": "The proved attribute: provider, service or infrastructure. Proof does not extend to other attributes."
-              },
-              "value_id": {
-                "type": "string"
-              },
-              "evidence_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "assessments": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true,
-            "required": [
-              "status",
-              "reason"
-            ],
-            "properties": {
-              "candidate_profile_id": {
-                "type": "string"
-              },
-              "status": {
-                "type": "string"
-              },
-              "reason": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "evidence": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true,
-            "required": [
-              "id",
-              "method",
-              "source_id",
-              "source_revision",
-              "checked_at",
-              "evaluated_at",
-              "covered_attributes"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "method": {
-                "type": "string"
-              },
-              "source_id": {
-                "type": "string"
-              },
-              "source_revision": {
-                "type": "string"
-              },
-              "checked_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "evaluated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "covered_attributes": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "covered_components": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "request_binding": {
-                "type": "string"
-              },
-              "replay_policy": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "description": "Stored ingest attribution, independent of risk score and browser automation. Claimed names are unverified. A verified provider does not verify the agent name, service or AI mode. Read proof scope from each attribution and its referenced evidence. Unknown string values and fields must be accepted."
-    },
     "ConnectionType": {
       "type": "string",
       "description": "How the visitor connected. Known values:\n- `direct`: a regular connection;\n- `mobile`: a mobile carrier network;\n- `vpn`: a VPN;\n- `proxy`: a proxy, datacenter or hosting network (search-engine crawlers are reported here too);\n- `tor`: the Tor network;\n- `privacy_relay`: a privacy relay such as iCloud Private Relay;\n- `browser_vpn_proxy`: a VPN or proxy built into the browser or one of its extensions;\n- `unknown`: not enough data.\n\nThe value can say `vpn` while `detection_flags.vpn` is `false` (IP intelligence classified the\nnetwork, but the scored VPN check did not fire). Branch on `detection_flags` for decisions.\nThe set is open: keep values added in later versions and treat them as `unknown`.",
@@ -752,7 +562,8 @@
       ],
       "properties": {
         "client_identity": {
-          "$ref": "#/$defs/ClientIdentity"
+          "$ref": "#/$defs/WebhookClientIdentity",
+          "description": "Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values."
         },
         "request_id": {
           "$ref": "#/$defs/RequestId"
@@ -1101,6 +912,282 @@
       "examples": [
         "e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b"
       ]
+    },
+    "WebhookClientIdentity": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "schema_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Open version identifier. Version 1 is currently emitted."
+        },
+        "classification_revision": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "classifier_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "availability": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "available or input_unavailable. Missing object means no stored identity data; it does not mean human."
+        },
+        "observed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "decided_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "claims": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "profile_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "provider_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "provider_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "agent_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "client_kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "purpose": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "verified": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "subject": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The proved attribute: provider, service or infrastructure. Proof does not extend to other attributes."
+              },
+              "value_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "evidence_ids": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "assessments": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "candidate_profile_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "evidence": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "method": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "checked_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "evaluated_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "covered_attributes": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "covered_components": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "request_binding": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "replay_policy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "description": "Optional best-effort client attribution for webhooks. The object and every nested field may be omitted or null. Availability and completeness are not guaranteed; integrations must work without this block or any of its fields. Missing or null values do not mean human or a negative verification result. Claimed names are unverified; a verified provider does not prove a service or agent. Unknown fields and string values must be accepted."
     }
   }
 }

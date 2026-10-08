@@ -23,7 +23,8 @@ required:
   - observed_at
 properties:
   client_identity:
-    $ref: ./ClientIdentity.yaml
+    $ref: ./WebhookClientIdentity.yaml
+    description: Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values.
   request_id:
     $ref: ./RequestId.yaml
   visitor_id:
