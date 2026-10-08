@@ -61,7 +61,7 @@ allOf:
         - schema_version
       properties:
         schema_version:
-          const: 2026-10-07
+          enum: [2026-10-07, 2026-10-08]
       additionalProperties: true
     then:
       type: object
@@ -129,3 +129,36 @@ allOf:
                   fingerprint: {}
                 additionalProperties: true
       additionalProperties: true
+
+  - if:
+      type: object
+      properties:
+        schema_version:
+          const: 2026-10-08
+      required: [schema_version]
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            detection_flags:
+              type: object
+              not:
+                anyOf:
+                  - type: object
+                    required: [browser_vpn_proxy]
+                    properties:
+                      browser_vpn_proxy: {}
+                  - type: object
+                    required: [datacenter_ip]
+                    properties:
+                      datacenter_ip: {}
+                  - type: object
+                    required: [abuser]
+                    properties:
+                      abuser: {}
+                  - type: object
+                    required: [suspicious_paid_click]
+                    properties:
+                      suspicious_paid_click: {}

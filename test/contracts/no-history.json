@@ -2,7 +2,7 @@
   "event_id": "ce256c0f66536957adc5f719250f5b10ce331bd1",
   "site_id": 7,
   "event_type": "identification.scored",
-  "schema_version": "2026-10-07",
+  "schema_version": "2026-10-08",
   "created_at": "2026-10-06T00:00:02Z",
   "data": {
     "result_version": "2026-10-06T00:00:01Z",
@@ -68,11 +68,8 @@
       "banned_ip": false,
       "vpn": false,
       "privacy_relay": false,
-      "browser_vpn_proxy": false,
       "tor": false,
       "proxy": false,
-      "datacenter_ip": false,
-      "abuser": false,
       "os_mismatch": false,
       "os_not_detected": false,
       "timezone_mismatch": false,
@@ -83,7 +80,6 @@
       "search_bot": false,
       "ai_bot": false,
       "ai_browser": false,
-      "suspicious_paid_click": false,
       "javascript_disabled": false,
       "stun_not_checked": false,
       "check_incomplete": false

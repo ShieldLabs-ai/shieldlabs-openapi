@@ -10,9 +10,9 @@ const HISTORY_HOST = 'https://account.shieldlabs.ai';
 const MANAGEMENT_HOST = 'https://api.shieldlabs.ai';
 
 const FLAGS = [
-  'vpn', 'privacy_relay', 'browser_vpn_proxy', 'tor', 'proxy', 'datacenter_ip', 'abuser',
+  'vpn', 'privacy_relay', 'tor', 'proxy',
   'os_mismatch', 'os_not_detected', 'timezone_mismatch', 'anti_detect_browser',
-  'browser_automation', 'ip_mismatch', 'incognito', 'search_bot', 'suspicious_paid_click',
+  'browser_automation', 'ip_mismatch', 'incognito', 'search_bot',
   'javascript_disabled', 'stun_not_checked', 'check_incomplete',
 ];
 const WEBHOOK_DATA_KEYS = [
@@ -205,11 +205,11 @@ describe('document', () => {
 });
 
 describe('schemas', () => {
-  it('require all 19 detection flags', () => {
+  it('require current detection flags and retain legacy properties', () => {
     const { doc } = freshBuild();
     const flags = doc.components.schemas.DetectionFlags;
     assert.deepEqual([...flags.required].sort(), [...FLAGS].sort());
-    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS, "os_mismatch2", "device_spoofing", "latency_test", "banned_ip", "ai_bot", "ai_browser"].sort());
+    assert.deepEqual(Object.keys(flags.properties).sort(), [...FLAGS, "browser_vpn_proxy", "datacenter_ip", "abuser", "suspicious_paid_click", "os_mismatch2", "device_spoofing", "latency_test", "banned_ip", "ai_bot", "ai_browser"].sort());
     for (const flag of FLAGS) assert.equal(flags.properties[flag].type, 'boolean', flag);
   });
 

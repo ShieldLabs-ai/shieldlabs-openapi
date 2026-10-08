@@ -88,7 +88,10 @@
         ],
         "properties": {
           "schema_version": {
-            "const": "2026-10-07"
+            "enum": [
+              "2026-10-07",
+              "2026-10-08"
+            ]
           }
         },
         "additionalProperties": true
@@ -193,6 +196,72 @@
           }
         },
         "additionalProperties": true
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": "2026-10-08"
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "detection_flags": {
+                "type": "object",
+                "not": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "browser_vpn_proxy"
+                      ],
+                      "properties": {
+                        "browser_vpn_proxy": {}
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "datacenter_ip"
+                      ],
+                      "properties": {
+                        "datacenter_ip": {}
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "abuser"
+                      ],
+                      "properties": {
+                        "abuser": {}
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "suspicious_paid_click"
+                      ],
+                      "properties": {
+                        "suspicious_paid_click": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     }
   ],
@@ -429,15 +498,12 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. Legacy 19 keys are always present; the extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "Stable yes/no verdicts for the identification. The extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
       "required": [
         "vpn",
         "privacy_relay",
-        "browser_vpn_proxy",
         "tor",
         "proxy",
-        "datacenter_ip",
-        "abuser",
         "os_mismatch",
         "os_not_detected",
         "timezone_mismatch",
@@ -446,7 +512,6 @@
         "ip_mismatch",
         "incognito",
         "search_bot",
-        "suspicious_paid_click",
         "javascript_disabled",
         "stun_not_checked",
         "check_incomplete"
@@ -454,7 +519,7 @@
       "properties": {
         "vpn": {
           "type": "boolean",
-          "description": "A VPN was detected (scored `vpn` signal)."
+          "description": "A VPN or Browser VPN/Proxy was detected."
         },
         "privacy_relay": {
           "type": "boolean",
@@ -462,6 +527,7 @@
         },
         "browser_vpn_proxy": {
           "type": "boolean",
+          "deprecated": true,
           "description": "A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`."
         },
         "tor": {
@@ -474,10 +540,12 @@
         },
         "datacenter_ip": {
           "type": "boolean",
+          "deprecated": true,
           "description": "The public IP belongs to a datacenter or hosting range."
         },
         "abuser": {
           "type": "boolean",
+          "deprecated": true,
           "description": "The public IP has a record of abuse in IP intelligence."
         },
         "os_mismatch": {
@@ -514,6 +582,7 @@
         },
         "suspicious_paid_click": {
           "type": "boolean",
+          "deprecated": true,
           "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
         },
         "javascript_disabled": {
@@ -640,7 +709,7 @@
     },
     "IdentificationScoredData": {
       "type": "object",
-      "description": "Final identification. risk_score is this scan only. Version 2026-10-07 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
+      "description": "Final identification. risk_score is this scan only. Version 2026-10-08 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
       "required": [
         "request_id",
         "visitor_id",
@@ -870,8 +939,10 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Scored release 2026-10-06; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-08; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-08",
+        "2026-10-07",
         "2026-10-06",
         "2026-06-01"
       ]

@@ -7,6 +7,7 @@
   "data": {
     "result_version": "2026-10-06T00:00:01Z",
     "scoring_version": "core:fixture",
+    "ai_bot_owner": "OpenAI",
     "hre": {
       "account_sharing": {
         "cluster_id": null,
@@ -73,9 +74,9 @@
       "anti_detect_browser": false,
       "browser_automation": false,
       "ip_mismatch": false,
-      "incognito": true,
+      "incognito": false,
       "search_bot": false,
-      "ai_bot": false,
+      "ai_bot": true,
       "ai_browser": false,
       "javascript_disabled": false,
       "stun_not_checked": false,
