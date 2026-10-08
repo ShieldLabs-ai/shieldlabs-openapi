@@ -1,6 +1,6 @@
 ## Unreleased
 
-- Scored webhook 2026-10-08 removes browser_vpn_proxy, datacenter_ip, abuser and suspicious_paid_click flags. vpn includes Browser VPN/Proxy; site_id remains. Legacy schemas remain readable.
+- Scored webhook 2026-10-08 removes browser_vpn_proxy, datacenter_ip, abuser and suspicious_paid_click flags. vpn includes Browser VPN/Proxy in flags, connection type and signals; site_id remains. Legacy schemas remain readable.
 
 # Changelog
 

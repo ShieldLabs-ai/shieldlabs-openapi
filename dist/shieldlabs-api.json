@@ -3033,6 +3033,26 @@
                 "data": {
                   "type": "object",
                   "properties": {
+                    "connection_type": {
+                      "type": "string",
+                      "not": {
+                        "const": "browser_vpn_proxy"
+                      }
+                    },
+                    "signals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "not": {
+                              "const": "browser_vpn_proxy"
+                            }
+                          }
+                        }
+                      }
+                    },
                     "detection_flags": {
                       "type": "object",
                       "not": {

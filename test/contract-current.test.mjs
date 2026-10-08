@@ -13,6 +13,12 @@ describe('Core 2026-10-08 fixtures',()=>{
    const broken=structuredClone(fixture);broken.data.detection_flags[key]=false;
    assert.equal(validator.validate(schema,broken).valid,false,key+' forbidden');
   }
+  for (const field of ['connection_type','signals']) {
+   const broken=structuredClone(fixture);
+   if (field==='connection_type') broken.data.connection_type='browser_vpn_proxy';
+   else broken.data.signals=[{name:'browser_vpn_proxy',weight:30}];
+   assert.equal(validator.validate(schema,broken).valid,false,field+' must unify VPN');
+  }
   assert.equal(fixture.data.risk_events,undefined);
   assert.equal(fixture.data.fingerprint,undefined);
   assert.equal(fixture.data.detection_flags.os_mismatch2,undefined);
