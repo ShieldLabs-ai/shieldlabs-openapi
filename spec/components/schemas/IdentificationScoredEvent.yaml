@@ -61,7 +61,7 @@ allOf:
         - schema_version
       properties:
         schema_version:
-          enum: [2026-10-07, 2026-10-08]
+          enum: [2026-10-07, 2026-10-08, 2026-10-09]
       additionalProperties: true
     then:
       type: object
@@ -72,8 +72,6 @@ allOf:
         data:
           type: object
           required:
-            - result_version
-            - scoring_version
             - hre
           properties:
             result_version: {}
@@ -134,7 +132,7 @@ allOf:
       type: object
       properties:
         schema_version:
-          const: 2026-10-08
+          enum: [2026-10-08, 2026-10-09]
       required: [schema_version]
     then:
       type: object
@@ -175,3 +173,40 @@ allOf:
                     required: [suspicious_paid_click]
                     properties:
                       suspicious_paid_click: {}
+
+  - if:
+      type: object
+      properties:
+        schema_version:
+          enum: [2026-10-07, 2026-10-08]
+      required: [schema_version]
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [result_version, scoring_version]
+          properties:
+            result_version: {}
+            scoring_version: {}
+  - if:
+      type: object
+      properties:
+        schema_version:
+          const: 2026-10-09
+      required: [schema_version]
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          not:
+            anyOf:
+              - type: object
+                required: [result_version]
+                properties:
+                  result_version: {}
+              - type: object
+                required: [scoring_version]
+                properties:
+                  scoring_version: {}

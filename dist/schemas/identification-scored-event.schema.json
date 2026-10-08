@@ -90,7 +90,8 @@
           "schema_version": {
             "enum": [
               "2026-10-07",
-              "2026-10-08"
+              "2026-10-08",
+              "2026-10-09"
             ]
           }
         },
@@ -110,8 +111,6 @@
           "data": {
             "type": "object",
             "required": [
-              "result_version",
-              "scoring_version",
               "hre"
             ],
             "properties": {
@@ -203,7 +202,10 @@
         "type": "object",
         "properties": {
           "schema_version": {
-            "const": "2026-10-08"
+            "enum": [
+              "2026-10-08",
+              "2026-10-09"
+            ]
           }
         },
         "required": [
@@ -279,6 +281,81 @@
                   ]
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "enum": [
+              "2026-10-07",
+              "2026-10-08"
+            ]
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "result_version",
+              "scoring_version"
+            ],
+            "properties": {
+              "result_version": {},
+              "scoring_version": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": "2026-10-09"
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "not": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "result_version"
+                  ],
+                  "properties": {
+                    "result_version": {}
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "scoring_version"
+                  ],
+                  "properties": {
+                    "scoring_version": {}
+                  }
+                }
+              ]
             }
           }
         }
@@ -539,7 +616,7 @@
     },
     "IdentificationScoredData": {
       "type": "object",
-      "description": "Final identification. risk_score is this scan only. Version 2026-10-08 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
+      "description": "Final identification. risk_score is this scan only. Version 2026-10-09 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
       "required": [
         "request_id",
         "visitor_id",
@@ -631,12 +708,15 @@
           "description": "Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits."
         },
         "result_version": {
+          "deprecated": true,
+          "description": "Legacy through 2026-10-08 only; omitted by current emitters.",
           "type": "string",
           "minLength": 1
         },
         "scoring_version": {
+          "deprecated": true,
           "type": "string",
-          "description": "Core build source revision; core:unversioned on local builds."
+          "description": "Legacy through 2026-10-08 only; omitted by current emitters."
         },
         "risk_events": {
           "deprecated": true,
@@ -770,8 +850,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Scored release 2026-10-08; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-09; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-09",
         "2026-10-08",
         "2026-10-07",
         "2026-10-06",

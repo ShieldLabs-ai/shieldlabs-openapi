@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Scored webhook schema 2026-10-09 removes result_version and scoring_version. Legacy versions remain readable.
+
+## Unreleased
+
 - Webhook client_identity and every nested field are optional and nullable. Attribution is best-effort; receivers must work without it.
 
 ## Unreleased

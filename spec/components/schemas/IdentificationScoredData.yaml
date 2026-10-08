@@ -1,5 +1,5 @@
 type: object
-description: Final identification. risk_score is this scan only. Version 2026-10-08
+description: Final identification. risk_score is this scan only. Version 2026-10-09
   uses signals for score contributions, detection_flags for final decisions,
   and hre for account results. Older bodies remain accepted.
 required:
@@ -78,11 +78,14 @@ properties:
     description: Original snapshot scan clock, distinct from envelope created_at.
       RFC 3339 in UTC with up to 9 fractional digits.
   result_version:
+    deprecated: true
+    description: Legacy through 2026-10-08 only; omitted by current emitters.
     type: string
     minLength: 1
   scoring_version:
+    deprecated: true
     type: string
-    description: Core build source revision; core:unversioned on local builds.
+    description: Legacy through 2026-10-08 only; omitted by current emitters.
   risk_events:
     deprecated: true
     description: Legacy 2026-10-06 only; absent from current scored events.
