@@ -1,5 +1,5 @@
 type: object
-description: Final identification. risk_score is this scan only. Version 2026-10-07
+description: Final identification. risk_score is this scan only. Version 2026-10-08
   uses signals for score contributions, detection_flags for final decisions,
   and hre for account results. Older bodies remain accepted.
 required:
