@@ -1,12 +1,10 @@
 {
-  "event_id": "ce256c0f66536957adc5f719250f5b10ce331bd1",
+  "event_id": "52102900cd52d25890e83e18bb0bdec95dedea02",
   "site_id": 7,
   "event_type": "identification.scored",
-  "schema_version": "2026-10-08",
+  "schema_version": "2026-10-09",
   "created_at": "2026-10-06T00:00:02Z",
   "data": {
-    "result_version": "2026-10-06T00:00:01Z",
-    "scoring_version": "core:fixture",
     "hre": {
       "account_sharing": {
         "cluster_id": null,
