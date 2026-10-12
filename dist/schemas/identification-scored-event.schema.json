@@ -91,7 +91,8 @@
             "enum": [
               "2026-10-07",
               "2026-10-08",
-              "2026-10-09"
+              "2026-10-09",
+              "2026-10-12"
             ]
           }
         },
@@ -118,19 +119,6 @@
               "scoring_version": {},
               "risk_events": {},
               "fingerprint": {},
-              "detection_flags": {
-                "type": "object",
-                "not": {
-                  "type": "object",
-                  "required": [
-                    "os_mismatch2"
-                  ],
-                  "properties": {
-                    "os_mismatch2": {}
-                  },
-                  "additionalProperties": true
-                }
-              },
               "hre": {
                 "type": "object",
                 "properties": {
@@ -164,7 +152,8 @@
                     },
                     "additionalProperties": true
                   }
-                }
+                },
+                "additionalProperties": true
               }
             },
             "additionalProperties": true,
@@ -204,13 +193,15 @@
           "schema_version": {
             "enum": [
               "2026-10-08",
-              "2026-10-09"
+              "2026-10-09",
+              "2026-10-12"
             ]
           }
         },
         "required": [
           "schema_version"
-        ]
+        ],
+        "additionalProperties": true
       },
       "then": {
         "type": "object",
@@ -235,7 +226,8 @@
                         "const": "browser_vpn_proxy"
                       }
                     }
-                  }
+                  },
+                  "additionalProperties": true
                 }
               },
               "detection_flags": {
@@ -249,7 +241,8 @@
                       ],
                       "properties": {
                         "browser_vpn_proxy": {}
-                      }
+                      },
+                      "additionalProperties": true
                     },
                     {
                       "type": "object",
@@ -258,7 +251,8 @@
                       ],
                       "properties": {
                         "datacenter_ip": {}
-                      }
+                      },
+                      "additionalProperties": true
                     },
                     {
                       "type": "object",
@@ -267,7 +261,8 @@
                       ],
                       "properties": {
                         "abuser": {}
-                      }
+                      },
+                      "additionalProperties": true
                     },
                     {
                       "type": "object",
@@ -276,14 +271,18 @@
                       ],
                       "properties": {
                         "suspicious_paid_click": {}
-                      }
+                      },
+                      "additionalProperties": true
                     }
                   ]
-                }
+                },
+                "additionalProperties": true
               }
-            }
+            },
+            "additionalProperties": true
           }
-        }
+        },
+        "additionalProperties": true
       }
     },
     {
@@ -323,12 +322,16 @@
         "type": "object",
         "properties": {
           "schema_version": {
-            "const": "2026-10-09"
+            "enum": [
+              "2026-10-09",
+              "2026-10-12"
+            ]
           }
         },
         "required": [
           "schema_version"
-        ]
+        ],
+        "additionalProperties": true
       },
       "then": {
         "type": "object",
@@ -344,7 +347,8 @@
                   ],
                   "properties": {
                     "result_version": {}
-                  }
+                  },
+                  "additionalProperties": true
                 },
                 {
                   "type": "object",
@@ -353,12 +357,88 @@
                   ],
                   "properties": {
                     "scoring_version": {}
-                  }
+                  },
+                  "additionalProperties": true
                 }
               ]
-            }
+            },
+            "additionalProperties": true
           }
-        }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": [
+          "schema_version"
+        ],
+        "properties": {
+          "schema_version": {
+            "enum": [
+              "2026-10-07",
+              "2026-10-08",
+              "2026-10-09"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "detection_flags": {
+                "type": "object",
+                "not": {
+                  "type": "object",
+                  "required": [
+                    "os_mismatch2"
+                  ],
+                  "properties": {
+                    "os_mismatch2": {}
+                  },
+                  "additionalProperties": true
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": [
+          "schema_version"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": "2026-10-12"
+          }
+        },
+        "additionalProperties": true
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "detection_flags": {
+                "$ref": "#/$defs/DetectionFlags"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
       }
     }
   ],
@@ -405,7 +485,365 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. The extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "The 21 source detection signals in scored webhook contract 2026-10-12. Groups and owner attribution are separate from this set. The two OS mismatch detectors remain independent.",
+      "required": [
+        "vpn",
+        "proxy",
+        "privacy_relay",
+        "check_incomplete",
+        "stun_not_checked",
+        "os_not_detected",
+        "timezone_mismatch",
+        "javascript_disabled",
+        "os_mismatch",
+        "os_mismatch2",
+        "ip_mismatch",
+        "latency_test",
+        "anti_detect_browser",
+        "device_spoofing",
+        "banned_ip",
+        "incognito",
+        "search_bot",
+        "ai_bot",
+        "browser_automation",
+        "ai_browser",
+        "tor"
+      ],
+      "properties": {
+        "vpn": {
+          "type": "boolean",
+          "description": "A VPN or Browser VPN/Proxy was detected."
+        },
+        "proxy": {
+          "type": "boolean",
+          "description": "A proxy was detected."
+        },
+        "privacy_relay": {
+          "type": "boolean",
+          "description": "A privacy relay such as iCloud Private Relay was detected."
+        },
+        "check_incomplete": {
+          "type": "boolean",
+          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+        },
+        "stun_not_checked": {
+          "type": "boolean",
+          "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+        },
+        "os_not_detected": {
+          "type": "boolean",
+          "description": "The operating system could not be determined from the User-Agent or the network."
+        },
+        "timezone_mismatch": {
+          "type": "boolean",
+          "description": "The browser timezone differs from the timezone of the IP location."
+        },
+        "javascript_disabled": {
+          "type": "boolean",
+          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+        },
+        "os_mismatch": {
+          "type": "boolean",
+          "description": "The first operating system consistency detector found a mismatch. Independent of os_mismatch2."
+        },
+        "os_mismatch2": {
+          "type": "boolean",
+          "description": "The second operating system consistency detector (TCP behaviour) found a mismatch. Independent of os_mismatch."
+        },
+        "ip_mismatch": {
+          "type": "boolean",
+          "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+        },
+        "latency_test": {
+          "type": "boolean"
+        },
+        "anti_detect_browser": {
+          "type": "boolean",
+          "description": "An anti-detect browser was detected."
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "banned_ip": {
+          "type": "boolean"
+        },
+        "incognito": {
+          "type": "boolean",
+          "description": "The browser runs in a private window."
+        },
+        "search_bot": {
+          "type": "boolean",
+          "description": "A search-engine crawler. Its Risk Score is always 0."
+        },
+        "ai_bot": {
+          "type": "boolean",
+          "description": "An already accepted crawler has purpose training or user_fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. A User-Agent claim alone does not grant an accepted verdict."
+        },
+        "browser_automation": {
+          "type": "boolean",
+          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+        },
+        "ai_browser": {
+          "type": "boolean",
+          "description": "A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient."
+        },
+        "tor": {
+          "type": "boolean",
+          "description": "The request came through the Tor network."
+        }
+      },
+      "additionalProperties": false
+    },
+    "DeviceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.",
+      "examples": [
+        "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
+        "00000000-0000-0000-0000-000000000000"
+      ]
+    },
+    "DeviceType": {
+      "type": "string",
+      "description": "Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the class could not be determined). The set is open: keep values added in later versions and treat them as `unknown`.",
+      "examples": [
+        "desktop"
+      ]
+    },
+    "HRE": {
+      "type": "object",
+      "required": [
+        "account_sharing",
+        "account_takeover",
+        "impossible_travel"
+      ],
+      "properties": {
+        "rules_version": {
+          "type": "string"
+        },
+        "account_sharing": {
+          "$ref": "#/$defs/HREResult"
+        },
+        "account_takeover": {
+          "$ref": "#/$defs/HREResult"
+        },
+        "impossible_travel": {
+          "$ref": "#/$defs/HREResult"
+        }
+      },
+      "description": "Three completed on-demand handler results. Technical errors block emission; no_history/skipped are explicit not_evaluated results. Anonymous checks are not_applicable. Multiaccount is separate."
+    },
+    "HREResult": {
+      "type": "object",
+      "required": [
+        "status",
+        "level",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "examples": [
+            "evaluated",
+            "not_evaluated",
+            "not_applicable"
+          ]
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "examples": [
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_devices": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cluster_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Authoritative cluster ID for this HRE result. Null when no cluster was published for the result, including old stored verdicts; never a device ID. Reused on retries."
+        }
+      }
+    },
+    "IdentificationScoredData": {
+      "type": "object",
+      "description": "Final identification. risk_score is this scan only. Version 2026-10-12 uses signals for score contributions, detection_flags for 21 source signals, and hre for account results. Older bodies remain accepted.",
+      "required": [
+        "request_id",
+        "visitor_id",
+        "device_id",
+        "session_id",
+        "cookie_id",
+        "user_hid",
+        "domain",
+        "public_ip",
+        "local_ip",
+        "connection_type",
+        "os",
+        "browser",
+        "device_type",
+        "traffic_source",
+        "risk_score",
+        "signals",
+        "detection_flags",
+        "observed_at"
+      ],
+      "properties": {
+        "client_identity": {
+          "$ref": "#/$defs/WebhookClientIdentity",
+          "description": "Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values."
+        },
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "visitor_id": {
+          "$ref": "#/$defs/VisitorId"
+        },
+        "device_id": {
+          "$ref": "#/$defs/DeviceId"
+        },
+        "session_id": {
+          "$ref": "#/$defs/SessionId"
+        },
+        "cookie_id": {
+          "$ref": "#/$defs/CookieId"
+        },
+        "user_hid": {
+          "$ref": "#/$defs/UserHid"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Registered domain of your site (the request host when no registered domain matched).",
+          "examples": [
+            "example.com"
+          ]
+        },
+        "public_ip": {
+          "$ref": "#/$defs/IpInfo",
+          "description": "Public IPv4 address of the HTTP request and its country. `ip` is empty when the request did not arrive over IPv4."
+        },
+        "local_ip": {
+          "$ref": "#/$defs/IpInfo",
+          "description": "Local IP address found by the browser network check (WebRTC): the leaked address when a local network leak was found, otherwise the address ShieldLabs observed. Both keys are empty when the check found nothing."
+        },
+        "connection_type": {
+          "$ref": "#/$defs/ConnectionType"
+        },
+        "os": {
+          "$ref": "#/$defs/OperatingSystem"
+        },
+        "browser": {
+          "$ref": "#/$defs/Browser"
+        },
+        "device_type": {
+          "$ref": "#/$defs/DeviceType"
+        },
+        "traffic_source": {
+          "$ref": "#/$defs/TrafficSource"
+        },
+        "risk_score": {
+          "$ref": "#/$defs/RiskScore"
+        },
+        "signals": {
+          "type": "array",
+          "description": "Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{\"name\":\"rate_limited\",\"weight\":999}`.",
+          "items": {
+            "$ref": "#/$defs/Signal"
+          }
+        },
+        "detection_flags": {
+          "$ref": "#/$defs/LegacyDetectionFlags",
+          "description": "Contract 2026-10-12 requires DetectionFlags (exactly 21 source signals); this fallback supports retained older versions."
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Rfc3339Timestamp",
+          "description": "Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits."
+        },
+        "result_version": {
+          "deprecated": true,
+          "description": "Legacy through 2026-10-08 only; omitted by current emitters.",
+          "type": "string",
+          "minLength": 1
+        },
+        "scoring_version": {
+          "deprecated": true,
+          "type": "string",
+          "description": "Legacy through 2026-10-08 only; omitted by current emitters."
+        },
+        "risk_events": {
+          "deprecated": true,
+          "description": "Legacy 2026-10-06 only; absent from current scored events.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiskEvent"
+          }
+        },
+        "hre": {
+          "$ref": "#/$defs/HRE"
+        },
+        "search_bot_owner": {
+          "type": "string",
+          "description": "Owner label from accepted search-bot detection; omitted when unknown or inactive.",
+          "examples": [
+            "Google"
+          ]
+        },
+        "ai_bot_owner": {
+          "type": "string",
+          "description": "Provider company label from accepted AI-bot detection; omitted when unknown or inactive.",
+          "examples": [
+            "OpenAI"
+          ]
+        },
+        "ai_browser_owner": {
+          "type": "string",
+          "description": "Owner label from accepted AI-browser detection; omitted when unknown or inactive."
+        }
+      }
+    },
+    "IpInfo": {
+      "type": "object",
+      "description": "An IPv4 address and its country. Both keys are always present and can be empty strings.",
+      "required": [
+        "ip",
+        "country"
+      ],
+      "properties": {
+        "ip": {
+          "$ref": "#/$defs/Ipv4OrEmpty"
+        },
+        "country": {
+          "$ref": "#/$defs/Country"
+        }
+      }
+    },
+    "Ipv4OrEmpty": {
+      "type": "string",
+      "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$",
+      "description": "Dotted IPv4 address, or an empty string when no IPv4 address is known (for example for visitors on IPv6).",
+      "examples": [
+        "203.0.113.24",
+        ""
+      ]
+    },
+    "LegacyDetectionFlags": {
+      "type": "object",
+      "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
       "required": [
         "vpn",
         "privacy_relay",
@@ -528,252 +966,6 @@
         }
       }
     },
-    "DeviceId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.",
-      "examples": [
-        "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
-        "00000000-0000-0000-0000-000000000000"
-      ]
-    },
-    "DeviceType": {
-      "type": "string",
-      "description": "Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the class could not be determined). The set is open: keep values added in later versions and treat them as `unknown`.",
-      "examples": [
-        "desktop"
-      ]
-    },
-    "HRE": {
-      "type": "object",
-      "required": [
-        "account_sharing",
-        "account_takeover",
-        "impossible_travel"
-      ],
-      "properties": {
-        "rules_version": {
-          "type": "string"
-        },
-        "account_sharing": {
-          "$ref": "#/$defs/HREResult"
-        },
-        "account_takeover": {
-          "$ref": "#/$defs/HREResult"
-        },
-        "impossible_travel": {
-          "$ref": "#/$defs/HREResult"
-        }
-      },
-      "description": "Three completed on-demand handler results. Technical errors block emission; no_history/skipped are explicit not_evaluated results. Anonymous checks are not_applicable. Multiaccount is separate."
-    },
-    "HREResult": {
-      "type": "object",
-      "required": [
-        "status",
-        "level",
-        "reason"
-      ],
-      "properties": {
-        "status": {
-          "type": "string",
-          "examples": [
-            "evaluated",
-            "not_evaluated",
-            "not_applicable"
-          ]
-        },
-        "level": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "examples": [
-            "medium",
-            "high",
-            null
-          ]
-        },
-        "reason": {
-          "type": "string"
-        },
-        "devices": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "min_devices": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "cluster_id": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Authoritative cluster ID for this HRE result. Null when no cluster was published for the result, including old stored verdicts; never a device ID. Reused on retries."
-        }
-      }
-    },
-    "IdentificationScoredData": {
-      "type": "object",
-      "description": "Final identification. risk_score is this scan only. Version 2026-10-09 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
-      "required": [
-        "request_id",
-        "visitor_id",
-        "device_id",
-        "session_id",
-        "cookie_id",
-        "user_hid",
-        "domain",
-        "public_ip",
-        "local_ip",
-        "connection_type",
-        "os",
-        "browser",
-        "device_type",
-        "traffic_source",
-        "risk_score",
-        "signals",
-        "detection_flags",
-        "observed_at"
-      ],
-      "properties": {
-        "client_identity": {
-          "$ref": "#/$defs/WebhookClientIdentity",
-          "description": "Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values."
-        },
-        "request_id": {
-          "$ref": "#/$defs/RequestId"
-        },
-        "visitor_id": {
-          "$ref": "#/$defs/VisitorId"
-        },
-        "device_id": {
-          "$ref": "#/$defs/DeviceId"
-        },
-        "session_id": {
-          "$ref": "#/$defs/SessionId"
-        },
-        "cookie_id": {
-          "$ref": "#/$defs/CookieId"
-        },
-        "user_hid": {
-          "$ref": "#/$defs/UserHid"
-        },
-        "domain": {
-          "type": "string",
-          "description": "Registered domain of your site (the request host when no registered domain matched).",
-          "examples": [
-            "example.com"
-          ]
-        },
-        "public_ip": {
-          "$ref": "#/$defs/IpInfo",
-          "description": "Public IPv4 address of the HTTP request and its country. `ip` is empty when the request did not arrive over IPv4."
-        },
-        "local_ip": {
-          "$ref": "#/$defs/IpInfo",
-          "description": "Local IP address found by the browser network check (WebRTC): the leaked address when a local network leak was found, otherwise the address ShieldLabs observed. Both keys are empty when the check found nothing."
-        },
-        "connection_type": {
-          "$ref": "#/$defs/ConnectionType"
-        },
-        "os": {
-          "$ref": "#/$defs/OperatingSystem"
-        },
-        "browser": {
-          "$ref": "#/$defs/Browser"
-        },
-        "device_type": {
-          "$ref": "#/$defs/DeviceType"
-        },
-        "traffic_source": {
-          "$ref": "#/$defs/TrafficSource"
-        },
-        "risk_score": {
-          "$ref": "#/$defs/RiskScore"
-        },
-        "signals": {
-          "type": "array",
-          "description": "Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{\"name\":\"rate_limited\",\"weight\":999}`.",
-          "items": {
-            "$ref": "#/$defs/Signal"
-          }
-        },
-        "detection_flags": {
-          "$ref": "#/$defs/DetectionFlags"
-        },
-        "observed_at": {
-          "$ref": "#/$defs/Rfc3339Timestamp",
-          "description": "Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits."
-        },
-        "result_version": {
-          "deprecated": true,
-          "description": "Legacy through 2026-10-08 only; omitted by current emitters.",
-          "type": "string",
-          "minLength": 1
-        },
-        "scoring_version": {
-          "deprecated": true,
-          "type": "string",
-          "description": "Legacy through 2026-10-08 only; omitted by current emitters."
-        },
-        "risk_events": {
-          "deprecated": true,
-          "description": "Legacy 2026-10-06 only; absent from current scored events.",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/RiskEvent"
-          }
-        },
-        "hre": {
-          "$ref": "#/$defs/HRE"
-        },
-        "search_bot_owner": {
-          "type": "string",
-          "description": "Owner label from accepted search-bot detection; omitted when unknown or inactive.",
-          "examples": [
-            "Google"
-          ]
-        },
-        "ai_bot_owner": {
-          "type": "string",
-          "description": "Provider company label from accepted AI-bot detection; omitted when unknown or inactive.",
-          "examples": [
-            "OpenAI"
-          ]
-        },
-        "ai_browser_owner": {
-          "type": "string",
-          "description": "Owner label from accepted AI-browser detection; omitted when unknown or inactive."
-        }
-      }
-    },
-    "IpInfo": {
-      "type": "object",
-      "description": "An IPv4 address and its country. Both keys are always present and can be empty strings.",
-      "required": [
-        "ip",
-        "country"
-      ],
-      "properties": {
-        "ip": {
-          "$ref": "#/$defs/Ipv4OrEmpty"
-        },
-        "country": {
-          "$ref": "#/$defs/Country"
-        }
-      }
-    },
-    "Ipv4OrEmpty": {
-      "type": "string",
-      "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$",
-      "description": "Dotted IPv4 address, or an empty string when no IPv4 address is known (for example for visitors on IPv6).",
-      "examples": [
-        "203.0.113.24",
-        ""
-      ]
-    },
     "OperatingSystem": {
       "type": "string",
       "description": "Operating system name, for example `Windows`, `Mac OS X`, `Linux`, `Android`, `IOS (iPhone)`, `IOS (iPad)`, `ChromeOS` or `Unknown`. Open set: display it, do not branch on it.",
@@ -850,8 +1042,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Scored release 2026-10-09; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-12 (21 independent source signals); multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-12",
         "2026-10-09",
         "2026-10-08",
         "2026-10-07",

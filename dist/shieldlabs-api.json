@@ -519,154 +519,19 @@
                   "$ref": "#/components/examples/IdentificationScoredTestDelivery"
                 },
                 "current": {
-                  "summary": "Current contract with fp21 and HRE",
+                  "summary": "21 source detection signals",
+                  "description": "Emitted by Core synthetic fixture export. This example describes serialization, not a live production visit.",
                   "value": {
-                    "event_id": "ce256c0f66536957adc5f719250f5b10ce331bd1",
+                    "event_id": "52102900cd52d25890e83e18bb0bdec95dedea02",
                     "site_id": 7,
                     "event_type": "identification.scored",
-                    "schema_version": "2026-10-06",
+                    "schema_version": "2026-10-12",
                     "created_at": "2026-10-06T00:00:02Z",
                     "data": {
-                      "result_version": "2026-10-06T00:00:01Z",
-                      "scoring_version": "core:fixture",
-                      "risk_events": [
-                        {
-                          "code": "vpn",
-                          "detected": false,
-                          "weight": 30,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "proxy",
-                          "detected": false,
-                          "weight": 30,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "privacy_relay",
-                          "detected": false,
-                          "weight": 30,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "check_incomplete",
-                          "detected": false,
-                          "weight": 0,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "network_check_incomplete",
-                          "detected": false,
-                          "weight": 30,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "os_not_detected",
-                          "detected": false,
-                          "weight": 30,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "timezone_mismatch",
-                          "detected": false,
-                          "weight": 10,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "javascript_disabled",
-                          "detected": false,
-                          "weight": 90,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "os_mismatch",
-                          "detected": false,
-                          "weight": 60,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "os_mismatch2",
-                          "detected": false,
-                          "weight": 60,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "ip_mismatch",
-                          "detected": false,
-                          "weight": 45,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "latency_test",
-                          "detected": false,
-                          "weight": 60,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "anti_detect_browser",
-                          "detected": false,
-                          "weight": 60,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "device_spoofing",
-                          "detected": false,
-                          "weight": 90,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "banned_ip",
-                          "detected": false,
-                          "weight": 999,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "incognito",
-                          "detected": true,
-                          "weight": 0,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "search_bot",
-                          "detected": false,
-                          "weight": 0,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "browser_automation",
-                          "detected": false,
-                          "weight": 60,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        },
-                        {
-                          "code": "tor",
-                          "detected": false,
-                          "weight": 99,
-                          "contribution": 0,
-                          "status": "evaluated"
-                        }
-                      ],
                       "hre": {
                         "rules_version": "fp21-fixture",
                         "account_sharing": {
+                          "cluster_id": "11111111-1111-4111-8111-111111111111",
                           "status": "evaluated",
                           "level": "high",
                           "reason": "",
@@ -674,11 +539,13 @@
                           "min_devices": 4
                         },
                         "account_takeover": {
+                          "cluster_id": "22222222-2222-4222-8222-222222222222",
                           "status": "evaluated",
                           "level": "medium",
                           "reason": "fixture"
                         },
                         "impossible_travel": {
+                          "cluster_id": null,
                           "status": "evaluated",
                           "level": null,
                           "reason": "below_distance"
@@ -723,11 +590,8 @@
                         "banned_ip": false,
                         "vpn": false,
                         "privacy_relay": false,
-                        "browser_vpn_proxy": false,
                         "tor": false,
                         "proxy": false,
-                        "datacenter_ip": false,
-                        "abuser": false,
                         "os_mismatch": false,
                         "os_not_detected": false,
                         "timezone_mismatch": false,
@@ -736,7 +600,188 @@
                         "ip_mismatch": false,
                         "incognito": true,
                         "search_bot": false,
-                        "suspicious_paid_click": false,
+                        "ai_bot": false,
+                        "ai_browser": false,
+                        "javascript_disabled": false,
+                        "stun_not_checked": false,
+                        "check_incomplete": false
+                      },
+                      "observed_at": "2026-10-06T00:00:00Z"
+                    }
+                  }
+                },
+                "aiBot": {
+                  "summary": "AI crawler flags",
+                  "description": "Emitted by Core synthetic fixture export. This example describes serialization, not a live production visit.",
+                  "value": {
+                    "event_id": "52102900cd52d25890e83e18bb0bdec95dedea02",
+                    "site_id": 7,
+                    "event_type": "identification.scored",
+                    "schema_version": "2026-10-12",
+                    "created_at": "2026-10-06T00:00:02Z",
+                    "data": {
+                      "ai_bot_owner": "OpenAI",
+                      "hre": {
+                        "account_sharing": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        },
+                        "account_takeover": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        },
+                        "impossible_travel": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        }
+                      },
+                      "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+                      "visitor_id": "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d",
+                      "device_id": "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
+                      "session_id": "7a1b2c3d-4e5f-4789-abcd-ef0123456789",
+                      "cookie_id": "3f2e1d0c-9b8a-4654-b210-fedcba987654",
+                      "user_hid": "anonymous",
+                      "domain": "example.com",
+                      "public_ip": {
+                        "ip": "203.0.113.1",
+                        "country": ""
+                      },
+                      "local_ip": {
+                        "ip": "",
+                        "country": ""
+                      },
+                      "connection_type": "direct",
+                      "os": "Windows",
+                      "browser": "Chrome",
+                      "device_type": "desktop",
+                      "traffic_source": {
+                        "channel": "",
+                        "referrer_domain": "",
+                        "landing_url": "",
+                        "click_id_type": "",
+                        "utm_source": "",
+                        "utm_medium": "",
+                        "utm_campaign": "",
+                        "utm_content": "",
+                        "utm_term": ""
+                      },
+                      "risk_score": 0,
+                      "signals": [],
+                      "detection_flags": {
+                        "os_mismatch2": false,
+                        "device_spoofing": false,
+                        "latency_test": false,
+                        "banned_ip": false,
+                        "vpn": false,
+                        "privacy_relay": false,
+                        "tor": false,
+                        "proxy": false,
+                        "os_mismatch": false,
+                        "os_not_detected": false,
+                        "timezone_mismatch": false,
+                        "anti_detect_browser": false,
+                        "browser_automation": false,
+                        "ip_mismatch": false,
+                        "incognito": false,
+                        "search_bot": false,
+                        "ai_bot": true,
+                        "ai_browser": false,
+                        "javascript_disabled": false,
+                        "stun_not_checked": false,
+                        "check_incomplete": false
+                      },
+                      "observed_at": "2026-10-06T00:00:00Z"
+                    }
+                  }
+                },
+                "aiBrowser": {
+                  "summary": "Verified browser infrastructure flags",
+                  "description": "Emitted by Core synthetic fixture export. This example describes serialization, not a live production visit.",
+                  "value": {
+                    "event_id": "52102900cd52d25890e83e18bb0bdec95dedea02",
+                    "site_id": 7,
+                    "event_type": "identification.scored",
+                    "schema_version": "2026-10-12",
+                    "created_at": "2026-10-06T00:00:02Z",
+                    "data": {
+                      "ai_browser_owner": "Browserbase",
+                      "hre": {
+                        "account_sharing": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        },
+                        "account_takeover": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        },
+                        "impossible_travel": {
+                          "cluster_id": null,
+                          "status": "not_applicable",
+                          "level": null,
+                          "reason": "anonymous_user"
+                        }
+                      },
+                      "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+                      "visitor_id": "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d",
+                      "device_id": "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
+                      "session_id": "7a1b2c3d-4e5f-4789-abcd-ef0123456789",
+                      "cookie_id": "3f2e1d0c-9b8a-4654-b210-fedcba987654",
+                      "user_hid": "anonymous",
+                      "domain": "example.com",
+                      "public_ip": {
+                        "ip": "203.0.113.1",
+                        "country": ""
+                      },
+                      "local_ip": {
+                        "ip": "",
+                        "country": ""
+                      },
+                      "connection_type": "direct",
+                      "os": "Windows",
+                      "browser": "Chrome",
+                      "device_type": "desktop",
+                      "traffic_source": {
+                        "channel": "",
+                        "referrer_domain": "",
+                        "landing_url": "",
+                        "click_id_type": "",
+                        "utm_source": "",
+                        "utm_medium": "",
+                        "utm_campaign": "",
+                        "utm_content": "",
+                        "utm_term": ""
+                      },
+                      "risk_score": 0,
+                      "signals": [],
+                      "detection_flags": {
+                        "os_mismatch2": false,
+                        "device_spoofing": false,
+                        "latency_test": false,
+                        "banned_ip": false,
+                        "vpn": false,
+                        "privacy_relay": false,
+                        "tor": false,
+                        "proxy": false,
+                        "os_mismatch": false,
+                        "os_not_detected": false,
+                        "timezone_mismatch": false,
+                        "anti_detect_browser": false,
+                        "browser_automation": false,
+                        "ip_mismatch": false,
+                        "incognito": false,
+                        "search_bot": false,
+                        "ai_bot": false,
+                        "ai_browser": true,
                         "javascript_disabled": false,
                         "stun_not_checked": false,
                         "check_incomplete": false
@@ -2310,11 +2355,123 @@
           }
         }
       },
+      "DetectionFlags": {
+        "type": "object",
+        "description": "The 21 source detection signals in scored webhook contract 2026-10-12. Groups and owner attribution are separate from this set. The two OS mismatch detectors remain independent.",
+        "required": [
+          "vpn",
+          "proxy",
+          "privacy_relay",
+          "check_incomplete",
+          "stun_not_checked",
+          "os_not_detected",
+          "timezone_mismatch",
+          "javascript_disabled",
+          "os_mismatch",
+          "os_mismatch2",
+          "ip_mismatch",
+          "latency_test",
+          "anti_detect_browser",
+          "device_spoofing",
+          "banned_ip",
+          "incognito",
+          "search_bot",
+          "ai_bot",
+          "browser_automation",
+          "ai_browser",
+          "tor"
+        ],
+        "properties": {
+          "vpn": {
+            "type": "boolean",
+            "description": "A VPN or Browser VPN/Proxy was detected."
+          },
+          "proxy": {
+            "type": "boolean",
+            "description": "A proxy was detected."
+          },
+          "privacy_relay": {
+            "type": "boolean",
+            "description": "A privacy relay such as iCloud Private Relay was detected."
+          },
+          "check_incomplete": {
+            "type": "boolean",
+            "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+          },
+          "stun_not_checked": {
+            "type": "boolean",
+            "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+          },
+          "os_not_detected": {
+            "type": "boolean",
+            "description": "The operating system could not be determined from the User-Agent or the network."
+          },
+          "timezone_mismatch": {
+            "type": "boolean",
+            "description": "The browser timezone differs from the timezone of the IP location."
+          },
+          "javascript_disabled": {
+            "type": "boolean",
+            "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+          },
+          "os_mismatch": {
+            "type": "boolean",
+            "description": "The first operating system consistency detector found a mismatch. Independent of os_mismatch2."
+          },
+          "os_mismatch2": {
+            "type": "boolean",
+            "description": "The second operating system consistency detector (TCP behaviour) found a mismatch. Independent of os_mismatch."
+          },
+          "ip_mismatch": {
+            "type": "boolean",
+            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+          },
+          "latency_test": {
+            "type": "boolean"
+          },
+          "anti_detect_browser": {
+            "type": "boolean",
+            "description": "An anti-detect browser was detected."
+          },
+          "device_spoofing": {
+            "type": "boolean"
+          },
+          "banned_ip": {
+            "type": "boolean"
+          },
+          "incognito": {
+            "type": "boolean",
+            "description": "The browser runs in a private window."
+          },
+          "search_bot": {
+            "type": "boolean",
+            "description": "A search-engine crawler. Its Risk Score is always 0."
+          },
+          "ai_bot": {
+            "type": "boolean",
+            "description": "An already accepted crawler has purpose training or user_fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. A User-Agent claim alone does not grant an accepted verdict."
+          },
+          "browser_automation": {
+            "type": "boolean",
+            "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+          },
+          "ai_browser": {
+            "type": "boolean",
+            "description": "A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient."
+          },
+          "tor": {
+            "type": "boolean",
+            "description": "The request came through the Tor network."
+          }
+        },
+        "additionalProperties": false
+      },
       "SchemaVersion": {
         "type": "string",
         "minLength": 1,
-        "description": "Webhook contract version. Scored release 2026-10-09; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+        "description": "Webhook contract version. Scored release 2026-10-12 (21 independent source signals); multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
         "examples": [
+          "2026-10-12",
           "2026-10-09",
           "2026-10-08",
           "2026-10-07",
@@ -2734,9 +2891,9 @@
           }
         }
       },
-      "DetectionFlags": {
+      "LegacyDetectionFlags": {
         "type": "object",
-        "description": "Stable yes/no verdicts for the identification. The extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+        "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
         "required": [
           "vpn",
           "privacy_relay",
@@ -2966,7 +3123,7 @@
       },
       "IdentificationScoredData": {
         "type": "object",
-        "description": "Final identification. risk_score is this scan only. Version 2026-10-09 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
+        "description": "Final identification. risk_score is this scan only. Version 2026-10-12 uses signals for score contributions, detection_flags for 21 source signals, and hre for account results. Older bodies remain accepted.",
         "required": [
           "request_id",
           "visitor_id",
@@ -3051,7 +3208,8 @@
             }
           },
           "detection_flags": {
-            "$ref": "#/components/schemas/DetectionFlags"
+            "$ref": "#/components/schemas/LegacyDetectionFlags",
+            "description": "Contract 2026-10-12 requires DetectionFlags (exactly 21 source signals); this fallback supports retained older versions."
           },
           "observed_at": {
             "$ref": "#/components/schemas/Rfc3339Timestamp",
@@ -3189,7 +3347,8 @@
                   "enum": [
                     "2026-10-07",
                     "2026-10-08",
-                    "2026-10-09"
+                    "2026-10-09",
+                    "2026-10-12"
                   ]
                 }
               },
@@ -3216,19 +3375,6 @@
                     "scoring_version": {},
                     "risk_events": {},
                     "fingerprint": {},
-                    "detection_flags": {
-                      "type": "object",
-                      "not": {
-                        "type": "object",
-                        "required": [
-                          "os_mismatch2"
-                        ],
-                        "properties": {
-                          "os_mismatch2": {}
-                        },
-                        "additionalProperties": true
-                      }
-                    },
                     "hre": {
                       "type": "object",
                       "properties": {
@@ -3262,7 +3408,8 @@
                           },
                           "additionalProperties": true
                         }
-                      }
+                      },
+                      "additionalProperties": true
                     }
                   },
                   "additionalProperties": true,
@@ -3302,13 +3449,15 @@
                 "schema_version": {
                   "enum": [
                     "2026-10-08",
-                    "2026-10-09"
+                    "2026-10-09",
+                    "2026-10-12"
                   ]
                 }
               },
               "required": [
                 "schema_version"
-              ]
+              ],
+              "additionalProperties": true
             },
             "then": {
               "type": "object",
@@ -3333,7 +3482,8 @@
                               "const": "browser_vpn_proxy"
                             }
                           }
-                        }
+                        },
+                        "additionalProperties": true
                       }
                     },
                     "detection_flags": {
@@ -3347,7 +3497,8 @@
                             ],
                             "properties": {
                               "browser_vpn_proxy": {}
-                            }
+                            },
+                            "additionalProperties": true
                           },
                           {
                             "type": "object",
@@ -3356,7 +3507,8 @@
                             ],
                             "properties": {
                               "datacenter_ip": {}
-                            }
+                            },
+                            "additionalProperties": true
                           },
                           {
                             "type": "object",
@@ -3365,7 +3517,8 @@
                             ],
                             "properties": {
                               "abuser": {}
-                            }
+                            },
+                            "additionalProperties": true
                           },
                           {
                             "type": "object",
@@ -3374,14 +3527,18 @@
                             ],
                             "properties": {
                               "suspicious_paid_click": {}
-                            }
+                            },
+                            "additionalProperties": true
                           }
                         ]
-                      }
+                      },
+                      "additionalProperties": true
                     }
-                  }
+                  },
+                  "additionalProperties": true
                 }
-              }
+              },
+              "additionalProperties": true
             }
           },
           {
@@ -3421,12 +3578,16 @@
               "type": "object",
               "properties": {
                 "schema_version": {
-                  "const": "2026-10-09"
+                  "enum": [
+                    "2026-10-09",
+                    "2026-10-12"
+                  ]
                 }
               },
               "required": [
                 "schema_version"
-              ]
+              ],
+              "additionalProperties": true
             },
             "then": {
               "type": "object",
@@ -3442,7 +3603,8 @@
                         ],
                         "properties": {
                           "result_version": {}
-                        }
+                        },
+                        "additionalProperties": true
                       },
                       {
                         "type": "object",
@@ -3451,12 +3613,88 @@
                         ],
                         "properties": {
                           "scoring_version": {}
-                        }
+                        },
+                        "additionalProperties": true
                       }
                     ]
-                  }
+                  },
+                  "additionalProperties": true
                 }
-              }
+              },
+              "additionalProperties": true
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "required": [
+                "schema_version"
+              ],
+              "properties": {
+                "schema_version": {
+                  "enum": [
+                    "2026-10-07",
+                    "2026-10-08",
+                    "2026-10-09"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "detection_flags": {
+                      "type": "object",
+                      "not": {
+                        "type": "object",
+                        "required": [
+                          "os_mismatch2"
+                        ],
+                        "properties": {
+                          "os_mismatch2": {}
+                        },
+                        "additionalProperties": true
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "required": [
+                "schema_version"
+              ],
+              "properties": {
+                "schema_version": {
+                  "const": "2026-10-12"
+                }
+              },
+              "additionalProperties": true
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "detection_flags": {
+                      "$ref": "#/components/schemas/DetectionFlags"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
             }
           }
         ]
