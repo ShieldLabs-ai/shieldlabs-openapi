@@ -61,7 +61,11 @@ allOf:
         - schema_version
       properties:
         schema_version:
-          enum: [2026-10-07, 2026-10-08, 2026-10-09]
+          enum:
+            - 2026-10-07
+            - 2026-10-08
+            - 2026-10-09
+            - 2026-10-12
       additionalProperties: true
     then:
       type: object
@@ -78,15 +82,6 @@ allOf:
             scoring_version: {}
             risk_events: {}
             fingerprint: {}
-            detection_flags:
-              type: object
-              not:
-                type: object
-                required:
-                  - os_mismatch2
-                properties:
-                  os_mismatch2: {}
-                additionalProperties: true
             hre:
               type: object
               properties:
@@ -111,6 +106,7 @@ allOf:
                   properties:
                     cluster_id: {}
                   additionalProperties: true
+              additionalProperties: true
           additionalProperties: true
           not:
             anyOf:
@@ -127,13 +123,17 @@ allOf:
                   fingerprint: {}
                 additionalProperties: true
       additionalProperties: true
-
   - if:
       type: object
       properties:
         schema_version:
-          enum: [2026-10-08, 2026-10-09]
-      required: [schema_version]
+          enum:
+            - 2026-10-08
+            - 2026-10-09
+            - 2026-10-12
+      required:
+        - schema_version
+      additionalProperties: true
     then:
       type: object
       properties:
@@ -153,39 +153,55 @@ allOf:
                     type: string
                     not:
                       const: browser_vpn_proxy
+                additionalProperties: true
             detection_flags:
               type: object
               not:
                 anyOf:
                   - type: object
-                    required: [browser_vpn_proxy]
+                    required:
+                      - browser_vpn_proxy
                     properties:
                       browser_vpn_proxy: {}
+                    additionalProperties: true
                   - type: object
-                    required: [datacenter_ip]
+                    required:
+                      - datacenter_ip
                     properties:
                       datacenter_ip: {}
+                    additionalProperties: true
                   - type: object
-                    required: [abuser]
+                    required:
+                      - abuser
                     properties:
                       abuser: {}
+                    additionalProperties: true
                   - type: object
-                    required: [suspicious_paid_click]
+                    required:
+                      - suspicious_paid_click
                     properties:
                       suspicious_paid_click: {}
-
+                    additionalProperties: true
+              additionalProperties: true
+          additionalProperties: true
+      additionalProperties: true
   - if:
       type: object
       properties:
         schema_version:
-          enum: [2026-10-07, 2026-10-08]
-      required: [schema_version]
+          enum:
+            - 2026-10-07
+            - 2026-10-08
+      required:
+        - schema_version
     then:
       type: object
       properties:
         data:
           type: object
-          required: [result_version, scoring_version]
+          required:
+            - result_version
+            - scoring_version
           properties:
             result_version: {}
             scoring_version: {}
@@ -193,8 +209,12 @@ allOf:
       type: object
       properties:
         schema_version:
-          const: 2026-10-09
-      required: [schema_version]
+          enum:
+            - 2026-10-09
+            - 2026-10-12
+      required:
+        - schema_version
+      additionalProperties: true
     then:
       type: object
       properties:
@@ -203,10 +223,63 @@ allOf:
           not:
             anyOf:
               - type: object
-                required: [result_version]
+                required:
+                  - result_version
                 properties:
                   result_version: {}
+                additionalProperties: true
               - type: object
-                required: [scoring_version]
+                required:
+                  - scoring_version
                 properties:
                   scoring_version: {}
+                additionalProperties: true
+          additionalProperties: true
+      additionalProperties: true
+  - if:
+      type: object
+      required:
+        - schema_version
+      properties:
+        schema_version:
+          enum:
+            - 2026-10-07
+            - 2026-10-08
+            - 2026-10-09
+      additionalProperties: true
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            detection_flags:
+              type: object
+              not:
+                type: object
+                required:
+                  - os_mismatch2
+                properties:
+                  os_mismatch2: {}
+                additionalProperties: true
+              additionalProperties: true
+          additionalProperties: true
+      additionalProperties: true
+  - if:
+      type: object
+      required:
+        - schema_version
+      properties:
+        schema_version:
+          const: 2026-10-12
+      additionalProperties: true
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            detection_flags:
+              $ref: ./DetectionFlags.yaml
+          additionalProperties: true
+      additionalProperties: true

@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Scored webhook contract 2026-10-12 requires the 21 source detection flags, including independent os_mismatch and os_mismatch2. Current flags exclude browser_vpn_proxy, datacenter_ip, abuser and suspicious_paid_click; retained older bodies use a separate legacy schema. AI bot and verified AI browser examples come from Core fixture output. Scoring weights are unchanged.
+
+## Unreleased
+
 - Scored webhook schema 2026-10-09 removes result_version and scoring_version. Legacy versions remain readable.
 
 ## Unreleased

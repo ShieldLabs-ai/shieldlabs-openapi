@@ -114,7 +114,7 @@ properties:
             - Is proxy
             - null
   detection_flags:
-    $ref: ../components/schemas/DetectionFlags.yaml
+    $ref: ../components/schemas/LegacyDetectionFlags.yaml
   observed_at:
     type: string
     format: date-time

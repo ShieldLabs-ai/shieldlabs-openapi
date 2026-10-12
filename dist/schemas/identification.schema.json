@@ -122,7 +122,7 @@
       }
     },
     "detection_flags": {
-      "$ref": "#/$defs/DetectionFlags"
+      "$ref": "#/$defs/LegacyDetectionFlags"
     },
     "observed_at": {
       "type": "string",
@@ -380,9 +380,50 @@
         ""
       ]
     },
-    "DetectionFlags": {
+    "DeviceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.",
+      "examples": [
+        "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
+        "00000000-0000-0000-0000-000000000000"
+      ]
+    },
+    "DeviceType": {
+      "type": "string",
+      "description": "Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the class could not be determined). The set is open: keep values added in later versions and treat them as `unknown`.",
+      "examples": [
+        "desktop"
+      ]
+    },
+    "IpInfo": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. The extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "An IPv4 address and its country. Both keys are always present and can be empty strings.",
+      "required": [
+        "ip",
+        "country"
+      ],
+      "properties": {
+        "ip": {
+          "$ref": "#/$defs/Ipv4OrEmpty"
+        },
+        "country": {
+          "$ref": "#/$defs/Country"
+        }
+      }
+    },
+    "Ipv4OrEmpty": {
+      "type": "string",
+      "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$",
+      "description": "Dotted IPv4 address, or an empty string when no IPv4 address is known (for example for visitors on IPv6).",
+      "examples": [
+        "203.0.113.24",
+        ""
+      ]
+    },
+    "LegacyDetectionFlags": {
+      "type": "object",
+      "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
       "required": [
         "vpn",
         "privacy_relay",
@@ -504,47 +545,6 @@
           "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
         }
       }
-    },
-    "DeviceId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Server-side device identifier (UUID v5). It survives cleared cookies and private windows. The nil UUID `00000000-0000-0000-0000-000000000000` means that no usable device signals were collected (for example on rate-limit marker rows): never group identifications by it.",
-      "examples": [
-        "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
-        "00000000-0000-0000-0000-000000000000"
-      ]
-    },
-    "DeviceType": {
-      "type": "string",
-      "description": "Device class from the browser. Known values: `desktop`, `mobile`, `tablet` and `unknown` (the class could not be determined). The set is open: keep values added in later versions and treat them as `unknown`.",
-      "examples": [
-        "desktop"
-      ]
-    },
-    "IpInfo": {
-      "type": "object",
-      "description": "An IPv4 address and its country. Both keys are always present and can be empty strings.",
-      "required": [
-        "ip",
-        "country"
-      ],
-      "properties": {
-        "ip": {
-          "$ref": "#/$defs/Ipv4OrEmpty"
-        },
-        "country": {
-          "$ref": "#/$defs/Country"
-        }
-      }
-    },
-    "Ipv4OrEmpty": {
-      "type": "string",
-      "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$",
-      "description": "Dotted IPv4 address, or an empty string when no IPv4 address is known (for example for visitors on IPv6).",
-      "examples": [
-        "203.0.113.24",
-        ""
-      ]
     },
     "OperatingSystem": {
       "type": "string",

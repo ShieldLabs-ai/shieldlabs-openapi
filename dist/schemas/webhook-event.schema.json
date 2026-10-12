@@ -115,59 +115,50 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "Stable yes/no verdicts for the identification. The extension flags depend on the scoring release. Task 204 adds optional ai_bot and ai_browser flags; older payloads omit them. Branch on these flags and on\nthe Risk Score; signal names are for display and logging.\n\nWhen `search_bot` is `true`, `incognito`, `check_incomplete`, `ip_mismatch` and\n`javascript_disabled` are always `false`.",
+      "description": "The 21 source detection signals in scored webhook contract 2026-10-12. Groups and owner attribution are separate from this set. The two OS mismatch detectors remain independent.",
       "required": [
         "vpn",
-        "privacy_relay",
-        "tor",
         "proxy",
-        "os_mismatch",
+        "privacy_relay",
+        "check_incomplete",
+        "stun_not_checked",
         "os_not_detected",
         "timezone_mismatch",
-        "anti_detect_browser",
-        "browser_automation",
+        "javascript_disabled",
+        "os_mismatch",
+        "os_mismatch2",
         "ip_mismatch",
+        "latency_test",
+        "anti_detect_browser",
+        "device_spoofing",
+        "banned_ip",
         "incognito",
         "search_bot",
-        "javascript_disabled",
-        "stun_not_checked",
-        "check_incomplete"
+        "ai_bot",
+        "browser_automation",
+        "ai_browser",
+        "tor"
       ],
       "properties": {
         "vpn": {
           "type": "boolean",
           "description": "A VPN or Browser VPN/Proxy was detected."
         },
-        "privacy_relay": {
-          "type": "boolean",
-          "description": "A privacy relay such as iCloud Private Relay was detected."
-        },
-        "browser_vpn_proxy": {
-          "type": "boolean",
-          "deprecated": true,
-          "description": "A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`."
-        },
-        "tor": {
-          "type": "boolean",
-          "description": "The request came through the Tor network."
-        },
         "proxy": {
           "type": "boolean",
           "description": "A proxy was detected."
         },
-        "datacenter_ip": {
+        "privacy_relay": {
           "type": "boolean",
-          "deprecated": true,
-          "description": "The public IP belongs to a datacenter or hosting range."
+          "description": "A privacy relay such as iCloud Private Relay was detected."
         },
-        "abuser": {
+        "check_incomplete": {
           "type": "boolean",
-          "deprecated": true,
-          "description": "The public IP has a record of abuse in IP intelligence."
+          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
         },
-        "os_mismatch": {
+        "stun_not_checked": {
           "type": "boolean",
-          "description": "Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks."
+          "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
         },
         "os_not_detected": {
           "type": "boolean",
@@ -177,17 +168,34 @@
           "type": "boolean",
           "description": "The browser timezone differs from the timezone of the IP location."
         },
-        "anti_detect_browser": {
+        "javascript_disabled": {
           "type": "boolean",
-          "description": "An anti-detect browser was detected."
+          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
         },
-        "browser_automation": {
+        "os_mismatch": {
           "type": "boolean",
-          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+          "description": "The first operating system consistency detector found a mismatch. Independent of os_mismatch2."
+        },
+        "os_mismatch2": {
+          "type": "boolean",
+          "description": "The second operating system consistency detector (TCP behaviour) found a mismatch. Independent of os_mismatch."
         },
         "ip_mismatch": {
           "type": "boolean",
           "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+        },
+        "latency_test": {
+          "type": "boolean"
+        },
+        "anti_detect_browser": {
+          "type": "boolean",
+          "description": "An anti-detect browser was detected."
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "banned_ip": {
+          "type": "boolean"
         },
         "incognito": {
           "type": "boolean",
@@ -197,46 +205,24 @@
           "type": "boolean",
           "description": "A search-engine crawler. Its Risk Score is always 0."
         },
-        "suspicious_paid_click": {
-          "type": "boolean",
-          "deprecated": true,
-          "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
-        },
-        "javascript_disabled": {
-          "type": "boolean",
-          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
-        },
-        "stun_not_checked": {
-          "type": "boolean",
-          "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
-        },
-        "check_incomplete": {
-          "type": "boolean",
-          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
-        },
-        "device_spoofing": {
-          "type": "boolean"
-        },
-        "latency_test": {
-          "type": "boolean"
-        },
-        "banned_ip": {
-          "type": "boolean"
-        },
         "ai_bot": {
           "type": "boolean",
-          "description": "An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk."
+          "description": "An already accepted crawler has purpose training or user_fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. A User-Agent claim alone does not grant an accepted verdict."
+        },
+        "browser_automation": {
+          "type": "boolean",
+          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
         },
         "ai_browser": {
           "type": "boolean",
-          "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
+          "description": "A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient."
         },
-        "os_mismatch2": {
+        "tor": {
           "type": "boolean",
-          "deprecated": true,
-          "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
+          "description": "The request came through the Tor network."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "DeviceId": {
       "type": "string",
@@ -326,7 +312,7 @@
     },
     "IdentificationScoredData": {
       "type": "object",
-      "description": "Final identification. risk_score is this scan only. Version 2026-10-09 uses signals for score contributions, detection_flags for final decisions, and hre for account results. Older bodies remain accepted.",
+      "description": "Final identification. risk_score is this scan only. Version 2026-10-12 uses signals for score contributions, detection_flags for 21 source signals, and hre for account results. Older bodies remain accepted.",
       "required": [
         "request_id",
         "visitor_id",
@@ -411,7 +397,8 @@
           }
         },
         "detection_flags": {
-          "$ref": "#/$defs/DetectionFlags"
+          "$ref": "#/$defs/LegacyDetectionFlags",
+          "description": "Contract 2026-10-12 requires DetectionFlags (exactly 21 source signals); this fallback supports retained older versions."
         },
         "observed_at": {
           "$ref": "#/$defs/Rfc3339Timestamp",
@@ -549,7 +536,8 @@
                 "enum": [
                   "2026-10-07",
                   "2026-10-08",
-                  "2026-10-09"
+                  "2026-10-09",
+                  "2026-10-12"
                 ]
               }
             },
@@ -576,19 +564,6 @@
                   "scoring_version": {},
                   "risk_events": {},
                   "fingerprint": {},
-                  "detection_flags": {
-                    "type": "object",
-                    "not": {
-                      "type": "object",
-                      "required": [
-                        "os_mismatch2"
-                      ],
-                      "properties": {
-                        "os_mismatch2": {}
-                      },
-                      "additionalProperties": true
-                    }
-                  },
                   "hre": {
                     "type": "object",
                     "properties": {
@@ -622,7 +597,8 @@
                         },
                         "additionalProperties": true
                       }
-                    }
+                    },
+                    "additionalProperties": true
                   }
                 },
                 "additionalProperties": true,
@@ -662,13 +638,15 @@
               "schema_version": {
                 "enum": [
                   "2026-10-08",
-                  "2026-10-09"
+                  "2026-10-09",
+                  "2026-10-12"
                 ]
               }
             },
             "required": [
               "schema_version"
-            ]
+            ],
+            "additionalProperties": true
           },
           "then": {
             "type": "object",
@@ -693,7 +671,8 @@
                             "const": "browser_vpn_proxy"
                           }
                         }
-                      }
+                      },
+                      "additionalProperties": true
                     }
                   },
                   "detection_flags": {
@@ -707,7 +686,8 @@
                           ],
                           "properties": {
                             "browser_vpn_proxy": {}
-                          }
+                          },
+                          "additionalProperties": true
                         },
                         {
                           "type": "object",
@@ -716,7 +696,8 @@
                           ],
                           "properties": {
                             "datacenter_ip": {}
-                          }
+                          },
+                          "additionalProperties": true
                         },
                         {
                           "type": "object",
@@ -725,7 +706,8 @@
                           ],
                           "properties": {
                             "abuser": {}
-                          }
+                          },
+                          "additionalProperties": true
                         },
                         {
                           "type": "object",
@@ -734,14 +716,18 @@
                           ],
                           "properties": {
                             "suspicious_paid_click": {}
-                          }
+                          },
+                          "additionalProperties": true
                         }
                       ]
-                    }
+                    },
+                    "additionalProperties": true
                   }
-                }
+                },
+                "additionalProperties": true
               }
-            }
+            },
+            "additionalProperties": true
           }
         },
         {
@@ -781,12 +767,16 @@
             "type": "object",
             "properties": {
               "schema_version": {
-                "const": "2026-10-09"
+                "enum": [
+                  "2026-10-09",
+                  "2026-10-12"
+                ]
               }
             },
             "required": [
               "schema_version"
-            ]
+            ],
+            "additionalProperties": true
           },
           "then": {
             "type": "object",
@@ -802,7 +792,8 @@
                       ],
                       "properties": {
                         "result_version": {}
-                      }
+                      },
+                      "additionalProperties": true
                     },
                     {
                       "type": "object",
@@ -811,12 +802,88 @@
                       ],
                       "properties": {
                         "scoring_version": {}
-                      }
+                      },
+                      "additionalProperties": true
                     }
                   ]
-                }
+                },
+                "additionalProperties": true
               }
-            }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "schema_version"
+            ],
+            "properties": {
+              "schema_version": {
+                "enum": [
+                  "2026-10-07",
+                  "2026-10-08",
+                  "2026-10-09"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "detection_flags": {
+                    "type": "object",
+                    "not": {
+                      "type": "object",
+                      "required": [
+                        "os_mismatch2"
+                      ],
+                      "properties": {
+                        "os_mismatch2": {}
+                      },
+                      "additionalProperties": true
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "schema_version"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": "2026-10-12"
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "detection_flags": {
+                    "$ref": "#/$defs/DetectionFlags"
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
           }
         }
       ]
@@ -845,6 +912,131 @@
         "203.0.113.24",
         ""
       ]
+    },
+    "LegacyDetectionFlags": {
+      "type": "object",
+      "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
+      "required": [
+        "vpn",
+        "privacy_relay",
+        "tor",
+        "proxy",
+        "os_mismatch",
+        "os_not_detected",
+        "timezone_mismatch",
+        "anti_detect_browser",
+        "browser_automation",
+        "ip_mismatch",
+        "incognito",
+        "search_bot",
+        "javascript_disabled",
+        "stun_not_checked",
+        "check_incomplete"
+      ],
+      "properties": {
+        "vpn": {
+          "type": "boolean",
+          "description": "A VPN or Browser VPN/Proxy was detected."
+        },
+        "privacy_relay": {
+          "type": "boolean",
+          "description": "A privacy relay such as iCloud Private Relay was detected."
+        },
+        "browser_vpn_proxy": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`."
+        },
+        "tor": {
+          "type": "boolean",
+          "description": "The request came through the Tor network."
+        },
+        "proxy": {
+          "type": "boolean",
+          "description": "A proxy was detected."
+        },
+        "datacenter_ip": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "The public IP belongs to a datacenter or hosting range."
+        },
+        "abuser": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "The public IP has a record of abuse in IP intelligence."
+        },
+        "os_mismatch": {
+          "type": "boolean",
+          "description": "Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks."
+        },
+        "os_not_detected": {
+          "type": "boolean",
+          "description": "The operating system could not be determined from the User-Agent or the network."
+        },
+        "timezone_mismatch": {
+          "type": "boolean",
+          "description": "The browser timezone differs from the timezone of the IP location."
+        },
+        "anti_detect_browser": {
+          "type": "boolean",
+          "description": "An anti-detect browser was detected."
+        },
+        "browser_automation": {
+          "type": "boolean",
+          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+        },
+        "ip_mismatch": {
+          "type": "boolean",
+          "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+        },
+        "incognito": {
+          "type": "boolean",
+          "description": "The browser runs in a private window."
+        },
+        "search_bot": {
+          "type": "boolean",
+          "description": "A search-engine crawler. Its Risk Score is always 0."
+        },
+        "suspicious_paid_click": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
+        },
+        "javascript_disabled": {
+          "type": "boolean",
+          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+        },
+        "stun_not_checked": {
+          "type": "boolean",
+          "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+        },
+        "check_incomplete": {
+          "type": "boolean",
+          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "latency_test": {
+          "type": "boolean"
+        },
+        "banned_ip": {
+          "type": "boolean"
+        },
+        "ai_bot": {
+          "type": "boolean",
+          "description": "An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk."
+        },
+        "ai_browser": {
+          "type": "boolean",
+          "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
+        },
+        "os_mismatch2": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
+        }
+      }
     },
     "MultiaccountChangedData": {
       "type": "object",
@@ -1207,8 +1399,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Scored release 2026-10-09; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-12 (21 independent source signals); multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-12",
         "2026-10-09",
         "2026-10-08",
         "2026-10-07",
