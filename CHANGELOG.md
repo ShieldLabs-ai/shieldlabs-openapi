@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Scored webhook contract 2026-10-13 sends 20 public detection flags. `os_mismatch` folds both OS detectors, `vpn` includes browser VPN/proxy, `latency_test` is `ws_tcp_latency`, and `banned_ip` is `rate_limited`. Fired signals of weight 0 stay in `signals`. Schema 2026-10-12 remains valid for already delivered bodies.
+
+## Unreleased
+
 - Scored webhook contract 2026-10-12 requires the 21 source detection flags, including independent os_mismatch and os_mismatch2. Current flags exclude browser_vpn_proxy, datacenter_ip, abuser and suspicious_paid_click; retained older bodies use a separate legacy schema. AI bot and verified AI browser examples come from Core fixture output. Scoring weights are unchanged.
 
 ## Unreleased

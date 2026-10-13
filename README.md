@@ -210,7 +210,7 @@ access the typed field.
 ## Compatibility
 
 - OpenAPI 3.1.0; the JSON Schemas use JSON Schema 2020-12 and compile with a strict validator.
-- `info.version` follows the package version (semantic versioning). Webhook payloads carry `schema_version` (`2026-10-07` current; `2026-10-06` and `2026-06-01` legacy).
+- `info.version` follows the package version (semantic versioning). Webhook payloads carry `schema_version` (`2026-10-13` current scored flags; `2026-10-12` and older bodies stay valid).
 - Parse tolerantly: ignore unknown fields, keep unknown values of string fields and accept other `schema_version` values. Response fields with a known set of values are open strings in the spec and in the JSON Schemas, so a value added later never fails validation.
 - Tooling requires Node.js 20.19 or later; CI runs on Node.js 20, 22 and 24.
 

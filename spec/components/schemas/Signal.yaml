@@ -1,7 +1,8 @@
 type: object
 description: >-
-  One weighted risk signal behind the Risk Score. Only signals with a non-zero weight are listed,
-  in scoring order. The same name can appear twice, and weights can be negative.
+  One public risk signal behind the Risk Score. Fired signals are listed in scoring order,
+  including weight 0 (incognito, search_bot, ai_bot, ai_browser, check_incomplete).
+  Debug rows are omitted. The same name can appear twice, and weights can be negative.
 required:
   - name
   - weight
@@ -13,7 +14,7 @@ properties:
       Signal name. The set is open: new names can appear at any time, so keep unknown names and
       use them for display and logging only. Known names:
       - `tor`: the request came through Tor;
-      - `vpn`: a VPN was detected;
+      - `vpn`: a VPN was detected, including a browser VPN or proxy;
       - `privacy_relay`: a privacy relay such as iCloud Private Relay;
       - `proxy`: a proxy was detected;
       - `datacenter_ip`: the IP belongs to a datacenter or hosting range;
@@ -26,8 +27,8 @@ properties:
         identification of the same device and IP;
       - `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);
       - `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;
-      - `os_mismatch`: the operating system seen on the network differs from the one the browser
-        reports;
+      - `os_mismatch`: either operating-system consistency detector fired;
+      - `ws_tcp_latency`: the WebSocket-to-TCP latency test fired;
       - `os_not_detected`: the operating system could not be determined;
       - `timezone_mismatch`: the browser timezone differs from the IP location timezone;
       - `stun_not_checked`: the network (STUN) check did not complete;
