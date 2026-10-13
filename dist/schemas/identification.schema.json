@@ -526,10 +526,20 @@
           "type": "boolean"
         },
         "latency_test": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Older name of ws_tcp_latency. Current 2026-10-13 payloads use ws_tcp_latency."
+        },
+        "ws_tcp_latency": {
+          "type": "boolean",
+          "description": "Public name of the latency detector from schema 2026-10-13."
         },
         "banned_ip": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Older name of rate_limited. Current 2026-10-13 payloads use rate_limited."
+        },
+        "rate_limited": {
+          "type": "boolean",
+          "description": "Public name of the banned-IP flag from schema 2026-10-13."
         },
         "ai_bot": {
           "type": "boolean",

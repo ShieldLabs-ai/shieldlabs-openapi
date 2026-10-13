@@ -41,14 +41,14 @@ post:
           testDelivery:
             $ref: ../components/examples/IdentificationScoredTestDelivery.yaml
           current:
-            summary: 21 source detection signals
+            summary: 20 public detection signals
             description: Emitted by Core synthetic fixture export. This example describes
               serialization, not a live production visit.
             value:
               event_id: 52102900cd52d25890e83e18bb0bdec95dedea02
               site_id: 7
               event_type: identification.scored
-              schema_version: 2026-10-12
+              schema_version: 2026-10-13
               created_at: 2026-10-06T00:00:02Z
               data:
                 hre:
@@ -98,12 +98,13 @@ post:
                   utm_content: ""
                   utm_term: ""
                 risk_score: 0
-                signals: []
+                signals:
+                  - name: incognito
+                    weight: 0
                 detection_flags:
-                  os_mismatch2: false
                   device_spoofing: false
-                  latency_test: false
-                  banned_ip: false
+                  ws_tcp_latency: false
+                  rate_limited: false
                   vpn: false
                   privacy_relay: false
                   tor: false
@@ -130,7 +131,7 @@ post:
               event_id: 52102900cd52d25890e83e18bb0bdec95dedea02
               site_id: 7
               event_type: identification.scored
-              schema_version: 2026-10-12
+              schema_version: 2026-10-13
               created_at: 2026-10-06T00:00:02Z
               data:
                 ai_bot_owner: OpenAI
@@ -178,12 +179,13 @@ post:
                   utm_content: ""
                   utm_term: ""
                 risk_score: 0
-                signals: []
+                signals:
+                  - name: ai_bot
+                    weight: 0
                 detection_flags:
-                  os_mismatch2: false
                   device_spoofing: false
-                  latency_test: false
-                  banned_ip: false
+                  ws_tcp_latency: false
+                  rate_limited: false
                   vpn: false
                   privacy_relay: false
                   tor: false
@@ -210,7 +212,7 @@ post:
               event_id: 52102900cd52d25890e83e18bb0bdec95dedea02
               site_id: 7
               event_type: identification.scored
-              schema_version: 2026-10-12
+              schema_version: 2026-10-13
               created_at: 2026-10-06T00:00:02Z
               data:
                 ai_browser_owner: Browserbase
@@ -258,12 +260,13 @@ post:
                   utm_content: ""
                   utm_term: ""
                 risk_score: 0
-                signals: []
+                signals:
+                  - name: ai_browser
+                    weight: 0
                 detection_flags:
-                  os_mismatch2: false
                   device_spoofing: false
-                  latency_test: false
-                  banned_ip: false
+                  ws_tcp_latency: false
+                  rate_limited: false
                   vpn: false
                   privacy_relay: false
                   tor: false

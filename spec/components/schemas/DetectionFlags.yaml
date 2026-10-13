@@ -1,7 +1,8 @@
 type: object
-description: The 21 source detection signals in scored webhook contract
-  2026-10-12. Groups and owner attribution are separate from this set. The two
-  OS mismatch detectors remain independent.
+description: The 20 public detection signals in scored webhook contract
+  2026-10-13. os_mismatch is true when either OS detector fired.
+  browser_vpn_proxy contributes to vpn and is not its own flag. Groups and
+  owner attribution are separate from this set.
 required:
   - vpn
   - proxy
@@ -12,12 +13,11 @@ required:
   - timezone_mismatch
   - javascript_disabled
   - os_mismatch
-  - os_mismatch2
   - ip_mismatch
-  - latency_test
+  - ws_tcp_latency
   - anti_detect_browser
   - device_spoofing
-  - banned_ip
+  - rate_limited
   - incognito
   - search_bot
   - ai_bot
@@ -27,7 +27,8 @@ required:
 properties:
   vpn:
     type: boolean
-    description: A VPN or Browser VPN/Proxy was detected.
+    description: A VPN was detected, including a VPN or proxy built into the
+      browser. connection_type may still be browser_vpn_proxy.
   proxy:
     type: boolean
     description: A proxy was detected.
@@ -37,7 +38,7 @@ properties:
   check_incomplete:
     type: boolean
     description: Part of the browser checks timed out, so the verdict rests on
-      partial data. Informational.
+      partial data. Informational. Weight 0, and present in signals when true.
   stun_not_checked:
     type: boolean
     description: The browser network (STUN) check did not complete. Cleared again
@@ -54,36 +55,39 @@ properties:
     description: JavaScript, or the browser APIs the checks need, were unavailable.
   os_mismatch:
     type: boolean
-    description: The first operating system consistency detector found a mismatch.
-      Independent of os_mismatch2.
-  os_mismatch2:
-    type: boolean
-    description: The second operating system consistency detector (TCP behaviour)
-      found a mismatch. Independent of os_mismatch.
+    description: Either operating-system consistency detector fired. The two
+      detectors are not separate public flags.
   ip_mismatch:
     type: boolean
     description: "The public IP differs from the local IP found by the browser
       network check. Informational: it does not add to the score."
-  latency_test:
+  ws_tcp_latency:
     type: boolean
+    description: The WebSocket-to-TCP latency test fired. This is the public name
+      of that detector.
   anti_detect_browser:
     type: boolean
     description: An anti-detect browser was detected.
   device_spoofing:
     type: boolean
-  banned_ip:
+  rate_limited:
     type: boolean
+    description: The visitor IP is banned for this window. The matching signal
+      weight is 999.
   incognito:
     type: boolean
-    description: The browser runs in a private window.
+    description: The browser runs in a private window. Weight 0, and present in
+      signals when true.
   search_bot:
     type: boolean
-    description: A search-engine crawler. Its Risk Score is always 0.
+    description: A search-engine crawler. Its Risk Score is always 0. Weight 0,
+      and present in signals when true.
   ai_bot:
     type: boolean
     description: An already accepted crawler has purpose training or user_fetch.
       ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI
       browsers. A User-Agent claim alone does not grant an accepted verdict.
+      Weight 0, and present in signals when true.
   browser_automation:
     type: boolean
     description: Browser automation was detected, for example a WebDriver-controlled
@@ -93,6 +97,7 @@ properties:
     type: boolean
     description: A browser has separately verified infrastructure or service
       attribution. A User-Agent claim or provider-only IP proof is insufficient.
+      Weight 0, and present in signals when true.
   tor:
     type: boolean
     description: The request came through the Tor network.

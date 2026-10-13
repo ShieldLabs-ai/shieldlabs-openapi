@@ -115,7 +115,115 @@
     },
     "DetectionFlags": {
       "type": "object",
-      "description": "The 21 source detection signals in scored webhook contract 2026-10-12. Groups and owner attribution are separate from this set. The two OS mismatch detectors remain independent.",
+      "description": "The 20 public detection signals in scored webhook contract 2026-10-13. os_mismatch is true when either OS detector fired. browser_vpn_proxy contributes to vpn and is not its own flag. Groups and owner attribution are separate from this set.",
+      "required": [
+        "vpn",
+        "proxy",
+        "privacy_relay",
+        "check_incomplete",
+        "stun_not_checked",
+        "os_not_detected",
+        "timezone_mismatch",
+        "javascript_disabled",
+        "os_mismatch",
+        "ip_mismatch",
+        "ws_tcp_latency",
+        "anti_detect_browser",
+        "device_spoofing",
+        "rate_limited",
+        "incognito",
+        "search_bot",
+        "ai_bot",
+        "browser_automation",
+        "ai_browser",
+        "tor"
+      ],
+      "properties": {
+        "vpn": {
+          "type": "boolean",
+          "description": "A VPN was detected, including a VPN or proxy built into the browser. connection_type may still be browser_vpn_proxy."
+        },
+        "proxy": {
+          "type": "boolean",
+          "description": "A proxy was detected."
+        },
+        "privacy_relay": {
+          "type": "boolean",
+          "description": "A privacy relay such as iCloud Private Relay was detected."
+        },
+        "check_incomplete": {
+          "type": "boolean",
+          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true."
+        },
+        "stun_not_checked": {
+          "type": "boolean",
+          "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+        },
+        "os_not_detected": {
+          "type": "boolean",
+          "description": "The operating system could not be determined from the User-Agent or the network."
+        },
+        "timezone_mismatch": {
+          "type": "boolean",
+          "description": "The browser timezone differs from the timezone of the IP location."
+        },
+        "javascript_disabled": {
+          "type": "boolean",
+          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+        },
+        "os_mismatch": {
+          "type": "boolean",
+          "description": "Either operating-system consistency detector fired. The two detectors are not separate public flags."
+        },
+        "ip_mismatch": {
+          "type": "boolean",
+          "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+        },
+        "ws_tcp_latency": {
+          "type": "boolean",
+          "description": "The WebSocket-to-TCP latency test fired. This is the public name of that detector."
+        },
+        "anti_detect_browser": {
+          "type": "boolean",
+          "description": "An anti-detect browser was detected."
+        },
+        "device_spoofing": {
+          "type": "boolean"
+        },
+        "rate_limited": {
+          "type": "boolean",
+          "description": "The visitor IP is banned for this window. The matching signal weight is 999."
+        },
+        "incognito": {
+          "type": "boolean",
+          "description": "The browser runs in a private window. Weight 0, and present in signals when true."
+        },
+        "search_bot": {
+          "type": "boolean",
+          "description": "A search-engine crawler. Its Risk Score is always 0. Weight 0, and present in signals when true."
+        },
+        "ai_bot": {
+          "type": "boolean",
+          "description": "An already accepted crawler has purpose training or user_fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. A User-Agent claim alone does not grant an accepted verdict. Weight 0, and present in signals when true."
+        },
+        "browser_automation": {
+          "type": "boolean",
+          "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+        },
+        "ai_browser": {
+          "type": "boolean",
+          "description": "A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient. Weight 0, and present in signals when true."
+        },
+        "tor": {
+          "type": "boolean",
+          "description": "The request came through the Tor network."
+        }
+      },
+      "additionalProperties": false
+    },
+    "DetectionFlags20261012": {
+      "type": "object",
+      "description": "Retained scored webhook contract 2026-10-12. Twenty-one source detection signals, with os_mismatch and os_mismatch2 independent. Current deliveries use DetectionFlags (2026-10-13).",
       "required": [
         "vpn",
         "proxy",
@@ -312,7 +420,7 @@
     },
     "IdentificationScoredData": {
       "type": "object",
-      "description": "Final identification. risk_score is this scan only. Version 2026-10-12 uses signals for score contributions, detection_flags for 21 source signals, and hre for account results. Older bodies remain accepted.",
+      "description": "Final identification. risk_score is this scan only. Version 2026-10-13 uses signals for score contributions, including fired signals of weight 0, detection_flags for 20 public signals, and hre for account results. Older bodies remain accepted.",
       "required": [
         "request_id",
         "visitor_id",
@@ -398,7 +506,7 @@
         },
         "detection_flags": {
           "$ref": "#/$defs/LegacyDetectionFlags",
-          "description": "Contract 2026-10-12 requires DetectionFlags (exactly 21 source signals); this fallback supports retained older versions."
+          "description": "Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. This fallback supports retained older versions."
         },
         "observed_at": {
           "$ref": "#/$defs/Rfc3339Timestamp",
@@ -537,7 +645,8 @@
                   "2026-10-07",
                   "2026-10-08",
                   "2026-10-09",
-                  "2026-10-12"
+                  "2026-10-12",
+                  "2026-10-13"
                 ]
               }
             },
@@ -639,7 +748,8 @@
                 "enum": [
                   "2026-10-08",
                   "2026-10-09",
-                  "2026-10-12"
+                  "2026-10-12",
+                  "2026-10-13"
                 ]
               }
             },
@@ -769,7 +879,8 @@
               "schema_version": {
                 "enum": [
                   "2026-10-09",
-                  "2026-10-12"
+                  "2026-10-12",
+                  "2026-10-13"
                 ]
               }
             },
@@ -866,6 +977,35 @@
             "properties": {
               "schema_version": {
                 "const": "2026-10-12"
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "detection_flags": {
+                    "$ref": "#/$defs/DetectionFlags20261012"
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "schema_version"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": "2026-10-13"
               }
             },
             "additionalProperties": true
@@ -1018,10 +1158,20 @@
           "type": "boolean"
         },
         "latency_test": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Older name of ws_tcp_latency. Current 2026-10-13 payloads use ws_tcp_latency."
+        },
+        "ws_tcp_latency": {
+          "type": "boolean",
+          "description": "Public name of the latency detector from schema 2026-10-13."
         },
         "banned_ip": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Older name of rate_limited. Current 2026-10-13 payloads use rate_limited."
+        },
+        "rate_limited": {
+          "type": "boolean",
+          "description": "Public name of the banned-IP flag from schema 2026-10-13."
         },
         "ai_bot": {
           "type": "boolean",
@@ -1399,8 +1549,9 @@
     "SchemaVersion": {
       "type": "string",
       "minLength": 1,
-      "description": "Webhook contract version. Scored release 2026-10-12 (21 independent source signals); multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
+      "description": "Webhook contract version. Scored release 2026-10-13 (20 public signals); 2026-10-12 keeps 21 independent source signals; multi-account group release 2026-10-07; parsers also accept legacy 2026-06-01.",
       "examples": [
+        "2026-10-13",
         "2026-10-12",
         "2026-10-09",
         "2026-10-08",
@@ -1419,7 +1570,7 @@
     },
     "Signal": {
       "type": "object",
-      "description": "One weighted risk signal behind the Risk Score. Only signals with a non-zero weight are listed, in scoring order. The same name can appear twice, and weights can be negative.",
+      "description": "One public risk signal behind the Risk Score. Fired signals are listed in scoring order, including weight 0 (incognito, search_bot, ai_bot, ai_browser, check_incomplete). Debug rows are omitted. The same name can appear twice, and weights can be negative.",
       "required": [
         "name",
         "weight"
@@ -1428,7 +1579,7 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected;\n- `privacy_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: the operating system seen on the network differs from the one the browser\n  reports;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `stun_not_checked`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `stun_not_checked`;\n- `rate_limited`: the rate-limit marker, weight 999.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
+          "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected, including a browser VPN or proxy;\n- `privacy_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: either operating-system consistency detector fired;\n- `ws_tcp_latency`: the WebSocket-to-TCP latency test fired;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `stun_not_checked`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `stun_not_checked`;\n- `rate_limited`: the rate-limit marker, weight 999.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
           "examples": [
             "proxy",
             "antidetect_browser"

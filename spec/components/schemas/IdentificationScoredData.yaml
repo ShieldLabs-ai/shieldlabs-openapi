@@ -1,7 +1,8 @@
 type: object
-description: Final identification. risk_score is this scan only. Version 2026-10-12
-  uses signals for score contributions, detection_flags for 21 source signals,
-  and hre for account results. Older bodies remain accepted.
+description: Final identification. risk_score is this scan only. Version 2026-10-13
+  uses signals for score contributions, including fired signals of weight 0,
+  detection_flags for 20 public signals, and hre for account results. Older
+  bodies remain accepted.
 required:
   - request_id
   - visitor_id
@@ -73,7 +74,7 @@ properties:
       $ref: ./Signal.yaml
   detection_flags:
     $ref: ./LegacyDetectionFlags.yaml
-    description: Contract 2026-10-12 requires DetectionFlags (exactly 21 source signals); this fallback supports retained older versions.
+    description: Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. This fallback supports retained older versions.
   observed_at:
     $ref: ./Rfc3339Timestamp.yaml
     description: Original snapshot scan clock, distinct from envelope created_at.

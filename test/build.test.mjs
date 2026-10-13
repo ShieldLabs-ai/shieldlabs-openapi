@@ -14,7 +14,7 @@ const FLAGS = [
   'os_mismatch', 'os_not_detected', 'timezone_mismatch', 'anti_detect_browser',
   'browser_automation', 'ip_mismatch', 'incognito', 'search_bot',
   'javascript_disabled', 'stun_not_checked', 'check_incomplete',
-  'os_mismatch2', 'device_spoofing', 'latency_test', 'banned_ip', 'ai_bot', 'ai_browser',
+  'device_spoofing', 'ws_tcp_latency', 'rate_limited', 'ai_bot', 'ai_browser',
 ];
 const WEBHOOK_DATA_KEYS = [
   'request_id', 'visitor_id', 'device_id', 'session_id', 'cookie_id', 'user_hid', 'domain',
@@ -206,7 +206,7 @@ describe('document', () => {
 });
 
 describe('schemas', () => {
-  it('require exactly the 21 current source detection flags', () => {
+  it('require exactly the 20 current public detection flags', () => {
     const { doc } = freshBuild();
     const flags = doc.components.schemas.DetectionFlags;
     assert.deepEqual([...flags.required].sort(), [...FLAGS].sort());

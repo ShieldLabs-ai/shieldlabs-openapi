@@ -66,6 +66,7 @@ allOf:
             - 2026-10-08
             - 2026-10-09
             - 2026-10-12
+            - 2026-10-13
       additionalProperties: true
     then:
       type: object
@@ -131,6 +132,7 @@ allOf:
             - 2026-10-08
             - 2026-10-09
             - 2026-10-12
+            - 2026-10-13
       required:
         - schema_version
       additionalProperties: true
@@ -212,6 +214,7 @@ allOf:
           enum:
             - 2026-10-09
             - 2026-10-12
+            - 2026-10-13
       required:
         - schema_version
       additionalProperties: true
@@ -272,6 +275,24 @@ allOf:
       properties:
         schema_version:
           const: 2026-10-12
+      additionalProperties: true
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            detection_flags:
+              $ref: ./DetectionFlags20261012.yaml
+          additionalProperties: true
+      additionalProperties: true
+  - if:
+      type: object
+      required:
+        - schema_version
+      properties:
+        schema_version:
+          const: 2026-10-13
       additionalProperties: true
     then:
       type: object
