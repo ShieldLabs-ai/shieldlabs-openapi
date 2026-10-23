@@ -2443,7 +2443,7 @@
           },
           "ip_mismatch": {
             "type": "boolean",
-            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+            "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions."
           },
           "incognito": {
             "type": "boolean",
@@ -2573,7 +2573,7 @@
           },
           "ip_mismatch": {
             "type": "boolean",
-            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+            "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions."
           },
           "latency_test": {
             "type": "boolean"

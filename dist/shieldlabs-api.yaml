@@ -2114,7 +2114,7 @@ components:
           description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
         ip_mismatch:
           type: boolean
-          description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
+          description: A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions.
         incognito:
           type: boolean
           description: The browser runs in a private window.
@@ -2216,7 +2216,7 @@ components:
           description: The second operating system consistency detector (TCP behaviour) found a mismatch. Independent of os_mismatch.
         ip_mismatch:
           type: boolean
-          description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
+          description: A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions.
         latency_test:
           type: boolean
         anti_detect_browser:
