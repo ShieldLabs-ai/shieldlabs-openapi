@@ -503,7 +503,7 @@
         },
         "ip_mismatch": {
           "type": "boolean",
-          "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+          "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions."
         },
         "incognito": {
           "type": "boolean",
@@ -535,19 +535,19 @@
         },
         "latency_test": {
           "type": "boolean",
-          "description": "Older name of ws_tcp_latency. Current 2026-10-13 payloads use ws_tcp_latency."
+          "description": "Current public name of the latency detector. Payloads from schema 2026-10-13 before the slug rename used ws_tcp_latency."
         },
         "ws_tcp_latency": {
           "type": "boolean",
-          "description": "Public name of the latency detector from schema 2026-10-13."
+          "description": "Previous public name of the latency detector. Current 2026-10-13 payloads use latency_test."
         },
         "banned_ip": {
           "type": "boolean",
-          "description": "Older name of rate_limited. Current 2026-10-13 payloads use rate_limited."
+          "description": "Current public name of the banned-IP flag. Payloads from schema 2026-10-13 before the slug rename used rate_limited."
         },
         "rate_limited": {
           "type": "boolean",
-          "description": "Public name of the banned-IP flag from schema 2026-10-13."
+          "description": "Previous public name of the banned-IP flag. Current 2026-10-13 payloads use banned_ip."
         },
         "ai_bot": {
           "type": "boolean",
@@ -576,7 +576,7 @@
     "RiskScore": {
       "type": "integer",
       "minimum": 0,
-      "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"rate_limited\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
+      "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
       "examples": [
         0,
         35,

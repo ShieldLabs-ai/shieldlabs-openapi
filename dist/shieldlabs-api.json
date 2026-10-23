@@ -4,7 +4,7 @@
     "title": "ShieldLabs API",
     "version": "1.0.1",
     "summary": "Identification results and risk scoring for your backend.",
-    "description": "The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent\nruns in a browser: the Risk Score, the risk signals behind it, the detection flags and the\nidentifiers (request, visitor, device, session, cookie and User HID) it belongs to.\n\n## How it fits\n\n1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification\n   and hands your page a request ID. The browser never receives a Risk Score, a visitor ID or\n   a device ID.\n2. **Your backend.** Your page sends the request ID along with the protected action (signup,\n   login, checkout). Your backend reads the verdict for it from the **History API**, or\n   receives it in a signed `identification.scored` **webhook**.\n3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`\n   and the identifiers, for example by counting how many accounts one `device_id` has used\n   (skipping the `user_hid` values that do not identify a user, listed under Identifiers).\n\nScoring is asynchronous. The webhook usually arrives about 300 ms after the browser check; when\nfollow-up network checks run, it is sent when they finish, at most about 10 seconds later. The\nHistory row appears about 1-3 seconds after the browser call and can be refined for up to about\n10 seconds as follow-up checks finish. Start the identification when the user begins the\nprotected action (for example when the signup form opens), then either poll the History API by\n`identification_id` with a short backoff or wait for the webhook. Let one identification authorize one\nprotected action: reject request IDs you have already used and identifications older than your\nfreshness window.\n\n## Hosts and credentials\n\n| API | Host | Paths | Credentials |\n|---|---|---|---|\n| History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |\n| Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |\n| Health | both hosts | `/health` | none |\n\nEvery operation declares its own server, so generated clients send each call to the right\nhost. The History API serves its paths from the host root: the full URL is\n`https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that\nalready ends in `/api` produces `/api/api/v1/...` and a `404`.\n\nThe two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your\nserver; only the Public Key belongs in the browser. All keys are in the analytics dashboard at\nhttps://app.shieldlabs.ai.\n\n## Rate limits\n\n- **History API:** about 15 requests per second per domain, shared by every caller of that\n  domain. Requests over the limit get `429`; there is no ban, so retry after about a second.\n- **Management API:** 15 requests per minute per client IP. The request that goes over the\n  limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`\n  from this API; cache the profile instead.\n- **Health:** not rate limited.\n\nAPI calls and webhook deliveries are free: only identifications made by the browser agent use\nyour included volume.\n\n## Errors\n\nError bodies are not uniform. Branch on the HTTP status first, then try to parse the body as\nJSON whatever its content type.\n\n| API | Status | Body |\n|---|---|---|\n| History API | 401 | JSON text `{\"error\":\"...\"}`, sent as `text/plain` |\n| History API | 429 | `{\"error\":\"too many requests\"}` |\n| History API | 500 | `{\"error\":\"...\"}`. A malformed UUID or IPv4 value always ends here: validate before sending and do not retry it |\n| Management API | 401 | empty |\n| Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |\n| Management API | 429, 503 | `{\"error\":\"...\"}` |\n| Both | 404 | `404 page not found` as `text/plain` when no route matches |\n| Both | 502, 504 | an HTML page from the edge proxy |\n\nRetry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,\n`401` or `404`, nor a History API `500` caused by a malformed value.\n\n## Identifiers\n\n- `identification_id`: one identification, created in the browser (UUID v4). It joins the browser\n  call, the webhook and the History row.\n- `session_id`: one visit on one origin (UUID v4).\n- `cookie_id`: first-party browser identifier kept by the agent (UUID v4).\n- `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private\n  windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.\n- `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on\n  a known device keeps the visitor ID.\n- `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.\n  `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Leave\n  these values, `null` and the empty string out when you count accounts. Hex-encoded hashes\n  are the easiest values to search: see the `value` parameter of `searchHistory` for how to\n  encode other characters.\n\nValidate UUIDs with any version accepted, the nil UUID included.\n\n## Risk Score, risk bands and the 999 marker\n\nThe Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to\n100. Search-engine crawlers always score 0. The three risk bands are computed on your side; no\nband field exists on the wire:\n\n| Band | Score |\n|---|---|\n| trusted | 0-29 |\n| suspicious | 30-59 |\n| dangerous | 60-100 |\n\nA value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over\nthe ingest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"rate_limited\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nBranch on `detection_flags` and the Risk Score. Signal names are for display and logging;\nweights can be negative or change between releases, so never add them up yourself. A missing\nidentification means \"unverified\", never \"clean\".\n\n## Countries, IP addresses and timestamps\n\n- `country` values are English country names from IP intelligence, such as `Germany` or\n  `United States`, or an empty string when unknown.\n- IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `\"\"` and the History\n  API sends `0.0.0.0`; such identifications cannot be searched by IP.\n- Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional\n  digits.\n- The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;\n  older rows can lack the milliseconds.\n- The Management API `CreatedAt` is RFC 3339 with second precision.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-06` includes the identification score, final risk-event catalogue,\nfp21 and three completed on-demand HRE results. AI bots/browser are planned only;\nmultiaccount is separate and all-time entity risks are not exported.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nWorker/Redis waits can extend wall time. Retries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-06` (current) or `2026-06-01` (legacy).\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
+    "description": "The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent\nruns in a browser: the Risk Score, the risk signals behind it, the detection flags and the\nidentifiers (request, visitor, device, session, cookie and User HID) it belongs to.\n\n## How it fits\n\n1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification\n   and hands your page an Identification ID.\n2. **Your backend.** Your page sends the request ID along with the protected action (signup,\n   login, checkout). Your backend reads the verdict for it from the **History API**, or\n   receives it in a signed `identification.scored` **webhook**.\n3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`\n   and the identifiers, for example by counting how many accounts one `device_id` has used\n   (skipping the `user_hid` values that do not identify a user, listed under Identifiers).\n\nScoring is asynchronous. Start the identification when the user begins the\nprotected action (for example when the signup form opens), then either poll the History API by\n`identification_id` with a short backoff or wait for the webhook. Let one identification authorize one\nprotected action: reject request IDs you have already used and identifications older than your\nfreshness window.\n\n## Hosts and credentials\n\n| API | Host | Paths | Credentials |\n|---|---|---|---|\n| History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |\n| Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |\n| Health | both hosts | `/health` | none |\n\nEvery operation declares its own server, so generated clients send each call to the right\nhost. The History API serves its paths from the host root: the full URL is\n`https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that\nalready ends in `/api` produces `/api/api/v1/...` and a `404`.\n\nThe two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your\nserver; only the Public Key belongs in the browser. All keys are in the analytics dashboard at\nhttps://app.shieldlabs.ai.\n\n## Rate limits\n\n- **History API:** about 15 requests per second per domain, shared by every caller of that\n  domain. Requests over the limit get `429`; there is no ban, so retry after about a second.\n- **Management API:** 15 requests per minute per client IP. The request that goes over the\n  limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`\n  from this API; cache the profile instead.\n- **Health:** not rate limited.\n\nAPI calls and webhook deliveries are free: only identifications made by the browser agent use\nyour included volume.\n\n## Errors\n\nError bodies are not uniform. Branch on the HTTP status first, then try to parse the body as\nJSON whatever its content type.\n\n| API | Status | Body |\n|---|---|---|\n| History API | 401 | JSON text `{\"error\":\"...\"}`, sent as `text/plain` |\n| History API | 429 | `{\"error\":\"too many requests\"}` |\n| History API | 500 | `{\"error\":\"...\"}`. A malformed UUID or IPv4 value always ends here: validate before sending and do not retry it |\n| Management API | 401 | empty |\n| Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |\n| Management API | 429, 503 | `{\"error\":\"...\"}` |\n| Both | 404 | `404 page not found` as `text/plain` when no route matches |\n| Both | 502, 504 | an HTML page from the edge proxy |\n\nRetry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,\n`401` or `404`, nor a History API `500` caused by a malformed value.\n\n## Identifiers\n\n- `identification_id`: one identification, created in the browser (UUID v4). It joins the browser\n  call, the webhook and the History row.\n- `session_id`: one visit on one origin (UUID v4).\n- `cookie_id`: first-party browser identifier kept by the agent (UUID v4).\n- `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private\n  windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.\n- `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on\n  a known device keeps the visitor ID.\n- `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.\n  `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Leave\n  these values, `null` and the empty string out when you count accounts. Hex-encoded hashes\n  are the easiest values to search: see the `value` parameter of `searchHistory` for how to\n  encode other characters.\n\nValidate UUIDs with any version accepted, the nil UUID included.\n\n## Risk Score, risk bands and the 999 marker\n\nThe Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to\n100. Recognized good bots, including search bots, AI bots and AI browsers, always score 0. The three risk bands are computed on your side; no\nband field exists on the wire:\n\n| Band | Score |\n|---|---|\n| trusted | 0-29 |\n| suspicious | 30-59 |\n| dangerous | 60-100 |\n\nA value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over\nthe ingest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nBranch on `detection_flags` and the Risk Score. Signal names are for display and logging;\nweights can be negative or change between releases, so never add them up yourself. A missing\nidentification means \"unverified\", never \"clean\".\n\n## Countries, IP addresses and timestamps\n\n- `country` values are English country names from IP intelligence, such as `Germany` or\n  `United States`, or an empty string when unknown.\n- IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `\"\"` and the History\n  API sends `0.0.0.0`; such identifications cannot be searched by IP.\n- Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional\n  digits.\n- The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;\n  older rows can lack the milliseconds.\n- The Management API `CreatedAt` is RFC 3339 with second precision.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
     "contact": {
       "name": "ShieldLabs",
       "url": "https://docs.shieldlabs.ai",
@@ -61,7 +61,7 @@
           "History API"
         ],
         "summary": "Search identifications",
-        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nappears about 1-3 seconds after the browser call and can be refined for up to about 10 seconds\nas follow-up network checks finish, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Validate before sending.** The server does not validate the path: an unknown `search_type`\nreturns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4\nvalue returns `500`, and a `limit` outside 1-100 silently becomes 20.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
+        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Validate before sending.** The server does not validate the path: an unknown `search_type`\nreturns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4\nvalue returns `500`, and a `limit` outside 1-100 silently becomes 20.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
         "security": [
           {
             "historyApiKey": []
@@ -490,7 +490,7 @@
           "Webhooks"
         ],
         "summary": "Identification scored",
-        "description": "Sent after final snapshot scoring and mandatory fp21 + three HRE handlers. Risk score is the identification score only. AI bots and AI browser are not implemented and not emitted.\n\nVerify HMAC-SHA256 over exact raw bytes with the endpoint secret. Body event_id is signed; X-Shield-Event-Id is its convenience mirror. Persist and deduplicate by event_id before returning 2xx within the 1-second send timeout. Legacy bodies without event_id can use data.identification_id. Retries preserve body and ID. Network/timeouts/429/5xx are retried with backoff up to 8 failed sends or 15 minutes of retry age; exhaustion/permanent 4xx goes to DLQ. Delivery is at-least-once attempts within that window, not guaranteed eternal delivery or exactly-once. Endpoints are independent. Redirects are not followed.\n\nUse History for recovery/latest state; later snapshot corrections do not automatically emit another identification.scored event.",
+        "description": "Sent when an identification is finalized. Risk Score describes this identification. Detection flags include search bots, AI bots and AI browsers. Recognized good bots always have a Risk Score of 0. ShieldLabs identifies the provider when available.\n\nVerify HMAC-SHA256 over exact raw bytes with the endpoint secret. Body event_id is signed; X-Shield-Event-Id is its convenience mirror. Persist and deduplicate by event_id before returning 2xx within the 1-second send timeout. Legacy bodies without event_id can use data.identification_id. Retries preserve body and ID. Network/timeouts/429/5xx are retried with backoff up to 8 failed sends or 15 minutes of retry age; exhaustion/permanent 4xx goes ends delivery. Delivery is at-least-once attempts within that window, not guaranteed eternal delivery or exactly-once. Endpoints are independent. Redirects are not followed.\n\nUse History for recovery/latest state; later snapshot corrections do not automatically emit another identification.scored event.",
         "security": [],
         "parameters": [
           {
@@ -590,10 +590,10 @@
                       ],
                       "detection_flags": {
                         "device_spoofing": false,
-                        "ws_tcp_latency": false,
-                        "rate_limited": false,
+                        "latency_test": false,
+                        "banned_ip": false,
                         "vpn": false,
-                        "privacy_relay": false,
+                        "private_relay": false,
                         "tor": false,
                         "proxy": false,
                         "os_mismatch": false,
@@ -607,7 +607,7 @@
                         "ai_bot": false,
                         "ai_browser": false,
                         "javascript_disabled": false,
-                        "stun_not_checked": false,
+                        "network_check_incomplete": false,
                         "check_incomplete": false
                       },
                       "observed_at": "2026-10-06T00:00:00Z"
@@ -684,10 +684,10 @@
                       ],
                       "detection_flags": {
                         "device_spoofing": false,
-                        "ws_tcp_latency": false,
-                        "rate_limited": false,
+                        "latency_test": false,
+                        "banned_ip": false,
                         "vpn": false,
-                        "privacy_relay": false,
+                        "private_relay": false,
                         "tor": false,
                         "proxy": false,
                         "os_mismatch": false,
@@ -701,7 +701,7 @@
                         "ai_bot": true,
                         "ai_browser": false,
                         "javascript_disabled": false,
-                        "stun_not_checked": false,
+                        "network_check_incomplete": false,
                         "check_incomplete": false
                       },
                       "observed_at": "2026-10-06T00:00:00Z"
@@ -778,10 +778,10 @@
                       ],
                       "detection_flags": {
                         "device_spoofing": false,
-                        "ws_tcp_latency": false,
-                        "rate_limited": false,
+                        "latency_test": false,
+                        "banned_ip": false,
                         "vpn": false,
-                        "privacy_relay": false,
+                        "private_relay": false,
                         "tor": false,
                         "proxy": false,
                         "os_mismatch": false,
@@ -795,7 +795,7 @@
                         "ai_bot": false,
                         "ai_browser": true,
                         "javascript_disabled": false,
-                        "stun_not_checked": false,
+                        "network_check_incomplete": false,
                         "check_incomplete": false
                       },
                       "observed_at": "2026-10-06T00:00:00Z"
@@ -1384,7 +1384,7 @@
       "RiskScore": {
         "type": "integer",
         "minimum": 0,
-        "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"rate_limited\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
+        "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
         "examples": [
           0,
           35,
@@ -2369,6 +2369,141 @@
           }
         }
       },
+      "LegacyDetectionFlags": {
+        "type": "object",
+        "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
+        "required": [
+          "vpn",
+          "privacy_relay",
+          "tor",
+          "proxy",
+          "os_mismatch",
+          "os_not_detected",
+          "timezone_mismatch",
+          "anti_detect_browser",
+          "browser_automation",
+          "ip_mismatch",
+          "incognito",
+          "search_bot",
+          "javascript_disabled",
+          "stun_not_checked",
+          "check_incomplete"
+        ],
+        "properties": {
+          "vpn": {
+            "type": "boolean",
+            "description": "A VPN or Browser VPN/Proxy was detected."
+          },
+          "privacy_relay": {
+            "type": "boolean",
+            "description": "A privacy relay such as iCloud Private Relay was detected."
+          },
+          "browser_vpn_proxy": {
+            "type": "boolean",
+            "deprecated": true,
+            "description": "A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`."
+          },
+          "tor": {
+            "type": "boolean",
+            "description": "The request came through the Tor network."
+          },
+          "proxy": {
+            "type": "boolean",
+            "description": "A proxy was detected."
+          },
+          "datacenter_ip": {
+            "type": "boolean",
+            "deprecated": true,
+            "description": "The public IP belongs to a datacenter or hosting range."
+          },
+          "abuser": {
+            "type": "boolean",
+            "deprecated": true,
+            "description": "The public IP has a record of abuse in IP intelligence."
+          },
+          "os_mismatch": {
+            "type": "boolean",
+            "description": "Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks."
+          },
+          "os_not_detected": {
+            "type": "boolean",
+            "description": "The operating system could not be determined from the User-Agent or the network."
+          },
+          "timezone_mismatch": {
+            "type": "boolean",
+            "description": "The browser timezone differs from the timezone of the IP location."
+          },
+          "anti_detect_browser": {
+            "type": "boolean",
+            "description": "An anti-detect browser was detected."
+          },
+          "browser_automation": {
+            "type": "boolean",
+            "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
+          },
+          "ip_mismatch": {
+            "type": "boolean",
+            "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions."
+          },
+          "incognito": {
+            "type": "boolean",
+            "description": "The browser runs in a private window."
+          },
+          "search_bot": {
+            "type": "boolean",
+            "description": "A search-engine crawler. Its Risk Score is always 0."
+          },
+          "suspicious_paid_click": {
+            "type": "boolean",
+            "deprecated": true,
+            "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
+          },
+          "javascript_disabled": {
+            "type": "boolean",
+            "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+          },
+          "stun_not_checked": {
+            "type": "boolean",
+            "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+          },
+          "check_incomplete": {
+            "type": "boolean",
+            "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
+          },
+          "device_spoofing": {
+            "type": "boolean"
+          },
+          "latency_test": {
+            "type": "boolean",
+            "description": "Current public name of the latency detector. Payloads from schema 2026-10-13 before the slug rename used ws_tcp_latency."
+          },
+          "ws_tcp_latency": {
+            "type": "boolean",
+            "description": "Previous public name of the latency detector. Current 2026-10-13 payloads use latency_test."
+          },
+          "banned_ip": {
+            "type": "boolean",
+            "description": "Current public name of the banned-IP flag. Payloads from schema 2026-10-13 before the slug rename used rate_limited."
+          },
+          "rate_limited": {
+            "type": "boolean",
+            "description": "Previous public name of the banned-IP flag. Current 2026-10-13 payloads use banned_ip."
+          },
+          "ai_bot": {
+            "type": "boolean",
+            "description": "An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk."
+          },
+          "ai_browser": {
+            "type": "boolean",
+            "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
+          },
+          "os_mismatch2": {
+            "type": "boolean",
+            "deprecated": true,
+            "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
+          }
+        }
+      },
       "DetectionFlags20261012": {
         "type": "object",
         "description": "Retained scored webhook contract 2026-10-12. Twenty-one source detection signals, with os_mismatch and os_mismatch2 independent. Current deliveries use DetectionFlags (2026-10-13).",
@@ -2438,7 +2573,7 @@
           },
           "ip_mismatch": {
             "type": "boolean",
-            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+            "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Read the returned Risk Score and signal contributions."
           },
           "latency_test": {
             "type": "boolean"
@@ -2486,18 +2621,18 @@
         "required": [
           "vpn",
           "proxy",
-          "privacy_relay",
+          "private_relay",
           "check_incomplete",
-          "stun_not_checked",
+          "network_check_incomplete",
           "os_not_detected",
           "timezone_mismatch",
           "javascript_disabled",
           "os_mismatch",
           "ip_mismatch",
-          "ws_tcp_latency",
+          "latency_test",
           "anti_detect_browser",
           "device_spoofing",
-          "rate_limited",
+          "banned_ip",
           "incognito",
           "search_bot",
           "ai_bot",
@@ -2514,17 +2649,17 @@
             "type": "boolean",
             "description": "A proxy was detected."
           },
-          "privacy_relay": {
+          "private_relay": {
             "type": "boolean",
-            "description": "A privacy relay such as iCloud Private Relay was detected."
+            "description": "A privacy relay such as iCloud Private Relay was detected. Older payloads used privacy_relay."
           },
           "check_incomplete": {
             "type": "boolean",
             "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true."
           },
-          "stun_not_checked": {
+          "network_check_incomplete": {
             "type": "boolean",
-            "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
+            "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives. Older payloads used stun_not_checked."
           },
           "os_not_detected": {
             "type": "boolean",
@@ -2544,11 +2679,11 @@
           },
           "ip_mismatch": {
             "type": "boolean",
-            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
+            "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Nominal weight 45; read the returned Risk Score."
           },
-          "ws_tcp_latency": {
+          "latency_test": {
             "type": "boolean",
-            "description": "The WebSocket-to-TCP latency test fired. This is the public name of that detector."
+            "description": "The WebSocket-to-TCP latency test fired. Older payloads used ws_tcp_latency."
           },
           "anti_detect_browser": {
             "type": "boolean",
@@ -2557,9 +2692,9 @@
           "device_spoofing": {
             "type": "boolean"
           },
-          "rate_limited": {
+          "banned_ip": {
             "type": "boolean",
-            "description": "The visitor IP is banned for this window. The matching signal weight is 999."
+            "description": "The visitor IP is banned for this window. The matching signal weight is 999. Older payloads used rate_limited."
           },
           "incognito": {
             "type": "boolean",
@@ -2571,7 +2706,7 @@
           },
           "ai_bot": {
             "type": "boolean",
-            "description": "An already accepted crawler has purpose training or user_fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. A User-Agent claim alone does not grant an accepted verdict. Weight 0, and present in signals when true."
+            "description": "A recognized AI bot or crawler. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true."
           },
           "browser_automation": {
             "type": "boolean",
@@ -2579,7 +2714,7 @@
           },
           "ai_browser": {
             "type": "boolean",
-            "description": "A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient. Weight 0, and present in signals when true."
+            "description": "A recognized AI browser. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true."
           },
           "tor": {
             "type": "boolean",
@@ -2998,7 +3133,7 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected, including a browser VPN or proxy;\n- `privacy_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: either operating-system consistency detector fired;\n- `ws_tcp_latency`: the WebSocket-to-TCP latency test fired;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `stun_not_checked`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `stun_not_checked`;\n- `rate_limited`: the rate-limit marker, weight 999.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
+            "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected, including a browser VPN or proxy;\n- `private_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: either operating-system consistency detector fired;\n- `latency_test`: the WebSocket-to-TCP latency test fired;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `network_check_incomplete`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `network_check_incomplete`;\n- `banned_ip`: the rate-limit marker, weight 999.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
             "examples": [
               "proxy",
               "antidetect_browser"
@@ -3006,146 +3141,11 @@
           },
           "weight": {
             "type": "integer",
-            "description": "Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `rate_limited`. Weights can change between releases; never add them up yourself.",
+            "description": "Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `banned_ip`. Weights can change between releases; never add them up yourself.",
             "examples": [
               10,
               -30
             ]
-          }
-        }
-      },
-      "LegacyDetectionFlags": {
-        "type": "object",
-        "description": "Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.",
-        "required": [
-          "vpn",
-          "privacy_relay",
-          "tor",
-          "proxy",
-          "os_mismatch",
-          "os_not_detected",
-          "timezone_mismatch",
-          "anti_detect_browser",
-          "browser_automation",
-          "ip_mismatch",
-          "incognito",
-          "search_bot",
-          "javascript_disabled",
-          "stun_not_checked",
-          "check_incomplete"
-        ],
-        "properties": {
-          "vpn": {
-            "type": "boolean",
-            "description": "A VPN or Browser VPN/Proxy was detected."
-          },
-          "privacy_relay": {
-            "type": "boolean",
-            "description": "A privacy relay such as iCloud Private Relay was detected."
-          },
-          "browser_vpn_proxy": {
-            "type": "boolean",
-            "deprecated": true,
-            "description": "A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`."
-          },
-          "tor": {
-            "type": "boolean",
-            "description": "The request came through the Tor network."
-          },
-          "proxy": {
-            "type": "boolean",
-            "description": "A proxy was detected."
-          },
-          "datacenter_ip": {
-            "type": "boolean",
-            "deprecated": true,
-            "description": "The public IP belongs to a datacenter or hosting range."
-          },
-          "abuser": {
-            "type": "boolean",
-            "deprecated": true,
-            "description": "The public IP has a record of abuse in IP intelligence."
-          },
-          "os_mismatch": {
-            "type": "boolean",
-            "description": "Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks."
-          },
-          "os_not_detected": {
-            "type": "boolean",
-            "description": "The operating system could not be determined from the User-Agent or the network."
-          },
-          "timezone_mismatch": {
-            "type": "boolean",
-            "description": "The browser timezone differs from the timezone of the IP location."
-          },
-          "anti_detect_browser": {
-            "type": "boolean",
-            "description": "An anti-detect browser was detected."
-          },
-          "browser_automation": {
-            "type": "boolean",
-            "description": "Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60."
-          },
-          "ip_mismatch": {
-            "type": "boolean",
-            "description": "The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score."
-          },
-          "incognito": {
-            "type": "boolean",
-            "description": "The browser runs in a private window."
-          },
-          "search_bot": {
-            "type": "boolean",
-            "description": "A search-engine crawler. Its Risk Score is always 0."
-          },
-          "suspicious_paid_click": {
-            "type": "boolean",
-            "deprecated": true,
-            "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
-          },
-          "javascript_disabled": {
-            "type": "boolean",
-            "description": "JavaScript, or the browser APIs the checks need, were unavailable."
-          },
-          "stun_not_checked": {
-            "type": "boolean",
-            "description": "The browser network (STUN) check did not complete. Cleared again when a late network result arrives."
-          },
-          "check_incomplete": {
-            "type": "boolean",
-            "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational."
-          },
-          "device_spoofing": {
-            "type": "boolean"
-          },
-          "latency_test": {
-            "type": "boolean",
-            "description": "Older name of ws_tcp_latency. Current 2026-10-13 payloads use ws_tcp_latency."
-          },
-          "ws_tcp_latency": {
-            "type": "boolean",
-            "description": "Public name of the latency detector from schema 2026-10-13."
-          },
-          "banned_ip": {
-            "type": "boolean",
-            "description": "Older name of rate_limited. Current 2026-10-13 payloads use rate_limited."
-          },
-          "rate_limited": {
-            "type": "boolean",
-            "description": "Public name of the banned-IP flag from schema 2026-10-13."
-          },
-          "ai_bot": {
-            "type": "boolean",
-            "description": "An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk."
-          },
-          "ai_browser": {
-            "type": "boolean",
-            "description": "A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative."
-          },
-          "os_mismatch2": {
-            "type": "boolean",
-            "deprecated": true,
-            "description": "Legacy 2026-10-06 only; current payloads combine this check into os_mismatch."
           }
         }
       },
@@ -3335,14 +3335,104 @@
           },
           "signals": {
             "type": "array",
-            "description": "Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{\"name\":\"rate_limited\",\"weight\":999}`.",
+            "description": "Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{\"name\":\"banned_ip\",\"weight\":999}`.",
             "items": {
               "$ref": "#/components/schemas/Signal"
             }
           },
           "detection_flags": {
-            "$ref": "#/components/schemas/LegacyDetectionFlags",
-            "description": "Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. This fallback supports retained older versions."
+            "type": "object",
+            "description": "Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. Older versions keep LegacyDetectionFlags.",
+            "additionalProperties": true,
+            "properties": {
+              "vpn": {
+                "type": "boolean"
+              },
+              "proxy": {
+                "type": "boolean"
+              },
+              "tor": {
+                "type": "boolean"
+              },
+              "private_relay": {
+                "type": "boolean"
+              },
+              "privacy_relay": {
+                "type": "boolean"
+              },
+              "network_check_incomplete": {
+                "type": "boolean"
+              },
+              "stun_not_checked": {
+                "type": "boolean"
+              },
+              "latency_test": {
+                "type": "boolean"
+              },
+              "ws_tcp_latency": {
+                "type": "boolean"
+              },
+              "banned_ip": {
+                "type": "boolean"
+              },
+              "rate_limited": {
+                "type": "boolean"
+              },
+              "check_incomplete": {
+                "type": "boolean"
+              },
+              "os_not_detected": {
+                "type": "boolean"
+              },
+              "timezone_mismatch": {
+                "type": "boolean"
+              },
+              "javascript_disabled": {
+                "type": "boolean"
+              },
+              "os_mismatch": {
+                "type": "boolean"
+              },
+              "os_mismatch2": {
+                "type": "boolean"
+              },
+              "ip_mismatch": {
+                "type": "boolean"
+              },
+              "anti_detect_browser": {
+                "type": "boolean"
+              },
+              "device_spoofing": {
+                "type": "boolean"
+              },
+              "incognito": {
+                "type": "boolean"
+              },
+              "search_bot": {
+                "type": "boolean"
+              },
+              "ai_bot": {
+                "type": "boolean"
+              },
+              "ai_browser": {
+                "type": "boolean"
+              },
+              "browser_automation": {
+                "type": "boolean"
+              },
+              "browser_vpn_proxy": {
+                "type": "boolean"
+              },
+              "datacenter_ip": {
+                "type": "boolean"
+              },
+              "abuser": {
+                "type": "boolean"
+              },
+              "suspicious_paid_click": {
+                "type": "boolean"
+              }
+            }
           },
           "observed_at": {
             "$ref": "#/components/schemas/Rfc3339Timestamp",
@@ -3796,6 +3886,40 @@
                         "additionalProperties": true
                       },
                       "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "required": [
+                "schema_version"
+              ],
+              "properties": {
+                "schema_version": {
+                  "not": {
+                    "enum": [
+                      "2026-10-12",
+                      "2026-10-13"
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": true
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "detection_flags": {
+                      "$ref": "#/components/schemas/LegacyDetectionFlags"
                     }
                   },
                   "additionalProperties": true

@@ -64,8 +64,8 @@ properties:
       result versions may retain the earlier weight 60.
   ip_mismatch:
     type: boolean
-    description: "The public IP differs from the local IP found by the browser
-      network check. Informational: it does not add to the score."
+    description: "A qualifying mismatch between the public IP and the browser's
+      network evidence was detected. Read the returned Risk Score and signal contributions."
   incognito:
     type: boolean
     description: The browser runs in a private window.
@@ -93,18 +93,20 @@ properties:
     type: boolean
   latency_test:
     type: boolean
-    description: Older name of ws_tcp_latency. Current 2026-10-13 payloads use
-      ws_tcp_latency.
+    description: Current public name of the latency detector. Payloads from
+      schema 2026-10-13 before the slug rename used ws_tcp_latency.
   ws_tcp_latency:
     type: boolean
-    description: Public name of the latency detector from schema 2026-10-13.
+    description: Previous public name of the latency detector. Current
+      2026-10-13 payloads use latency_test.
   banned_ip:
     type: boolean
-    description: Older name of rate_limited. Current 2026-10-13 payloads use
-      rate_limited.
+    description: Current public name of the banned-IP flag. Payloads from
+      schema 2026-10-13 before the slug rename used rate_limited.
   rate_limited:
     type: boolean
-    description: Public name of the banned-IP flag from schema 2026-10-13.
+    description: Previous public name of the banned-IP flag. Current
+      2026-10-13 payloads use banned_ip.
   ai_bot:
     type: boolean
     description: An accepted bot is classified as AI training or user-requested

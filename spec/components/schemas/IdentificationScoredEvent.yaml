@@ -274,6 +274,27 @@ allOf:
         - schema_version
       properties:
         schema_version:
+          not:
+            enum:
+              - 2026-10-12
+              - 2026-10-13
+      additionalProperties: true
+    then:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            detection_flags:
+              $ref: ./LegacyDetectionFlags.yaml
+          additionalProperties: true
+      additionalProperties: true
+  - if:
+      type: object
+      required:
+        - schema_version
+      properties:
+        schema_version:
           const: 2026-10-12
       additionalProperties: true
     then:

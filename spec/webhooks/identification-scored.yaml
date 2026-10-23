@@ -4,9 +4,9 @@ post:
     - Webhooks
   summary: Identification scored
   description: >-
-    Sent after final snapshot scoring and mandatory fp21 + three HRE handlers.
-    Risk score is the identification score only. AI bots and AI browser are not
-    implemented and not emitted.
+    Sent when an identification is finalized. Risk Score describes this identification.
+    Detection flags include search bots, AI bots and AI browsers. Recognized good bots
+    always have a Risk Score of 0. ShieldLabs identifies the provider when available.
 
 
     Verify HMAC-SHA256 over exact raw bytes with the endpoint secret. Body
@@ -15,7 +15,7 @@ post:
     timeout. Legacy bodies without event_id can use data.identification_id. Retries
     preserve body and ID. Network/timeouts/429/5xx are retried with backoff up
     to 8 failed sends or 15 minutes of retry age; exhaustion/permanent 4xx goes
-    to DLQ. Delivery is at-least-once attempts within that window, not
+    ends delivery. Delivery is at-least-once attempts within that window, not
     guaranteed eternal delivery or exactly-once. Endpoints are independent.
     Redirects are not followed.
 
@@ -103,10 +103,10 @@ post:
                     weight: 0
                 detection_flags:
                   device_spoofing: false
-                  ws_tcp_latency: false
-                  rate_limited: false
+                  latency_test: false
+                  banned_ip: false
                   vpn: false
-                  privacy_relay: false
+                  private_relay: false
                   tor: false
                   proxy: false
                   os_mismatch: false
@@ -120,7 +120,7 @@ post:
                   ai_bot: false
                   ai_browser: false
                   javascript_disabled: false
-                  stun_not_checked: false
+                  network_check_incomplete: false
                   check_incomplete: false
                 observed_at: 2026-10-06T00:00:00Z
           aiBot:
@@ -184,10 +184,10 @@ post:
                     weight: 0
                 detection_flags:
                   device_spoofing: false
-                  ws_tcp_latency: false
-                  rate_limited: false
+                  latency_test: false
+                  banned_ip: false
                   vpn: false
-                  privacy_relay: false
+                  private_relay: false
                   tor: false
                   proxy: false
                   os_mismatch: false
@@ -201,7 +201,7 @@ post:
                   ai_bot: true
                   ai_browser: false
                   javascript_disabled: false
-                  stun_not_checked: false
+                  network_check_incomplete: false
                   check_incomplete: false
                 observed_at: 2026-10-06T00:00:00Z
           aiBrowser:
@@ -265,10 +265,10 @@ post:
                     weight: 0
                 detection_flags:
                   device_spoofing: false
-                  ws_tcp_latency: false
-                  rate_limited: false
+                  latency_test: false
+                  banned_ip: false
                   vpn: false
-                  privacy_relay: false
+                  private_relay: false
                   tor: false
                   proxy: false
                   os_mismatch: false
@@ -282,7 +282,7 @@ post:
                   ai_bot: false
                   ai_browser: true
                   javascript_disabled: false
-                  stun_not_checked: false
+                  network_check_incomplete: false
                   check_incomplete: false
                 observed_at: 2026-10-06T00:00:00Z
   responses:
