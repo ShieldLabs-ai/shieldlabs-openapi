@@ -1,7 +1,7 @@
 summary: One identification (deprecated shape)
 description: The PascalCase array returned by the deprecated endpoint, for the same identification as the first History API example row.
 value:
-  - RequestID: "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+  - IdentificationID: "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
     SessionID: "b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e"
     CookieID: "c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f"
     DeviceID: "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a"

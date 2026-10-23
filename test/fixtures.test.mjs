@@ -44,10 +44,10 @@ describe('History API fixtures', () => {
     const { data } = readFixture('history-page.json');
     const extra = new Set();
     for (const row of data) {
-      assertValid(validator, 'HistoryRow', row, row.request_id);
+      assertValid(validator, 'HistoryRow', row, row.identification_id);
       const { contentErrors, undocumented } = validator.inspect(ref('HistoryRow'), row);
-      assert.deepEqual(contentErrors, [], row.request_id);
-      assert.deepEqual(unexpectedUndocumented(undocumented, 'history-row'), [], row.request_id);
+      assert.deepEqual(contentErrors, [], row.identification_id);
+      assert.deepEqual(unexpectedUndocumented(undocumented, 'history-row'), [], row.identification_id);
       for (const key of undocumented) extra.add(key.slice(1));
     }
     assert.deepEqual([...extra].sort(), [...DIAGNOSTIC_HISTORY_FIELDS].sort());

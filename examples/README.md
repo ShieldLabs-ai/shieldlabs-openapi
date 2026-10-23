@@ -21,5 +21,5 @@ SHIELDLABS_WEBHOOK_SECRET=whsec_your_signing_secret \
 
 In a real handler, verify the signature before parsing and answer 2xx within a second. Each
 identification is delivered once today (1-second timeout, no retries); a later release adds
-retries that resend identical bytes, so make the handler idempotent on `data.request_id`, and use
+retries that resend identical bytes, so make the handler idempotent on `data.identification_id`, and use
 the History API for guaranteed reads. The official server SDKs do all of this for you.

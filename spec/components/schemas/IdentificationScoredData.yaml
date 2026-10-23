@@ -4,7 +4,7 @@ description: Final identification. risk_score is this scan only. Version 2026-10
   detection_flags for 20 public signals, and hre for account results. Older
   bodies remain accepted.
 required:
-  - request_id
+  - identification_id
   - visitor_id
   - device_id
   - session_id
@@ -26,8 +26,8 @@ properties:
   client_identity:
     $ref: ./WebhookClientIdentity.yaml
     description: Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values.
-  request_id:
-    $ref: ./RequestId.yaml
+  identification_id:
+    $ref: ./IdentificationId.yaml
   visitor_id:
     $ref: ./VisitorId.yaml
   device_id:

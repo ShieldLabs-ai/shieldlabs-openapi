@@ -23,7 +23,7 @@ for (const action of ['detected','updated','resolved']) {
 }
 test('known multi-account events cannot bypass result validation',()=>{
  const e=JSON.parse(readFileSync(new URL('./fixtures/webhook-multiaccount-detected.json',import.meta.url)));
- for (const mutate of [x=>x.data.level=null,x=>x.data.status='pending',x=>x.data.members_complete=false,x=>x.data.user_hids.push(x.data.user_hids[0]),x=>x.data.request_id='invented',x=>x.data.source.coverage_id='unknown']) {
+ for (const mutate of [x=>x.data.level=null,x=>x.data.status='pending',x=>x.data.members_complete=false,x=>x.data.user_hids.push(x.data.user_hids[0]),x=>x.data.identification_id='invented',x=>x.data.source.coverage_id='unknown']) {
   const bad=structuredClone(e);mutate(bad);assert.equal(union(bad),false);
  }
 });

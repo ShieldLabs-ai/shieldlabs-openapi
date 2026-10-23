@@ -60,8 +60,8 @@ properties:
       detectors are not separate public flags.
   ip_mismatch:
     type: boolean
-    description: "The public IP differs from the local IP found by the browser
-      network check. Informational: it does not add to the score."
+    description: "A qualifying mismatch between the public IP and the browser's
+      network evidence was detected. Nominal weight 45; read the returned Risk Score."
   latency_test:
     type: boolean
     description: The WebSocket-to-TCP latency test fired. Older payloads used
@@ -85,9 +85,8 @@ properties:
       and present in signals when true.
   ai_bot:
     type: boolean
-    description: An already accepted crawler has purpose training or user_fetch.
-      ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI
-      browsers. A User-Agent claim alone does not grant an accepted verdict.
+    description: A recognized AI bot or crawler. Its Risk Score is always 0.
+      ShieldLabs identifies the provider when available.
       Weight 0, and present in signals when true.
   browser_automation:
     type: boolean
@@ -96,8 +95,8 @@ properties:
       result versions may retain the earlier weight 60.
   ai_browser:
     type: boolean
-    description: A browser has separately verified infrastructure or service
-      attribution. A User-Agent claim or provider-only IP proof is insufficient.
+    description: A recognized AI browser. Its Risk Score is always 0.
+      ShieldLabs identifies the provider when available.
       Weight 0, and present in signals when true.
   tor:
     type: boolean

@@ -6,7 +6,7 @@
   "additionalProperties": true,
   "description": "One identification in the shape the official ShieldLabs server SDKs return, whether it was read\nfrom the History API or received in an `identification.scored` webhook. Field names follow the\nwebhook `data` object. Conversion rules from a History row:\n- `user_hid`: an empty string becomes `null`; `anonymous` and the other markers stay strings;\n- `domain`: `site_domain` when present, otherwise `domain`;\n- `public_ip`: `ip` (`0.0.0.0` becomes `\"\"`) and `country`;\n- `local_ip`: `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not\n  `none`, otherwise `web_rtc_ip` and `web_rtc_country` (`0.0.0.0` becomes `\"\"`);\n- `traffic_source`: `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type` and the\n  `utm_*` fields, `\"\"` when omitted;\n- `risk_score`: `score`;\n- `signals`: the `score_details` entries with a non-zero `Value`, in order, each with a signal\n  name derived from its description, the weight and the original description;\n- `detection_flags`: the `is_*` columns and `check_incomplete`; `browser_vpn_proxy` is\n  `connection_type == \"browser_vpn_proxy\"`; `ip_mismatch` is true (except for search-engine\n  crawlers) when a score detail starts with `IP ≠ leakIP` or when the public and the local IP\n  are both known and differ; `suspicious_paid_click` is `false` when omitted;\n- `observed_at`: `created_at` read as UTC.\n\nFrom a webhook, the fields are copied; a missing detection flag is `false` and `description` of\nevery signal is `null`. In JSON, `observed_at` is RFC 3339 in UTC with millisecond precision\n(truncated, never rounded).",
   "required": [
-    "request_id",
+    "identification_id",
     "visitor_id",
     "device_id",
     "session_id",
@@ -30,8 +30,8 @@
     "client_identity": {
       "$ref": "#/$defs/ClientIdentity"
     },
-    "request_id": {
-      "$ref": "#/$defs/RequestId"
+    "identification_id": {
+      "$ref": "#/$defs/IdentificationId"
     },
     "visitor_id": {
       "$ref": "#/$defs/VisitorId"
@@ -396,6 +396,14 @@
         "desktop"
       ]
     },
+    "IdentificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+      ]
+    },
     "IpInfo": {
       "type": "object",
       "description": "An IPv4 address and its country. Both keys are always present and can be empty strings.",
@@ -563,14 +571,6 @@
         "Windows",
         "Mac OS X",
         "Android"
-      ]
-    },
-    "RequestId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
-      "examples": [
-        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
     },
     "RiskScore": {

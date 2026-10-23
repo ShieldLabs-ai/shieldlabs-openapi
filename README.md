@@ -56,7 +56,7 @@ console.log(Object.keys(spec.paths)); // [ '/api/v1/history/{search_type}/{value
 Read one verdict with `curl`:
 
 ```sh
-curl "https://account.shieldlabs.ai/api/v1/history/request_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
+curl "https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
   -H "Authorization: Bearer $SHIELDLABS_API_KEY"
 ```
 
@@ -129,15 +129,15 @@ export function parseEvent(rawBody) {
 ```
 
 - The key is the whole signing secret, `whsec_` prefix included, as UTF-8 bytes. The message is the raw body: re-serialized JSON does not match (for example, `&` arrives as `\u0026`).
-- Delivery attempts have a 1-second timeout. Network errors, timeout, 429 and 5xx retry with backoff within a bounded window (8 failed sends or 15-minute retry age); worker/Redis waits can extend wall time. Retries preserve signed bytes and `event_id`, and duplicate deliveries remain possible. Verify the raw-body signature, durably store by signed `event_id` (legacy fallback: `data.request_id`), then acknowledge 2xx and process asynchronously. Redirects are not followed.
+- Delivery attempts have a 1-second timeout. Network errors, timeout, 429 and 5xx retry with backoff within a bounded window (8 failed sends or 15-minute retry age); worker/Redis waits can extend wall time. Retries preserve signed bytes and `event_id`, and duplicate deliveries remain possible. Verify the raw-body signature, durably store by signed `event_id` (legacy fallback: `data.identification_id`), then acknowledge 2xx and process asynchronously. Redirects are not followed.
 - Current Portal Test sends a complete `2026-10-07` Core-generated sample with HRE cluster references and a distinct event ID per click. Vendored historical Test fixtures retain their two missing flags as explicit legacy compatibility cases.
 - A History row can be refined after its webhook was sent; the webhook is not sent again. Read the History API when you need the latest state.
 
 ### Read identifications from the History API
 
-- Search by `request_id` with `limit=1` right after a protected action. The row appears about 1-3 seconds after the browser call and can be refined for up to about 10 seconds as follow-up checks finish, so start the identification when the user begins the action (for example when the signup form opens). An empty `data` array means "not scored yet", never "clean": poll with backoff for up to about 10 seconds.
+- Search by `identification_id` with `limit=1` right after a protected action. The row appears about 1-3 seconds after the browser call and can be refined for up to about 10 seconds as follow-up checks finish, so start the identification when the user begins the action (for example when the signup form opens). An empty `data` array means "not scored yet", never "clean": poll with backoff for up to about 10 seconds.
 - Search by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks. When you count accounts, skip rows whose `user_hid` is empty or one of `anonymous`, `fail`, `-1` and `unknown`: these do not identify a user.
-- Page with `offset` while it is below `total`, and deduplicate on `request_id`.
+- Page with `offset` while it is below `total`, and deduplicate on `identification_id`.
 - `score_details` is a JSON-encoded string; `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC.
 
 ### Check the spec against the live API

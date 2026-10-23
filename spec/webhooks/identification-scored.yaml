@@ -4,18 +4,18 @@ post:
     - Webhooks
   summary: Identification scored
   description: >-
-    Sent after final snapshot scoring and mandatory fp21 + three HRE handlers.
-    Risk score is the identification score only. AI bots and AI browser are not
-    implemented and not emitted.
+    Sent when an identification is finalized. Risk Score describes this identification.
+    Detection flags include search bots, AI bots and AI browsers. Recognized good bots
+    always have a Risk Score of 0. ShieldLabs identifies the provider when available.
 
 
     Verify HMAC-SHA256 over exact raw bytes with the endpoint secret. Body
     event_id is signed; X-Shield-Event-Id is its convenience mirror. Persist and
     deduplicate by event_id before returning 2xx within the 1-second send
-    timeout. Legacy bodies without event_id can use data.request_id. Retries
+    timeout. Legacy bodies without event_id can use data.identification_id. Retries
     preserve body and ID. Network/timeouts/429/5xx are retried with backoff up
     to 8 failed sends or 15 minutes of retry age; exhaustion/permanent 4xx goes
-    to DLQ. Delivery is at-least-once attempts within that window, not
+    ends delivery. Delivery is at-least-once attempts within that window, not
     guaranteed eternal delivery or exactly-once. Endpoints are independent.
     Redirects are not followed.
 
@@ -70,7 +70,7 @@ post:
                     status: evaluated
                     level: null
                     reason: below_distance
-                request_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
+                identification_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
                 visitor_id: 161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d
                 device_id: 5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f
                 session_id: 7a1b2c3d-4e5f-4789-abcd-ef0123456789
@@ -151,7 +151,7 @@ post:
                     status: not_applicable
                     level: null
                     reason: anonymous_user
-                request_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
+                identification_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
                 visitor_id: 161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d
                 device_id: 5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f
                 session_id: 7a1b2c3d-4e5f-4789-abcd-ef0123456789
@@ -232,7 +232,7 @@ post:
                     status: not_applicable
                     level: null
                     reason: anonymous_user
-                request_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
+                identification_id: 13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11
                 visitor_id: 161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d
                 device_id: 5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f
                 session_id: 7a1b2c3d-4e5f-4789-abcd-ef0123456789
