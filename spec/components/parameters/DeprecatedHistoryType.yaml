@@ -2,11 +2,13 @@ name: type
 in: path
 required: true
 description: >-
-  Identifier to search by. Other values get a `404` with a bare JSON string such as
+  Identifier to search by. `request_id` is a legacy alias of `identification_id`.
+  Other values get a `404` with a bare JSON string such as
   `"auto is not supported"`.
 schema:
   type: string
   enum:
+    - identification_id
     - request_id
     - device_id
     - user_hid
@@ -15,6 +17,6 @@ schema:
     - session_id
     - cookie_id
 examples:
-  requestId:
+  identificationId:
     summary: Search by request ID
-    value: request_id
+    value: identification_id

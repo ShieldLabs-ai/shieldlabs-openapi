@@ -66,7 +66,7 @@ if (validate(event)) {
 if (event.event_type === 'identification.scored') {
   const { data } = event;
   const flags = Object.entries(data.detection_flags ?? {}).filter(([, on]) => on).map(([flag]) => flag);
-  console.log(`request_id: ${data.request_id}`);
+  console.log(`identification_id: ${data.identification_id}`);
   console.log(`risk_score: ${data.risk_score} (${riskBand(data.risk_score)})`);
   console.log(`detection flags: ${flags.join(', ') || 'none'}`);
 }

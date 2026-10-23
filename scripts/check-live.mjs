@@ -135,7 +135,7 @@ export async function runLiveChecks(env = process.env, print = console.log) {
 
   try {
     const unknownId = randomUUID();
-    const url = `${history}/api/v1/history/request_id/${unknownId}?limit=1`;
+    const url = `${history}/api/v1/history/identification_id/${unknownId}?limit=1`;
     const response = await getJson(url, auth);
     if (response.status !== 200) fail(`History API search for an unknown request ID: ${describeFailure(response)}`);
     else if (check('History API page', 'HistoryPage', response.body)) {
@@ -148,7 +148,7 @@ export async function runLiveChecks(env = process.env, print = console.log) {
     if (liveId) {
       if (!UUID.test(liveId)) fail('SHIELDLABS_LIVE_REQUEST_ID is not a UUID');
       else {
-        const rowUrl = `${history}/api/v1/history/request_id/${liveId.toLowerCase()}?limit=1`;
+        const rowUrl = `${history}/api/v1/history/identification_id/${liveId.toLowerCase()}?limit=1`;
         const rowResponse = await getJson(rowUrl, auth);
         if (rowResponse.status !== 200) fail(`History API row: ${describeFailure(rowResponse)}`);
         else if (check('History API page', 'HistoryPage', rowResponse.body)) {

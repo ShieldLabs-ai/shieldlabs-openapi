@@ -3,7 +3,7 @@ in: path
 required: true
 description: |-
   Value of the identifier, validated on your side before sending:
-  - `request_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,
+  - `identification_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,
     the nil UUID included, matching
     `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it
     lowercase.
@@ -24,7 +24,7 @@ schema:
   minLength: 1
   pattern: '^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$'
 examples:
-  requestId:
+  identificationId:
     summary: A request ID
     value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
   ip:

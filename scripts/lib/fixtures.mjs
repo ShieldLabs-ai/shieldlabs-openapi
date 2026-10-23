@@ -50,7 +50,7 @@ export const FIXTURE_EXAMPLES = [
     file: 'history-empty.json',
     summary: 'Nothing matched',
     description:
-      'No identification matched. When searching by `request_id` right after a protected action, ' +
+      'No identification matched. When searching by `identification_id` right after a protected action, ' +
       'this means "not scored yet" (or an invalid request ID), never "clean".',
   },
   {

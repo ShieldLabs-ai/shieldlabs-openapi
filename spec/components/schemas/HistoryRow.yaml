@@ -19,7 +19,7 @@ description: |-
   The `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and
   STUN measurements) that are not part of the stable contract: ignore fields you do not know.
 required:
-  - request_id
+  - identification_id
   - session_id
   - cookie_id
   - domain
@@ -62,8 +62,8 @@ required:
 properties:
   client_identity:
     $ref: ./ClientIdentity.yaml
-  request_id:
-    $ref: ./RequestId.yaml
+  identification_id:
+    $ref: ./IdentificationId.yaml
   session_id:
     $ref: ./SessionId.yaml
   cookie_id:

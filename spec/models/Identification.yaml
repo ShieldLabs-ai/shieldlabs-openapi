@@ -27,7 +27,7 @@ description: |-
   every signal is `null`. In JSON, `observed_at` is RFC 3339 in UTC with millisecond precision
   (truncated, never rounded).
 required:
-  - request_id
+  - identification_id
   - visitor_id
   - device_id
   - session_id
@@ -49,8 +49,8 @@ required:
 properties:
   client_identity:
     $ref: ../components/schemas/ClientIdentity.yaml
-  request_id:
-    $ref: ../components/schemas/RequestId.yaml
+  identification_id:
+    $ref: ../components/schemas/IdentificationId.yaml
   visitor_id:
     $ref: ../components/schemas/VisitorId.yaml
   device_id:

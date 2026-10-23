@@ -17,7 +17,7 @@ const FLAGS = [
   'device_spoofing', 'ws_tcp_latency', 'rate_limited', 'ai_bot', 'ai_browser',
 ];
 const WEBHOOK_DATA_KEYS = [
-  'request_id', 'visitor_id', 'device_id', 'session_id', 'cookie_id', 'user_hid', 'domain',
+  'identification_id', 'visitor_id', 'device_id', 'session_id', 'cookie_id', 'user_hid', 'domain',
   'public_ip', 'local_ip', 'connection_type', 'os', 'browser', 'device_type', 'traffic_source',
   'risk_score', 'signals', 'detection_flags', 'observed_at',
 ];

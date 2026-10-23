@@ -28,7 +28,7 @@
   "tags": [
     {
       "name": "History API",
-      "description": "Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private API Key. The canonical way to read a verdict: by `request_id` right after a protected action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks."
+      "description": "Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private API Key. The canonical way to read a verdict: by `identification_id` right after a protected action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks."
     },
     {
       "name": "Management API",
@@ -123,7 +123,7 @@
           {
             "lang": "Shell",
             "label": "curl",
-            "source": "curl \"https://account.shieldlabs.ai/api/v1/history/request_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1\" \\\n  -H \"Authorization: Bearer $SHIELDLABS_API_KEY\"\n"
+            "source": "curl \"https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1\" \\\n  -H \"Authorization: Bearer $SHIELDLABS_API_KEY\"\n"
           }
         ]
       }
@@ -439,7 +439,7 @@
           "Webhooks"
         ],
         "summary": "A multi-account group changed",
-        "description": "Opt-in notification when a complete background detector publication detects, updates, or\nresolves an exact group of accounts. Enable `multiaccount: true` on the webhook endpoint.\nThe default is false; existing identification.scored subscriptions are preserved.\n\nA repeated build with unchanged membership, level, and rules does not produce a new event.\nAn unambiguous membership expansion or contraction preserves cluster_id and produces updated.\nAmbiguous splits or merges resolve replaced groups and detect new identities. Resolved means the group is no longer supported by the current complete source\ncut, including evidence expiry; it does not certify that its accounts are safe.\n\nDelivery is at least once, with no global ordering guarantee. Save event_id atomically with\nyour business operation. Within a site, publication epoch, and cluster_id, compare revision\nas an integer and ignore older transitions. Verify HMAC-SHA256 over the raw received bytes;\nX-Shield-Event-Id is a convenience header, and the signed body is authoritative.\n\nThis event has no request_id or risk_score. Its source identifies the published group result;\nit does not mutate an earlier identification.scored body or an already pinned Console view.",
+        "description": "Opt-in notification when a complete background detector publication detects, updates, or\nresolves an exact group of accounts. Enable `multiaccount: true` on the webhook endpoint.\nThe default is false; existing identification.scored subscriptions are preserved.\n\nA repeated build with unchanged membership, level, and rules does not produce a new event.\nAn unambiguous membership expansion or contraction preserves cluster_id and produces updated.\nAmbiguous splits or merges resolve replaced groups and detect new identities. Resolved means the group is no longer supported by the current complete source\ncut, including evidence expiry; it does not certify that its accounts are safe.\n\nDelivery is at least once, with no global ordering guarantee. Save event_id atomically with\nyour business operation. Within a site, publication epoch, and cluster_id, compare revision\nas an integer and ignore older transitions. Verify HMAC-SHA256 over the raw received bytes;\nX-Shield-Event-Id is a convenience header, and the signed body is authoritative.\n\nThis event has no identification_id or risk_score. Its source identifies the published group result;\nit does not mutate an earlier identification.scored body or an already pinned Console view.",
         "security": [],
         "parameters": [
           {
@@ -551,7 +551,7 @@
                           "reason": "below_distance"
                         }
                       },
-                      "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+                      "identification_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
                       "visitor_id": "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d",
                       "device_id": "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
                       "session_id": "7a1b2c3d-4e5f-4789-abcd-ef0123456789",
@@ -645,7 +645,7 @@
                           "reason": "anonymous_user"
                         }
                       },
-                      "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+                      "identification_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
                       "visitor_id": "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d",
                       "device_id": "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
                       "session_id": "7a1b2c3d-4e5f-4789-abcd-ef0123456789",
@@ -739,7 +739,7 @@
                           "reason": "anonymous_user"
                         }
                       },
-                      "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+                      "identification_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
                       "visitor_id": "161dfbad-8e7f-4a6b-9c5d-0e1f2a3b4c5d",
                       "device_id": "5eb7fd5c-2a1b-4c3d-9e8f-7a6b5c4d3e2f",
                       "session_id": "7a1b2c3d-4e5f-4789-abcd-ef0123456789",
@@ -879,10 +879,11 @@
         "name": "search_type",
         "in": "path",
         "required": true,
-        "description": "Identifier to search by. Only these seven values are supported:\n- `request_id`: one identification (read a verdict);\n- `device_id`: every identification of one device;\n- `user_hid`: every identification of one account;\n- `visitor_id`: every identification of one visitor;\n- `ip`: every identification from one public IPv4 address;\n- `session_id`: every identification of one visit;\n- `cookie_id`: every identification with one browser cookie.\n\nThe server does not reject other values: it ignores them and returns the latest identifications\nof the whole domain, so restrict the value on your side.",
+        "description": "Identifier to search by. These values are supported (`request_id` is a legacy alias of `identification_id`):\n- `request_id`: one identification (read a verdict);\n- `device_id`: every identification of one device;\n- `user_hid`: every identification of one account;\n- `visitor_id`: every identification of one visitor;\n- `ip`: every identification from one public IPv4 address;\n- `session_id`: every identification of one visit;\n- `cookie_id`: every identification with one browser cookie.\n\nThe server does not reject other values: it ignores them and returns the latest identifications\nof the whole domain, so restrict the value on your side.",
         "schema": {
           "type": "string",
           "enum": [
+            "identification_id",
             "request_id",
             "device_id",
             "user_hid",
@@ -893,9 +894,9 @@
           ]
         },
         "examples": {
-          "requestId": {
+          "identificationId": {
             "summary": "Read one verdict",
-            "value": "request_id"
+            "value": "identification_id"
           },
           "deviceId": {
             "summary": "All identifications of one device",
@@ -907,14 +908,14 @@
         "name": "value",
         "in": "path",
         "required": true,
-        "description": "Value of the identifier, validated on your side before sending:\n- `request_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,\n  the nil UUID included, matching\n  `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it\n  lowercase.\n- `ip`: a dotted IPv4 address. IPv6 addresses cannot be searched.\n- `user_hid`: the exact, case-sensitive User HID as one path segment, encoded the way the\n  server reads it: send the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped and\n  percent-encode every other byte of the UTF-8 value as uppercase `%XX`, including\n  `! ' ( ) *`, spaces and `%` itself. The server compares any other encoding literally, so\n  `%40` instead of `@`, or lowercase hex digits, return an empty page instead of the matching\n  rows. Many HTTP clients and generated clients escape `$ & + , : ; = @` in path values: build\n  this path yourself when yours does. A User HID that contains `/` cannot be searched, and most\n  HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern\n  rejects these values. Hex-encoded hashes need no escaping at all.\n\nThe server does not validate the value: a malformed UUID or IPv4 address gets a `500`.",
+        "description": "Value of the identifier, validated on your side before sending:\n- `identification_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,\n  the nil UUID included, matching\n  `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it\n  lowercase.\n- `ip`: a dotted IPv4 address. IPv6 addresses cannot be searched.\n- `user_hid`: the exact, case-sensitive User HID as one path segment, encoded the way the\n  server reads it: send the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped and\n  percent-encode every other byte of the UTF-8 value as uppercase `%XX`, including\n  `! ' ( ) *`, spaces and `%` itself. The server compares any other encoding literally, so\n  `%40` instead of `@`, or lowercase hex digits, return an empty page instead of the matching\n  rows. Many HTTP clients and generated clients escape `$ & + , : ; = @` in path values: build\n  this path yourself when yours does. A User HID that contains `/` cannot be searched, and most\n  HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern\n  rejects these values. Hex-encoded hashes need no escaping at all.\n\nThe server does not validate the value: a malformed UUID or IPv4 address gets a `500`.",
         "schema": {
           "type": "string",
           "minLength": 1,
           "pattern": "^(?:[^/.][^/]*|\\.[^/.][^/]*|\\.\\.[^/]+)$"
         },
         "examples": {
-          "requestId": {
+          "identificationId": {
             "summary": "A request ID",
             "value": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
           },
@@ -954,7 +955,7 @@
         "name": "offset",
         "in": "query",
         "required": false,
-        "description": "Number of identifications to skip, for paging. The server treats negative or non-numeric values as 0. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `request_id`.",
+        "description": "Number of identifications to skip, for paging. The server treats negative or non-numeric values as 0. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.",
         "schema": {
           "type": "integer",
           "minimum": 0,
@@ -996,6 +997,7 @@
         "schema": {
           "type": "string",
           "enum": [
+            "identification_id",
             "request_id",
             "device_id",
             "user_hid",
@@ -1006,9 +1008,9 @@
           ]
         },
         "examples": {
-          "requestId": {
+          "identificationId": {
             "summary": "Search by request ID",
-            "value": "request_id"
+            "value": "identification_id"
           }
         }
       },
@@ -1022,7 +1024,7 @@
           "minLength": 1
         },
         "examples": {
-          "requestId": {
+          "identificationId": {
             "summary": "A request ID",
             "value": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
           }
@@ -1273,7 +1275,7 @@
         },
         "description": "Stored ingest attribution, independent of risk score and browser automation. Claimed names are unverified. A verified provider does not verify the agent name, service or AI mode. Read proof scope from each attribution and its referenced evidence. Unknown string values and fields must be accepted."
       },
-      "RequestId": {
+      "IdentificationId": {
         "type": "string",
         "format": "uuid",
         "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
@@ -1520,7 +1522,7 @@
         "additionalProperties": true,
         "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | `score_details` (JSON-encoded string, zero weights included) |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `detection_flags.browser_vpn_proxy` | derive it: `connection_type == \"browser_vpn_proxy\"` |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nThe `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and\nSTUN measurements) that are not part of the stable contract: ignore fields you do not know.",
         "required": [
-          "request_id",
+          "identification_id",
           "session_id",
           "cookie_id",
           "domain",
@@ -1565,8 +1567,8 @@
           "client_identity": {
             "$ref": "#/components/schemas/ClientIdentity"
           },
-          "request_id": {
-            "$ref": "#/components/schemas/RequestId"
+          "identification_id": {
+            "$ref": "#/components/schemas/IdentificationId"
           },
           "session_id": {
             "$ref": "#/components/schemas/SessionId"
@@ -1953,7 +1955,7 @@
         "additionalProperties": true,
         "description": "One identification as returned by the deprecated Management API history endpoint (PascalCase keys). Also carries diagnostic network fields that are not part of the stable contract. Use the History API row instead.",
         "required": [
-          "RequestID",
+          "IdentificationID",
           "SessionID",
           "CookieID",
           "DeviceID",
@@ -1973,8 +1975,8 @@
           "LastRequestTime"
         ],
         "properties": {
-          "RequestID": {
-            "$ref": "#/components/schemas/RequestId"
+          "IdentificationID": {
+            "$ref": "#/components/schemas/IdentificationId"
           },
           "SessionID": {
             "$ref": "#/components/schemas/SessionId"
@@ -3256,7 +3258,7 @@
         "type": "object",
         "description": "Final identification. risk_score is this scan only. Version 2026-10-13 uses signals for score contributions, including fired signals of weight 0, detection_flags for 20 public signals, and hre for account results. Older bodies remain accepted.",
         "required": [
-          "request_id",
+          "identification_id",
           "visitor_id",
           "device_id",
           "session_id",
@@ -3280,8 +3282,8 @@
             "$ref": "#/components/schemas/WebhookClientIdentity",
             "description": "Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values."
           },
-          "request_id": {
-            "$ref": "#/components/schemas/RequestId"
+          "identification_id": {
+            "$ref": "#/components/schemas/IdentificationId"
           },
           "visitor_id": {
             "$ref": "#/components/schemas/VisitorId"
@@ -3897,7 +3899,7 @@
         "value": {
           "data": [
             {
-              "request_id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+              "identification_id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
               "session_id": "b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e",
               "cookie_id": "c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f",
               "domain": "shop.example.com",
@@ -3957,7 +3959,7 @@
               "is_suspicious_paid_click": true
             },
             {
-              "request_id": "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b",
+              "identification_id": "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b",
               "session_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
               "cookie_id": "f0e1d2c3-b4a5-4968-8776-655443322110",
               "domain": "example.com",
@@ -4008,7 +4010,7 @@
               "stun_flow_status": "ok"
             },
             {
-              "request_id": "9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0",
+              "identification_id": "9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0",
               "session_id": "b0c1d2e3-f4a5-4b6c-9d7e-8f9a0b1c2d3e",
               "cookie_id": "c3d4e5f6-a7b8-4c9d-8e0f-a1b2c3d4e5f6",
               "domain": "example.com",
@@ -4064,7 +4066,7 @@
               "traffic_reason": "external_referrer"
             },
             {
-              "request_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+              "identification_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
               "session_id": "00000000-0000-0000-0000-000000000000",
               "cookie_id": "00000000-0000-0000-0000-000000000000",
               "domain": "example.com",
@@ -4115,7 +4117,7 @@
               "stun_flow_status": ""
             },
             {
-              "request_id": "4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f",
+              "identification_id": "4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f",
               "session_id": "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d",
               "cookie_id": "6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e",
               "domain": "example.com",
@@ -4175,7 +4177,7 @@
       },
       "HistoryPageEmpty": {
         "summary": "Nothing matched",
-        "description": "No identification matched. When searching by `request_id` right after a protected action, this means \"not scored yet\" (or an invalid request ID), never \"clean\".",
+        "description": "No identification matched. When searching by `identification_id` right after a protected action, this means \"not scored yet\" (or an invalid request ID), never \"clean\".",
         "value": {
           "data": [],
           "total": 0
@@ -4256,7 +4258,7 @@
         "description": "The PascalCase array returned by the deprecated endpoint, for the same identification as the first History API example row.",
         "value": [
           {
-            "RequestID": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+            "IdentificationID": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
             "SessionID": "b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e",
             "CookieID": "c7d9e1f3-a5b7-4c9d-ae1f-3a5b7c9d1e3f",
             "DeviceID": "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
@@ -4483,7 +4485,7 @@
           "schema_version": "2026-06-01",
           "created_at": "2026-09-30T12:34:57.482913041Z",
           "data": {
-            "request_id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+            "identification_id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
             "visitor_id": "e9f1a3b5-c7d9-4e1f-8a3b-5c7d9e1f3a5b",
             "device_id": "d8e0f2a4-b6c8-4d0e-bf2a-4b6c8d0e2f4a",
             "session_id": "b6c8d0e2-f4a6-4b8c-8d0e-2f4a6b8c0d2e",
@@ -4561,7 +4563,7 @@
           "schema_version": "2026-06-01",
           "created_at": "2026-09-30T13:10:00.5Z",
           "data": {
-            "request_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+            "identification_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
             "visitor_id": "00000000-0000-0000-0000-000000000000",
             "device_id": "00000000-0000-0000-0000-000000000000",
             "session_id": "00000000-0000-0000-0000-000000000000",
@@ -4664,7 +4666,7 @@
               "country": "BY",
               "ip": "203.0.113.10"
             },
-            "request_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
+            "identification_id": "13f84f05-7c2a-4e9b-9f1d-2a6b8c0e4d11",
             "risk_score": 30,
             "session_id": "3a2b1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d",
             "signals": [
