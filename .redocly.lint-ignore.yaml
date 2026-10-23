@@ -5,6 +5,9 @@
 # receivers get it, while the schema keeps all 19 flags required because production events always
 # carry them. test/examples.test.mjs asserts that this example fails validation on exactly these
 # two missing flags and nothing else.
+# Version-conditional validation also reports the enclosing then-schema failure.
+# The fixture test still checks the exact two missing flags independently.
 spec/components/examples/IdentificationScoredTestDelivery.yaml:
   no-invalid-media-type-examples:
     - '#/value/data/detection_flags'
+    - '#/value'

@@ -326,7 +326,7 @@ describe('lint exceptions', () => {
     const ignore = YAML.parse(readFileSync(path.join(ROOT, '.redocly.lint-ignore.yaml'), 'utf8'));
     assert.deepEqual(ignore, {
       'spec/components/examples/IdentificationScoredTestDelivery.yaml': {
-        'no-invalid-media-type-examples': ['#/value/data/detection_flags'],
+        'no-invalid-media-type-examples': ['#/value/data/detection_flags', '#/value'],
       },
     });
   });
