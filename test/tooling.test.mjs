@@ -39,7 +39,7 @@ async function startMockApi({ corruptRow = false } = {}) {
       res.end(`${JSON.stringify(body)}\n`);
     };
     const url = new URL(req.url, 'http://localhost');
-    if (url.pathname.startsWith('/api/v1/history/request_id/')) {
+    if (url.pathname.startsWith('/api/v1/history/identification_id/')) {
       if (req.headers.authorization !== 'Bearer sec_test0000-test0000-test0000') {
         res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('{"error":"invalid api key"}\n');

@@ -2621,7 +2621,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "request_id": {
+                  "identification_id": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 512

@@ -6,7 +6,7 @@
   "additionalProperties": true,
   "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | `score_details` (JSON-encoded string, zero weights included) |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `detection_flags.browser_vpn_proxy` | derive it: `connection_type == \"browser_vpn_proxy\"` |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nThe `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and\nSTUN measurements) that are not part of the stable contract: ignore fields you do not know.",
   "required": [
-    "request_id",
+    "identification_id",
     "session_id",
     "cookie_id",
     "domain",
@@ -51,8 +51,8 @@
     "client_identity": {
       "$ref": "#/$defs/ClientIdentity"
     },
-    "request_id": {
-      "$ref": "#/$defs/RequestId"
+    "identification_id": {
+      "$ref": "#/$defs/IdentificationId"
     },
     "session_id": {
       "$ref": "#/$defs/SessionId"
@@ -558,6 +558,14 @@
         "2026-09-30 13:05:12"
       ]
     },
+    "IdentificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+      ]
+    },
     "Ipv4": {
       "type": "string",
       "format": "ipv4",
@@ -581,14 +589,6 @@
         "Windows",
         "Mac OS X",
         "Android"
-      ]
-    },
-    "RequestId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
-      "examples": [
-        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
     },
     "RiskScore": {

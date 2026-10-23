@@ -5,7 +5,7 @@ description: >-
   keys). Also carries diagnostic network fields that are not part of the stable contract. Use the
   History API row instead.
 required:
-  - RequestID
+  - IdentificationID
   - SessionID
   - CookieID
   - DeviceID
@@ -24,8 +24,8 @@ required:
   - Details
   - LastRequestTime
 properties:
-  RequestID:
-    $ref: ./RequestId.yaml
+  IdentificationID:
+    $ref: ./IdentificationId.yaml
   SessionID:
     $ref: ./SessionId.yaml
   CookieID:

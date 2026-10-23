@@ -418,11 +418,19 @@
         }
       }
     },
+    "IdentificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+      ]
+    },
     "IdentificationScoredData": {
       "type": "object",
       "description": "Final identification. risk_score is this scan only. Version 2026-10-13 uses signals for score contributions, including fired signals of weight 0, detection_flags for 20 public signals, and hre for account results. Older bodies remain accepted.",
       "required": [
-        "request_id",
+        "identification_id",
         "visitor_id",
         "device_id",
         "session_id",
@@ -446,8 +454,8 @@
           "$ref": "#/$defs/WebhookClientIdentity",
           "description": "Optional best-effort attribution. May be omitted or null; every nested field is also optional and nullable. Integrations must work without these values."
         },
-        "request_id": {
-          "$ref": "#/$defs/RequestId"
+        "identification_id": {
+          "$ref": "#/$defs/IdentificationId"
         },
         "visitor_id": {
           "$ref": "#/$defs/VisitorId"
@@ -1480,14 +1488,6 @@
         "Windows",
         "Mac OS X",
         "Android"
-      ]
-    },
-    "RequestId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
-      "examples": [
-        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
     },
     "Rfc3339Timestamp": {

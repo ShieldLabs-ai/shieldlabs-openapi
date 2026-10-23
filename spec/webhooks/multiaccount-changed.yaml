@@ -17,7 +17,7 @@ post:
     as an integer and ignore older transitions. Verify HMAC-SHA256 over the raw received bytes;
     X-Shield-Event-Id is a convenience header, and the signed body is authoritative.
 
-    This event has no request_id or risk_score. Its source identifies the published group result;
+    This event has no identification_id or risk_score. Its source identifies the published group result;
     it does not mutate an earlier identification.scored body or an already pinned Console view.
   security: []
   parameters:
