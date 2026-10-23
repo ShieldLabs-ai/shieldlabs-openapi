@@ -10,5 +10,5 @@ schema:
   minLength: 1
 examples:
   identificationId:
-    summary: A request ID
+    summary: An Identification ID
     value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d

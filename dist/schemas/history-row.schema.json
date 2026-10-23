@@ -561,7 +561,7 @@
     "IdentificationId": {
       "type": "string",
       "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed Identification ID.",
       "examples": [
         "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
@@ -594,7 +594,7 @@
     "RiskScore": {
       "type": "integer",
       "minimum": 0,
-      "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
+      "description": "Risk Score from 0 (no risk found) to 100. Search-engine crawlers always score 0.\n\nRisk bands are computed on your side from the score; no band field exists on the wire:\n- trusted: 0-29\n- suspicious: 30-59\n- dangerous: 60-100\n\nA value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the\ningest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nThe score usually equals the sum of the signal weights capped at 100, but carried-forward\nverdicts and corrections make that unreliable: never recompute or validate it yourself.",
       "examples": [
         0,
         35,
