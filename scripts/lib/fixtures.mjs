@@ -51,7 +51,7 @@ export const FIXTURE_EXAMPLES = [
     summary: 'Nothing matched',
     description:
       'No identification matched. When searching by `identification_id` right after a protected action, ' +
-      'this means "not scored yet" (or an invalid request ID), never "clean".',
+      'this means "not scored yet" (or an invalid Identification ID), never "clean".',
   },
   {
     name: 'IdentificationScored',

@@ -12,7 +12,7 @@ info:
 
     1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification
        and hands your page an Identification ID.
-    2. **Your backend.** Your page sends the request ID along with the protected action (signup,
+    2. **Your backend.** Your page sends the Identification ID along with the protected action (signup,
        login, checkout). Your backend reads the verdict for it from the **History API**, or
        receives it in a signed `identification.scored` **webhook**.
     3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`
@@ -22,7 +22,7 @@ info:
     Scoring is asynchronous. Start the identification when the user begins the
     protected action (for example when the signup form opens), then either poll the History API by
     `identification_id` with a short backoff or wait for the webhook. Let one identification authorize one
-    protected action: reject request IDs you have already used and identifications older than your
+    protected action: reject Identification IDs you have already used and identifications older than your
     freshness window.
 
     ## Hosts and credentials
@@ -106,7 +106,7 @@ info:
     A value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over
     the ingest rate limit, and the identification carries exactly one signal,
     `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
-    100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued
+    100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued
     while it stays blocked get no row and no webhook, so they stay unverified.
 
     Branch on `detection_flags` and the Risk Score. Signal names are for display and logging;
@@ -901,7 +901,7 @@ components:
         pattern: ^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$
       examples:
         identificationId:
-          summary: A request ID
+          summary: An Identification ID
           value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
         ip:
           summary: A public IPv4 address
@@ -973,7 +973,7 @@ components:
           - cookie_id
       examples:
         identificationId:
-          summary: Search by request ID
+          summary: Search by Identification ID
           value: identification_id
     DeprecatedHistoryValue:
       name: value
@@ -985,7 +985,7 @@ components:
         minLength: 1
       examples:
         identificationId:
-          summary: A request ID
+          summary: An Identification ID
           value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
     DeprecatedHistoryLimit:
       name: limit
@@ -1177,7 +1177,7 @@ components:
     IdentificationId:
       type: string
       format: uuid
-      description: Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.
+      description: Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed Identification ID.
       examples:
         - a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
     SessionId:
@@ -1283,7 +1283,7 @@ components:
         A value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the
         ingest rate limit, and the identification carries exactly one signal,
         `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
-        100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued
+        100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued
         while it stays blocked get no row and no webhook, so they stay unverified.
 
         The score usually equals the sum of the signal weights capped at 100, but carried-forward
@@ -3528,7 +3528,7 @@ components:
         total: 37
     HistoryPageEmpty:
       summary: Nothing matched
-      description: No identification matched. When searching by `identification_id` right after a protected action, this means "not scored yet" (or an invalid request ID), never "clean".
+      description: No identification matched. When searching by `identification_id` right after a protected action, this means "not scored yet" (or an invalid Identification ID), never "clean".
       value:
         data: []
         total: 0

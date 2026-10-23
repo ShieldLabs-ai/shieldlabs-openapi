@@ -18,5 +18,5 @@ schema:
     - cookie_id
 examples:
   identificationId:
-    summary: Search by request ID
+    summary: Search by Identification ID
     value: identification_id
