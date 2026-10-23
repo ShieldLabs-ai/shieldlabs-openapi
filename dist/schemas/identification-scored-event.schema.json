@@ -820,6 +820,14 @@
         }
       }
     },
+    "IdentificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+      ]
+    },
     "IdentificationScoredData": {
       "type": "object",
       "description": "Final identification. risk_score is this scan only. Version 2026-10-13 uses signals for score contributions, including fired signals of weight 0, detection_flags for 20 public signals, and hre for account results. Older bodies remain accepted.",
@@ -1123,14 +1131,6 @@
         "Windows",
         "Mac OS X",
         "Android"
-      ]
-    },
-    "IdentificationId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
-      "examples": [
-        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
     },
     "Rfc3339Timestamp": {

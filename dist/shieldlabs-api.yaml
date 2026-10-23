@@ -846,7 +846,7 @@ components:
       in: path
       required: true
       description: |-
-        Identifier to search by. These values are supported (`request_id` is a legacy alias of `identification_id`):
+        Identifier to search by:
         - `identification_id`: one identification (read a verdict);
         - `device_id`: every identification of one device;
         - `user_hid`: every identification of one account;
@@ -855,12 +855,14 @@ components:
         - `session_id`: every identification of one visit;
         - `cookie_id`: every identification with one browser cookie.
 
+        `request_id` is a legacy alias of `identification_id` and is still accepted.
         The server does not reject other values: it ignores them and returns the latest identifications
         of the whole domain, so restrict the value on your side.
       schema:
         type: string
         enum:
           - identification_id
+          - request_id
           - device_id
           - user_hid
           - visitor_id
@@ -960,11 +962,12 @@ components:
       name: type
       in: path
       required: true
-      description: Identifier to search by. Other values get a `404` with a bare JSON string such as `"auto is not supported"`.
+      description: Identifier to search by. `request_id` is a legacy alias of `identification_id`. Other values get a `404` with a bare JSON string such as `"auto is not supported"`.
       schema:
         type: string
         enum:
           - identification_id
+          - request_id
           - device_id
           - user_hid
           - visitor_id
@@ -1020,7 +1023,7 @@ components:
       examples:
         identificationScored:
           summary: Signature of the identification.scored example
-          value: sha256=397ff9bd26888e9e86addc2d920a8c5b2037251a3a1181f3b4810ca6c5f78062
+          value: sha256=ef87f1f65933ed7536236a3b2354c4ff657c6f7e852cb8d5a7a0ba2604951819
         webhookPing:
           summary: Signature of the webhook.ping example
           value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8

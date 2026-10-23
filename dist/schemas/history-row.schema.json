@@ -558,6 +558,14 @@
         "2026-09-30 13:05:12"
       ]
     },
+    "IdentificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
+      "examples": [
+        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+      ]
+    },
     "Ipv4": {
       "type": "string",
       "format": "ipv4",
@@ -581,14 +589,6 @@
         "Windows",
         "Mac OS X",
         "Android"
-      ]
-    },
-    "IdentificationId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifies one identification. The browser creates it as a UUID v4 and hands it to your page; it is the join key between the browser, the webhook and the History API. The nil UUID appears only on rate-limit marker rows that arrived with a malformed request ID.",
-      "examples": [
-        "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
       ]
     },
     "RiskScore": {
