@@ -130,7 +130,9 @@ describe('normalization cases', () => {
         assert.equal(testCase.source, 'webhook');
         const result = validator.validate(ref('IdentificationScoredData'), testCase.input);
         if (testCase.name === 'webhook_test_delivery') {
-          assert.equal(testDeliveryMismatch(result.errors, '/detection_flags'), null, testCase.name);
+          const flags = validator.validate(ref('LegacyDetectionFlags'), testCase.input.detection_flags);
+          const errors = flags.errors.map((error) => ({ ...error, instancePath: `/detection_flags${error.instancePath}` }));
+          assert.equal(testDeliveryMismatch(errors, '/detection_flags'), null, testCase.name);
         } else {
           assert.ok(result.valid, `${testCase.name}: ${describeErrors(result.errors)}`);
         }

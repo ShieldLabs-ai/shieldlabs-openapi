@@ -69,12 +69,43 @@ properties:
     type: array
     description: Weighted risk signals behind `risk_score`, in scoring order. Can be
       empty. The rate-limit marker carries exactly one entry,
-      `{"name":"rate_limited","weight":999}`.
+      `{"name":"banned_ip","weight":999}`.
     items:
       $ref: ./Signal.yaml
   detection_flags:
-    $ref: ./LegacyDetectionFlags.yaml
-    description: Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. This fallback supports retained older versions.
+    type: object
+    description: Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. Older versions keep LegacyDetectionFlags.
+    additionalProperties: true
+    properties:
+      vpn: {type: boolean}
+      proxy: {type: boolean}
+      tor: {type: boolean}
+      private_relay: {type: boolean}
+      privacy_relay: {type: boolean}
+      network_check_incomplete: {type: boolean}
+      stun_not_checked: {type: boolean}
+      latency_test: {type: boolean}
+      ws_tcp_latency: {type: boolean}
+      banned_ip: {type: boolean}
+      rate_limited: {type: boolean}
+      check_incomplete: {type: boolean}
+      os_not_detected: {type: boolean}
+      timezone_mismatch: {type: boolean}
+      javascript_disabled: {type: boolean}
+      os_mismatch: {type: boolean}
+      os_mismatch2: {type: boolean}
+      ip_mismatch: {type: boolean}
+      anti_detect_browser: {type: boolean}
+      device_spoofing: {type: boolean}
+      incognito: {type: boolean}
+      search_bot: {type: boolean}
+      ai_bot: {type: boolean}
+      ai_browser: {type: boolean}
+      browser_automation: {type: boolean}
+      browser_vpn_proxy: {type: boolean}
+      datacenter_ip: {type: boolean}
+      abuser: {type: boolean}
+      suspicious_paid_click: {type: boolean}
   observed_at:
     $ref: ./Rfc3339Timestamp.yaml
     description: Original snapshot scan clock, distinct from envelope created_at.

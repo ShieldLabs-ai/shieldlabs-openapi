@@ -15,7 +15,7 @@ properties:
       use them for display and logging only. Known names:
       - `tor`: the request came through Tor;
       - `vpn`: a VPN was detected, including a browser VPN or proxy;
-      - `privacy_relay`: a privacy relay such as iCloud Private Relay;
+      - `private_relay`: a privacy relay such as iCloud Private Relay;
       - `proxy`: a proxy was detected;
       - `datacenter_ip`: the IP belongs to a datacenter or hosting range;
       - `abuser`: the IP has a record of abuse;
@@ -28,13 +28,13 @@ properties:
       - `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);
       - `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;
       - `os_mismatch`: either operating-system consistency detector fired;
-      - `ws_tcp_latency`: the WebSocket-to-TCP latency test fired;
+      - `latency_test`: the WebSocket-to-TCP latency test fired;
       - `os_not_detected`: the operating system could not be determined;
       - `timezone_mismatch`: the browser timezone differs from the IP location timezone;
-      - `stun_not_checked`: the network (STUN) check did not complete;
+      - `network_check_incomplete`: the network (STUN) check did not complete;
       - `stun_late_correction`: a late network result arrived; negative weight that cancels
-        `stun_not_checked`;
-      - `rate_limited`: the rate-limit marker, weight 999.
+        `network_check_incomplete`;
+      - `banned_ip`: the rate-limit marker, weight 999.
 
       A verdict carried forward from an earlier identification of the same device and IP (for
       example `antidetect_browser`) keeps a name derived from the original signal and can carry a
@@ -46,7 +46,7 @@ properties:
     type: integer
     description: >-
       Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999
-      for `rate_limited`. Weights can change between releases; never add them up yourself.
+      for `banned_ip`. Weights can change between releases; never add them up yourself.
     examples:
       - 10
       - -30

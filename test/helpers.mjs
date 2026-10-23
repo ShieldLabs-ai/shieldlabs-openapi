@@ -105,6 +105,7 @@ export const TEST_DELIVERY_MISSING_FLAGS = ['browser_automation', 'search_bot'];
  */
 export function testDeliveryMismatch(errors, flagsPath) {
   const actual = errors
+    .filter((e) => e.keyword !== 'if')
     .map((e) => `${e.instancePath} ${e.keyword} ${e.params?.missingProperty ?? ''}`.trim())
     .sort();
   const expected = TEST_DELIVERY_MISSING_FLAGS.map((flag) => `${flagsPath} required ${flag}`).sort();

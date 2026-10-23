@@ -109,7 +109,7 @@ info:
 
     A value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over
     the ingest rate limit, and the identification carries exactly one signal,
-    `{"name":"rate_limited","weight":999}`, usually with nil identifiers. Treat every value above
+    `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
     100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued
     while it stays blocked get no row and no webhook, so they stay unverified.
 
@@ -605,10 +605,10 @@ webhooks:
                         weight: 0
                     detection_flags:
                       device_spoofing: false
-                      ws_tcp_latency: false
-                      rate_limited: false
+                      latency_test: false
+                      banned_ip: false
                       vpn: false
-                      privacy_relay: false
+                      private_relay: false
                       tor: false
                       proxy: false
                       os_mismatch: false
@@ -622,7 +622,7 @@ webhooks:
                       ai_bot: false
                       ai_browser: false
                       javascript_disabled: false
-                      stun_not_checked: false
+                      network_check_incomplete: false
                       check_incomplete: false
                     observed_at: '2026-10-06T00:00:00Z'
               aiBot:
@@ -685,10 +685,10 @@ webhooks:
                         weight: 0
                     detection_flags:
                       device_spoofing: false
-                      ws_tcp_latency: false
-                      rate_limited: false
+                      latency_test: false
+                      banned_ip: false
                       vpn: false
-                      privacy_relay: false
+                      private_relay: false
                       tor: false
                       proxy: false
                       os_mismatch: false
@@ -702,7 +702,7 @@ webhooks:
                       ai_bot: true
                       ai_browser: false
                       javascript_disabled: false
-                      stun_not_checked: false
+                      network_check_incomplete: false
                       check_incomplete: false
                     observed_at: '2026-10-06T00:00:00Z'
               aiBrowser:
@@ -765,10 +765,10 @@ webhooks:
                         weight: 0
                     detection_flags:
                       device_spoofing: false
-                      ws_tcp_latency: false
-                      rate_limited: false
+                      latency_test: false
+                      banned_ip: false
                       vpn: false
-                      privacy_relay: false
+                      private_relay: false
                       tor: false
                       proxy: false
                       os_mismatch: false
@@ -782,7 +782,7 @@ webhooks:
                       ai_bot: false
                       ai_browser: true
                       javascript_disabled: false
-                      stun_not_checked: false
+                      network_check_incomplete: false
                       check_incomplete: false
                     observed_at: '2026-10-06T00:00:00Z'
       responses:
@@ -1282,7 +1282,7 @@ components:
 
         A value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the
         ingest rate limit, and the identification carries exactly one signal,
-        `{"name":"rate_limited","weight":999}`, usually with nil identifiers. Treat every value above
+        `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
         100 as rate limited. One marker is written when the IP goes over the limit; request IDs issued
         while it stays blocked get no row and no webhook, so they stay unverified.
 
@@ -2053,6 +2053,111 @@ components:
           $ref: '#/components/schemas/Rfc3339Timestamp'
         data:
           $ref: '#/components/schemas/MultiaccountChangedData'
+    LegacyDetectionFlags:
+      type: object
+      description: Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.
+      required:
+        - vpn
+        - privacy_relay
+        - tor
+        - proxy
+        - os_mismatch
+        - os_not_detected
+        - timezone_mismatch
+        - anti_detect_browser
+        - browser_automation
+        - ip_mismatch
+        - incognito
+        - search_bot
+        - javascript_disabled
+        - stun_not_checked
+        - check_incomplete
+      properties:
+        vpn:
+          type: boolean
+          description: A VPN or Browser VPN/Proxy was detected.
+        privacy_relay:
+          type: boolean
+          description: A privacy relay such as iCloud Private Relay was detected.
+        browser_vpn_proxy:
+          type: boolean
+          deprecated: true
+          description: A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`.
+        tor:
+          type: boolean
+          description: The request came through the Tor network.
+        proxy:
+          type: boolean
+          description: A proxy was detected.
+        datacenter_ip:
+          type: boolean
+          deprecated: true
+          description: The public IP belongs to a datacenter or hosting range.
+        abuser:
+          type: boolean
+          deprecated: true
+          description: The public IP has a record of abuse in IP intelligence.
+        os_mismatch:
+          type: boolean
+          description: Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks.
+        os_not_detected:
+          type: boolean
+          description: The operating system could not be determined from the User-Agent or the network.
+        timezone_mismatch:
+          type: boolean
+          description: The browser timezone differs from the timezone of the IP location.
+        anti_detect_browser:
+          type: boolean
+          description: An anti-detect browser was detected.
+        browser_automation:
+          type: boolean
+          description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
+        ip_mismatch:
+          type: boolean
+          description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
+        incognito:
+          type: boolean
+          description: The browser runs in a private window.
+        search_bot:
+          type: boolean
+          description: A search-engine crawler. Its Risk Score is always 0.
+        suspicious_paid_click:
+          type: boolean
+          deprecated: true
+          description: The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included).
+        javascript_disabled:
+          type: boolean
+          description: JavaScript, or the browser APIs the checks need, were unavailable.
+        stun_not_checked:
+          type: boolean
+          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives.
+        check_incomplete:
+          type: boolean
+          description: Part of the browser checks timed out, so the verdict rests on partial data. Informational.
+        device_spoofing:
+          type: boolean
+        latency_test:
+          type: boolean
+          description: Current public name of the latency detector. Payloads from schema 2026-10-13 before the slug rename used ws_tcp_latency.
+        ws_tcp_latency:
+          type: boolean
+          description: Previous public name of the latency detector. Current 2026-10-13 payloads use latency_test.
+        banned_ip:
+          type: boolean
+          description: Current public name of the banned-IP flag. Payloads from schema 2026-10-13 before the slug rename used rate_limited.
+        rate_limited:
+          type: boolean
+          description: Previous public name of the banned-IP flag. Current 2026-10-13 payloads use banned_ip.
+        ai_bot:
+          type: boolean
+          description: An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk.
+        ai_browser:
+          type: boolean
+          description: A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative.
+        os_mismatch2:
+          type: boolean
+          deprecated: true
+          description: Legacy 2026-10-06 only; current payloads combine this check into os_mismatch.
     DetectionFlags20261012:
       type: object
       description: Retained scored webhook contract 2026-10-12. Twenty-one source detection signals, with os_mismatch and os_mismatch2 independent. Current deliveries use DetectionFlags (2026-10-13).
@@ -2146,18 +2251,18 @@ components:
       required:
         - vpn
         - proxy
-        - privacy_relay
+        - private_relay
         - check_incomplete
-        - stun_not_checked
+        - network_check_incomplete
         - os_not_detected
         - timezone_mismatch
         - javascript_disabled
         - os_mismatch
         - ip_mismatch
-        - ws_tcp_latency
+        - latency_test
         - anti_detect_browser
         - device_spoofing
-        - rate_limited
+        - banned_ip
         - incognito
         - search_bot
         - ai_bot
@@ -2171,15 +2276,15 @@ components:
         proxy:
           type: boolean
           description: A proxy was detected.
-        privacy_relay:
+        private_relay:
           type: boolean
-          description: A privacy relay such as iCloud Private Relay was detected.
+          description: A privacy relay such as iCloud Private Relay was detected. Older payloads used privacy_relay.
         check_incomplete:
           type: boolean
           description: Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true.
-        stun_not_checked:
+        network_check_incomplete:
           type: boolean
-          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives.
+          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives. Older payloads used stun_not_checked.
         os_not_detected:
           type: boolean
           description: The operating system could not be determined from the User-Agent or the network.
@@ -2195,17 +2300,17 @@ components:
         ip_mismatch:
           type: boolean
           description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
-        ws_tcp_latency:
+        latency_test:
           type: boolean
-          description: The WebSocket-to-TCP latency test fired. This is the public name of that detector.
+          description: The WebSocket-to-TCP latency test fired. Older payloads used ws_tcp_latency.
         anti_detect_browser:
           type: boolean
           description: An anti-detect browser was detected.
         device_spoofing:
           type: boolean
-        rate_limited:
+        banned_ip:
           type: boolean
-          description: The visitor IP is banned for this window. The matching signal weight is 999.
+          description: The visitor IP is banned for this window. The matching signal weight is 999. Older payloads used rate_limited.
         incognito:
           type: boolean
           description: The browser runs in a private window. Weight 0, and present in signals when true.
@@ -2529,7 +2634,7 @@ components:
             use them for display and logging only. Known names:
             - `tor`: the request came through Tor;
             - `vpn`: a VPN was detected, including a browser VPN or proxy;
-            - `privacy_relay`: a privacy relay such as iCloud Private Relay;
+            - `private_relay`: a privacy relay such as iCloud Private Relay;
             - `proxy`: a proxy was detected;
             - `datacenter_ip`: the IP belongs to a datacenter or hosting range;
             - `abuser`: the IP has a record of abuse;
@@ -2542,13 +2647,13 @@ components:
             - `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);
             - `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;
             - `os_mismatch`: either operating-system consistency detector fired;
-            - `ws_tcp_latency`: the WebSocket-to-TCP latency test fired;
+            - `latency_test`: the WebSocket-to-TCP latency test fired;
             - `os_not_detected`: the operating system could not be determined;
             - `timezone_mismatch`: the browser timezone differs from the IP location timezone;
-            - `stun_not_checked`: the network (STUN) check did not complete;
+            - `network_check_incomplete`: the network (STUN) check did not complete;
             - `stun_late_correction`: a late network result arrived; negative weight that cancels
-              `stun_not_checked`;
-            - `rate_limited`: the rate-limit marker, weight 999.
+              `network_check_incomplete`;
+            - `banned_ip`: the rate-limit marker, weight 999.
 
             A verdict carried forward from an earlier identification of the same device and IP (for
             example `antidetect_browser`) keeps a name derived from the original signal and can carry a
@@ -2558,115 +2663,10 @@ components:
             - antidetect_browser
         weight:
           type: integer
-          description: Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `rate_limited`. Weights can change between releases; never add them up yourself.
+          description: Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `banned_ip`. Weights can change between releases; never add them up yourself.
           examples:
             - 10
             - -30
-    LegacyDetectionFlags:
-      type: object
-      description: Detection flags in retained webhook and History payloads before 2026-10-12. Missing extension flags are not evaluated negative results.
-      required:
-        - vpn
-        - privacy_relay
-        - tor
-        - proxy
-        - os_mismatch
-        - os_not_detected
-        - timezone_mismatch
-        - anti_detect_browser
-        - browser_automation
-        - ip_mismatch
-        - incognito
-        - search_bot
-        - javascript_disabled
-        - stun_not_checked
-        - check_incomplete
-      properties:
-        vpn:
-          type: boolean
-          description: A VPN or Browser VPN/Proxy was detected.
-        privacy_relay:
-          type: boolean
-          description: A privacy relay such as iCloud Private Relay was detected.
-        browser_vpn_proxy:
-          type: boolean
-          deprecated: true
-          description: A VPN or proxy built into the browser or one of its extensions. `true` exactly when `connection_type` is `browser_vpn_proxy`.
-        tor:
-          type: boolean
-          description: The request came through the Tor network.
-        proxy:
-          type: boolean
-          description: A proxy was detected.
-        datacenter_ip:
-          type: boolean
-          deprecated: true
-          description: The public IP belongs to a datacenter or hosting range.
-        abuser:
-          type: boolean
-          deprecated: true
-          description: The public IP has a record of abuse in IP intelligence.
-        os_mismatch:
-          type: boolean
-          description: Either internal OS consistency check detected a mismatch. The public flag combines browser/network and TCP behaviour checks.
-        os_not_detected:
-          type: boolean
-          description: The operating system could not be determined from the User-Agent or the network.
-        timezone_mismatch:
-          type: boolean
-          description: The browser timezone differs from the timezone of the IP location.
-        anti_detect_browser:
-          type: boolean
-          description: An anti-detect browser was detected.
-        browser_automation:
-          type: boolean
-          description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
-        ip_mismatch:
-          type: boolean
-          description: 'The public IP differs from the local IP found by the browser network check. Informational: it does not add to the score.'
-        incognito:
-          type: boolean
-          description: The browser runs in a private window.
-        search_bot:
-          type: boolean
-          description: A search-engine crawler. Its Risk Score is always 0.
-        suspicious_paid_click:
-          type: boolean
-          deprecated: true
-          description: The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included).
-        javascript_disabled:
-          type: boolean
-          description: JavaScript, or the browser APIs the checks need, were unavailable.
-        stun_not_checked:
-          type: boolean
-          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives.
-        check_incomplete:
-          type: boolean
-          description: Part of the browser checks timed out, so the verdict rests on partial data. Informational.
-        device_spoofing:
-          type: boolean
-        latency_test:
-          type: boolean
-          description: Older name of ws_tcp_latency. Current 2026-10-13 payloads use ws_tcp_latency.
-        ws_tcp_latency:
-          type: boolean
-          description: Public name of the latency detector from schema 2026-10-13.
-        banned_ip:
-          type: boolean
-          description: Older name of rate_limited. Current 2026-10-13 payloads use rate_limited.
-        rate_limited:
-          type: boolean
-          description: Public name of the banned-IP flag from schema 2026-10-13.
-        ai_bot:
-          type: boolean
-          description: An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk.
-        ai_browser:
-          type: boolean
-          description: A browser is identified by separate verified browser infrastructure. A generic browser User-Agent or a verified provider alone is insufficient. Weight 0. Optional on older payloads; absence is not an evaluated negative.
-        os_mismatch2:
-          type: boolean
-          deprecated: true
-          description: Legacy 2026-10-06 only; current payloads combine this check into os_mismatch.
     RiskEvent:
       type: object
       required:
@@ -2806,12 +2806,72 @@ components:
           $ref: '#/components/schemas/RiskScore'
         signals:
           type: array
-          description: Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{"name":"rate_limited","weight":999}`.
+          description: Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{"name":"banned_ip","weight":999}`.
           items:
             $ref: '#/components/schemas/Signal'
         detection_flags:
-          $ref: '#/components/schemas/LegacyDetectionFlags'
-          description: Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. This fallback supports retained older versions.
+          type: object
+          description: Contract 2026-10-13 requires DetectionFlags (exactly 20 public signals). 2026-10-12 keeps its 21-flag schema. Older versions keep LegacyDetectionFlags.
+          additionalProperties: true
+          properties:
+            vpn:
+              type: boolean
+            proxy:
+              type: boolean
+            tor:
+              type: boolean
+            private_relay:
+              type: boolean
+            privacy_relay:
+              type: boolean
+            network_check_incomplete:
+              type: boolean
+            stun_not_checked:
+              type: boolean
+            latency_test:
+              type: boolean
+            ws_tcp_latency:
+              type: boolean
+            banned_ip:
+              type: boolean
+            rate_limited:
+              type: boolean
+            check_incomplete:
+              type: boolean
+            os_not_detected:
+              type: boolean
+            timezone_mismatch:
+              type: boolean
+            javascript_disabled:
+              type: boolean
+            os_mismatch:
+              type: boolean
+            os_mismatch2:
+              type: boolean
+            ip_mismatch:
+              type: boolean
+            anti_detect_browser:
+              type: boolean
+            device_spoofing:
+              type: boolean
+            incognito:
+              type: boolean
+            search_bot:
+              type: boolean
+            ai_bot:
+              type: boolean
+            ai_browser:
+              type: boolean
+            browser_automation:
+              type: boolean
+            browser_vpn_proxy:
+              type: boolean
+            datacenter_ip:
+              type: boolean
+            abuser:
+              type: boolean
+            suspicious_paid_click:
+              type: boolean
         observed_at:
           $ref: '#/components/schemas/Rfc3339Timestamp'
           description: Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits.
@@ -3117,6 +3177,27 @@ components:
                         os_mismatch2: {}
                       additionalProperties: true
                     additionalProperties: true
+                additionalProperties: true
+            additionalProperties: true
+        - if:
+            type: object
+            required:
+              - schema_version
+            properties:
+              schema_version:
+                not:
+                  enum:
+                    - '2026-10-12'
+                    - '2026-10-13'
+            additionalProperties: true
+          then:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  detection_flags:
+                    $ref: '#/components/schemas/LegacyDetectionFlags'
                 additionalProperties: true
             additionalProperties: true
         - if:
