@@ -6,7 +6,7 @@ description: |-
   - `vpn`: a VPN;
   - `proxy`: a proxy, datacenter or hosting network (search-engine crawlers are reported here too);
   - `tor`: the Tor network;
-  - `privacy_relay`: a privacy relay such as iCloud Private Relay;
+  - `private_relay`: a privacy relay such as iCloud Private Relay. Older visits may say `privacy_relay`;
   - `browser_vpn_proxy`: a VPN or proxy built into the browser or one of its extensions;
   - `unknown`: not enough data.
 
@@ -19,6 +19,7 @@ x-extensible-enum:
   - vpn
   - proxy
   - tor
+  - private_relay
   - privacy_relay
   - browser_vpn_proxy
   - unknown

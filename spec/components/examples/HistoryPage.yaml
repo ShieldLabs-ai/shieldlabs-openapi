@@ -61,7 +61,7 @@ value:
       ip_mismatch: false
       latency_test: false
       device_spoofing: false
-      banned_ip: false
+      rate_limited: false
       ai_bot: false
       ai_browser: false
       detection_flags:
@@ -78,7 +78,7 @@ value:
         latency_test: false
         anti_detect_browser: true
         device_spoofing: false
-        banned_ip: false
+        rate_limited: false
         incognito: false
         search_bot: false
         ai_bot: false
@@ -135,7 +135,7 @@ value:
       ip_mismatch: false
       latency_test: false
       device_spoofing: false
-      banned_ip: false
+      rate_limited: false
       ai_bot: false
       ai_browser: false
       detection_flags:
@@ -152,7 +152,7 @@ value:
         latency_test: false
         anti_detect_browser: false
         device_spoofing: false
-        banned_ip: false
+        rate_limited: false
         incognito: true
         search_bot: false
         ai_bot: false
@@ -214,7 +214,7 @@ value:
       ip_mismatch: false
       latency_test: false
       device_spoofing: false
-      banned_ip: false
+      rate_limited: false
       ai_bot: false
       ai_browser: false
       detection_flags:
@@ -231,7 +231,7 @@ value:
         latency_test: false
         anti_detect_browser: false
         device_spoofing: false
-        banned_ip: false
+        rate_limited: false
         incognito: false
         search_bot: false
         ai_bot: false
@@ -288,7 +288,7 @@ value:
       ip_mismatch: false
       latency_test: false
       device_spoofing: false
-      banned_ip: true
+      rate_limited: true
       ai_bot: false
       ai_browser: false
       detection_flags:
@@ -305,7 +305,7 @@ value:
         latency_test: false
         anti_detect_browser: false
         device_spoofing: false
-        banned_ip: true
+        rate_limited: true
         incognito: false
         search_bot: false
         ai_bot: false
@@ -366,7 +366,7 @@ value:
       ip_mismatch: false
       latency_test: false
       device_spoofing: false
-      banned_ip: false
+      rate_limited: false
       ai_bot: false
       ai_browser: false
       detection_flags:
@@ -383,7 +383,7 @@ value:
         latency_test: false
         anti_detect_browser: false
         device_spoofing: false
-        banned_ip: false
+        rate_limited: false
         incognito: false
         search_bot: true
         ai_bot: false
