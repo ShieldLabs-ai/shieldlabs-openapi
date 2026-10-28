@@ -4,7 +4,7 @@
     "title": "ShieldLabs API",
     "version": "1.0.1",
     "summary": "Identification results and risk scoring for your backend.",
-    "description": "The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent\nruns in a browser: the Risk Score, the risk signals behind it, the detection flags and the\nidentifiers (request, visitor, device, session, cookie and User HID) it belongs to.\n\n## How it fits\n\n1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification\n   and hands your page an Identification ID.\n2. **Your backend.** Your page sends the Identification ID along with the protected action (signup,\n   login, checkout). Your backend reads the verdict for it from the **History API**, or\n   receives it in a signed `identification.scored` **webhook**.\n3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`\n   and the identifiers, for example by counting how many accounts one `device_id` has used\n   (skipping the `user_hid` values that do not identify a user, listed under Identifiers).\n\nScoring is asynchronous. Start the identification when the user begins the\nprotected action (for example when the signup form opens), then either poll the History API by\n`identification_id` with a short backoff or wait for the webhook. Let one identification authorize one\nprotected action: reject Identification IDs you have already used and identifications older than your\nfreshness window.\n\n## Hosts and credentials\n\n| API | Host | Paths | Credentials |\n|---|---|---|---|\n| History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |\n| Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |\n| Health | both hosts | `/health` | none |\n\nEvery operation declares its own server, so generated clients send each call to the right\nhost. The History API serves its paths from the host root: the full URL is\n`https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that\nalready ends in `/api` produces `/api/api/v1/...` and a `404`.\n\nThe two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your\nserver; only the Public Key belongs in the browser. All keys are in the analytics dashboard at\nhttps://app.shieldlabs.ai.\n\n## Rate limits\n\n- **History API:** about 15 requests per second per domain, shared by every caller of that\n  domain. Requests over the limit get `429`; there is no ban, so retry after about a second.\n- **Management API:** 15 requests per minute per client IP. The request that goes over the\n  limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`\n  from this API; cache the profile instead.\n- **Health:** not rate limited.\n\nAPI calls and webhook deliveries are free: only identifications made by the browser agent use\nyour included volume.\n\n## Errors\n\nError bodies are not uniform. Branch on the HTTP status first, then try to parse the body as\nJSON whatever its content type.\n\n| API | Status | Body |\n|---|---|---|\n| History API | 400 | `{\"code\":\"invalid_request\",\"error\":\"invalid history input\"}` |\n| History API | 401 | JSON text `{\"error\":\"...\"}`, sent as `text/plain` |\n| History API | 429 | `{\"error\":\"too many requests\"}` |\n| History API | 500 | `{\"error\":\"...\"}`. A value that is not a UUID can still end here: validate before sending and do not retry it |\n| Management API | 401 | empty |\n| Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |\n| Management API | 429, 503 | `{\"error\":\"...\"}` |\n| Both | 404 | `404 page not found` as `text/plain` when no route matches |\n| Both | 502, 504 | an HTML page from the edge proxy |\n\nRetry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,\n`401` or `404`, nor a History API `500` caused by a malformed value.\n\n## Identifiers\n\n- `identification_id`: one identification, created in the browser (UUID v4). It joins the browser\n  call, the webhook and the History row.\n- `session_id`: one visit on one origin (UUID v4).\n- `cookie_id`: first-party browser identifier kept by the agent (UUID v4).\n- `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private\n  windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.\n- `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on\n  a known device keeps the visitor ID.\n- `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.\n  `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Leave\n  these values, `null` and the empty string out when you count accounts. Hex-encoded hashes\n  are the easiest values to search: see the `value` parameter of `searchHistory` for how to\n  encode other characters.\n\nValidate UUIDs with any version accepted, the nil UUID included.\n\n## Risk Score, risk bands and the 999 marker\n\nThe Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to\n100. Recognized good bots, including search bots, AI bots and AI browsers, always score 0. The three risk bands are computed on your side; no\nband field exists on the wire:\n\n| Band | Score |\n|---|---|\n| trusted | 0-29 |\n| suspicious | 30-59 |\n| dangerous | 60-100 |\n\nA value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over\nthe ingest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nBranch on `detection_flags` and the Risk Score. Signal names are for display and logging;\nweights can be negative or change between releases, so never add them up yourself. A missing\nidentification means \"unverified\", never \"clean\".\n\n## Countries, IP addresses and timestamps\n\n- `country` values are English country names from IP intelligence, such as `Germany` or\n  `United States`, or an empty string when unknown.\n- IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `\"\"` and the History\n  API sends `0.0.0.0`; such identifications cannot be searched by IP.\n- Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional\n  digits.\n- The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;\n  older rows can lack the milliseconds.\n- The Management API `CreatedAt` is RFC 3339 with second precision.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
+    "description": "ShieldLabs provides identification, risk signals and risk scoring. The public History API\nserves domain-scoped entity lists and cards. Signed scored webhooks use a separate payload\nshape: an entity card must not be normalized as a legacy row or a scored webhook.\n\n## How it fits\n\n1. The browser SDK returns an identification ID for a visit or protected action.\n2. Your backend reads its card at `/api/v1/domains/{domain}/history/identifications/{id}`\n   or receives a signed `identification.scored` webhook.\n3. Check ownership, freshness, replay protection and the actual availability state before\n   applying your application's policy. An ID alone does not prove successful ingest.\n\n## Hosts and credentials\n\n| API | Host | Credentials |\n|---|---|---|\n| History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |\n| Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |\n\n`{domain}` in History is the public domain UUID, not a hostname. Lists are available for\n`identifications` and `user`. Cards are available for `identifications`, `user`, `visitor`,\n`device` and `ip`. Session and cookie are identification fields, not resources.\nThe old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.\nKeep server keys and webhook secrets off the browser; only the public browser key goes there.\nAccounts and configuration are available in the dashboard at https://app.shieldlabs.ai.\n\n## Risk and availability\n\nAn identification card uses `type: identification`, `id`, `domain_id`, `domain`, nested\n`risk` and `signals`. Use `risk.score` only when `risk.state` is `ok` and a score is present.\n`risk.state: unavailable` is unknown, never Score 0. Bands are Trusted 0-29, Suspicious 30-59\nand Dangerous 60-100. Missing signal weights do not mean nothing contributed to a score.\nEntity counts are backend aggregates, not a list of analyzed identifications. Preserve\n`high_risk_events` availability and confidence separately from Risk Score.\nScored webhook payloads use `identification_id`, `risk_score` and weighted `signals`.\nLegacy 999 markers are not numeric risk scores and must not be fabricated from missing data.\n\n## Pagination and time\n\nLists return `data`, opaque `next_page_token` and optional `total`. Pass the token as\n`page_token`, retaining the same resource, limit, filter, sort and window. Tokens can be\ninvalidated by a server restart. Do not silently combine a restarted traversal with an\nearlier snapshot. Use paired RFC3339 `from` and `to`: from is inclusive and to exclusive.\nOld `offset`, raw-score and boolean row-search query parameters are not accepted.\nIdentification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.\n\n## Errors and retries\n\nEntity errors use `{\"error\":{\"code\":\"...\",\"message\":\"...\"}}`. Handle the controlled\ncode together with HTTP status. Missing entities return 404; retired routes return 410;\ninvalid queries return 400; snapshot failures return 503. Authentication and gateway errors\ncan use their own envelopes. Do not log credentials or raw private diagnostic bodies.\nRetry reads within a bounded budget, respecting Retry-After and cancellation. Never retry\nmutations automatically. A missing History result does not establish a billing cause.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
     "contact": {
       "name": "ShieldLabs",
       "url": "https://docs.shieldlabs.ai",
@@ -28,7 +28,7 @@
   "tags": [
     {
       "name": "History API",
-      "description": "Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private API Key. The canonical way to read a verdict: by `identification_id` right after a protected action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks."
+      "description": "Read History entities for one public domain UUID on `https://account.shieldlabs.ai` with the Private API Key. Lists are `identifications` and `user`. Cards are `identifications`, `user`, `visitor`, `device` and `ip`. The old search route returns `410 endpoint_retired`."
     },
     {
       "name": "Management API",
@@ -60,8 +60,8 @@
         "tags": [
           "History API"
         ],
-        "summary": "Search identifications",
-        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\naccepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
+        "summary": "Retired identification search",
+        "description": "This route returns `410 endpoint_retired` and does not run the search. Use\n`GET /api/v1/domains/{domain}/history/{resource}` and\n`GET /api/v1/domains/{domain}/history/{resource}/{id}`. `{domain}` is the public domain UUID.\n\nThe description below is the previous contract, kept so existing field docs stay attached to this operation until clients move.\n\nReturns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\naccepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
         "security": [
           {
             "historyApiKey": []
@@ -181,6 +181,47 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "410": {
+            "description": "The unscoped search route is retired. `error.code` is `endpoint_retired`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "const": "endpoint_retired"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "retired": {
+                    "value": {
+                      "error": {
+                        "code": "endpoint_retired",
+                        "message": "endpoint_retired"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "$ref": "#/components/responses/HistoryTooManyRequests"
           },
@@ -201,6 +242,420 @@
             "source": "curl \"https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1\" \\\n  -H \"Authorization: Bearer $SHIELDLABS_API_KEY\"\n"
           }
         ]
+      }
+    },
+    "/api/v1/domains/{domain}/history/{resource}": {
+      "servers": [
+        {
+          "url": "https://account.shieldlabs.ai",
+          "description": "History API"
+        }
+      ],
+      "get": {
+        "operationId": "listHistoryEntities",
+        "tags": [
+          "History API"
+        ],
+        "summary": "List History entities",
+        "description": "Lists `identifications` or `user` for one domain. `{domain}` is the public domain UUID.\nLiteral `all` returns `403 domain_scope_not_supported`. A list of `visitor`, `device` or `ip`\nreturns `403 entity_list_disabled`. `session` and `cookie` are not resources.\n\nThe old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.\nPage with `page_token`, not `offset`. `from` and `to` are both required when either is set,\nRFC3339, and the window is half-open.",
+        "security": [
+          {
+            "historyApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "description": "Public domain UUID of the site whose History is being read.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "examples": {
+              "owned": {
+                "value": "00000000-0000-4000-8000-000000000031"
+              }
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "History resource. Lists are enabled for identifications and user only.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            },
+            "examples": {
+              "identifications": {
+                "value": "identifications"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum records in the page, from 1 through 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "examples": {
+              "page": {
+                "value": 20
+              }
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "description": "Opaque token from the previous page. Omit it on the first page.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "next": {
+                "value": "next-page"
+              }
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive RFC3339 start. Send `to` as well, or send neither.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "examples": {
+              "start": {
+                "value": "2026-10-27T00:00:00Z"
+              }
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Exclusive RFC3339 end. Send `from` as well, or send neither.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "examples": {
+              "end": {
+                "value": "2026-10-28T00:00:00Z"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of entity records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "id",
+                          "risk",
+                          "signals"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "identification",
+                              "user",
+                              "visitor",
+                              "device",
+                              "ip"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "risk": {
+                            "type": "object",
+                            "required": [
+                              "state"
+                            ],
+                            "properties": {
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "unavailable"
+                                ]
+                              },
+                              "band": {
+                                "type": "string",
+                                "enum": [
+                                  "trusted",
+                                  "suspicious",
+                                  "dangerous"
+                                ]
+                              },
+                              "score": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              }
+                            }
+                          },
+                          "signals": {
+                            "type": "object",
+                            "required": [
+                              "state",
+                              "items"
+                            ],
+                            "properties": {
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "unavailable"
+                                ]
+                              },
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next_page_token": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "examples": {
+                  "identifications": {
+                    "value": {
+                      "data": [
+                        {
+                          "type": "identification",
+                          "id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+                          "risk": {
+                            "state": "ok",
+                            "band": "suspicious",
+                            "score": 42
+                          },
+                          "signals": {
+                            "state": "unavailable",
+                            "items": []
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query is not valid. `error.code` is `invalid_query` or `invalid_domain_scope`."
+          },
+          "401": {
+            "$ref": "#/components/responses/HistoryUnauthorized"
+          },
+          "403": {
+            "description": "`domain_scope_not_supported` or `entity_list_disabled`."
+          }
+        }
+      }
+    },
+    "/api/v1/domains/{domain}/history/{resource}/{id}": {
+      "servers": [
+        {
+          "url": "https://account.shieldlabs.ai",
+          "description": "History API"
+        }
+      ],
+      "get": {
+        "operationId": "getHistoryEntity",
+        "tags": [
+          "History API"
+        ],
+        "summary": "Read one History entity",
+        "description": "Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.\n`{domain}` is the public domain UUID. The identification record uses `type: identification`.\nAn unknown id returns `404 not_found`. The same id on more than one owned domain returns\n`409 ambiguous_entity_id`.",
+        "security": [
+          {
+            "historyApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "description": "Public domain UUID of the site whose History is being read.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "examples": {
+              "owned": {
+                "value": "00000000-0000-4000-8000-000000000031"
+              }
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "History resource. A card exists for identifications, user, visitor, device and ip.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            },
+            "examples": {
+              "identifications": {
+                "value": "identifications"
+              }
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "identification": {
+                "value": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The entity card.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "id"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "type": "string"
+                            },
+                            "band": {
+                              "type": "string"
+                            },
+                            "score": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 100
+                            }
+                          }
+                        },
+                        "signals": {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "type": "string"
+                            },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "identification": {
+                    "value": {
+                      "data": {
+                        "type": "identification",
+                        "id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+                        "risk": {
+                          "state": "ok",
+                          "band": "trusted",
+                          "score": 10
+                        },
+                        "signals": {
+                          "state": "unavailable",
+                          "items": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HistoryUnauthorized"
+          },
+          "404": {
+            "description": "`not_found` when the id is not in this domain."
+          },
+          "409": {
+            "description": "`ambiguous_entity_id` when the id matches more than one domain."
+          }
+        }
       }
     },
     "/v1/profile": {

@@ -5,8 +5,14 @@ get:
   operationId: searchHistory
   tags:
     - History API
-  summary: Search identifications
+  summary: Retired identification search
   description: |-
+    This route returns `410 endpoint_retired` and does not run the search. Use
+    `GET /api/v1/domains/{domain}/history/{resource}` and
+    `GET /api/v1/domains/{domain}/history/{resource}/{id}`. `{domain}` is the public domain UUID.
+
+    The description below is the previous contract, kept so existing field docs stay attached to this operation until clients move.
+
     Returns the identifications of your domain that match one identifier, newest first, together
     with the total number of matches. The Private API Key selects the domain; identifications from
     its subdomains are included (`domain` holds the host, `site_domain` the registered domain).
@@ -78,6 +84,29 @@ get:
     - $ref: ../components/parameters/HistoryFlagAiBot.yaml
     - $ref: ../components/parameters/HistoryFlagAiBrowser.yaml
   responses:
+    '410':
+      description: The unscoped search route is retired. `error.code` is `endpoint_retired`.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                    const: endpoint_retired
+                  message:
+                    type: string
+          examples:
+            retired:
+              value:
+                error:
+                  code: endpoint_retired
+                  message: endpoint_retired
     '200':
       description: Matching identifications, newest first. `data` is empty when nothing matched.
       content:

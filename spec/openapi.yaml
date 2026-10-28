@@ -4,127 +4,60 @@ info:
   version: 1.0.1
   summary: Identification results and risk scoring for your backend.
   description: |-
-    The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent
-    runs in a browser: the Risk Score, the risk signals behind it, the detection flags and the
-    identifiers (request, visitor, device, session, cookie and User HID) it belongs to.
+    ShieldLabs provides identification, risk signals and risk scoring. The public History API
+    serves domain-scoped entity lists and cards. Signed scored webhooks use a separate payload
+    shape: an entity card must not be normalized as a legacy row or a scored webhook.
 
     ## How it fits
 
-    1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification
-       and hands your page an Identification ID.
-    2. **Your backend.** Your page sends the Identification ID along with the protected action (signup,
-       login, checkout). Your backend reads the verdict for it from the **History API**, or
-       receives it in a signed `identification.scored` **webhook**.
-    3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`
-       and the identifiers, for example by counting how many accounts one `device_id` has used
-       (skipping the `user_hid` values that do not identify a user, listed under Identifiers).
-
-    Scoring is asynchronous. Start the identification when the user begins the
-    protected action (for example when the signup form opens), then either poll the History API by
-    `identification_id` with a short backoff or wait for the webhook. Let one identification authorize one
-    protected action: reject Identification IDs you have already used and identifications older than your
-    freshness window.
+    1. The browser SDK returns an identification ID for a visit or protected action.
+    2. Your backend reads its card at `/api/v1/domains/{domain}/history/identifications/{id}`
+       or receives a signed `identification.scored` webhook.
+    3. Check ownership, freshness, replay protection and the actual availability state before
+       applying your application's policy. An ID alone does not prove successful ingest.
 
     ## Hosts and credentials
 
-    | API | Host | Paths | Credentials |
-    |---|---|---|---|
-    | History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |
-    | Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |
-    | Health | both hosts | `/health` | none |
-
-    Every operation declares its own server, so generated clients send each call to the right
-    host. The History API serves its paths from the host root: the full URL is
-    `https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that
-    already ends in `/api` produces `/api/api/v1/...` and a `404`.
-
-    The two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your
-    server; only the Public Key belongs in the browser. All keys are in the analytics dashboard at
-    https://app.shieldlabs.ai.
-
-    ## Rate limits
-
-    - **History API:** about 15 requests per second per domain, shared by every caller of that
-      domain. Requests over the limit get `429`; there is no ban, so retry after about a second.
-    - **Management API:** 15 requests per minute per client IP. The request that goes over the
-      limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`
-      from this API; cache the profile instead.
-    - **Health:** not rate limited.
-
-    API calls and webhook deliveries are free: only identifications made by the browser agent use
-    your included volume.
-
-    ## Errors
-
-    Error bodies are not uniform. Branch on the HTTP status first, then try to parse the body as
-    JSON whatever its content type.
-
-    | API | Status | Body |
+    | API | Host | Credentials |
     |---|---|---|
-    | History API | 400 | `{"code":"invalid_request","error":"invalid history input"}` |
-    | History API | 401 | JSON text `{"error":"..."}`, sent as `text/plain` |
-    | History API | 429 | `{"error":"too many requests"}` |
-    | History API | 500 | `{"error":"..."}`. A value that is not a UUID can still end here: validate before sending and do not retry it |
-    | Management API | 401 | empty |
-    | Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |
-    | Management API | 429, 503 | `{"error":"..."}` |
-    | Both | 404 | `404 page not found` as `text/plain` when no route matches |
-    | Both | 502, 504 | an HTML page from the edge proxy |
+    | History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |
+    | Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |
 
-    Retry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,
-    `401` or `404`, nor a History API `500` caused by a malformed value.
+    `{domain}` in History is the public domain UUID, not a hostname. Lists are available for
+    `identifications` and `user`. Cards are available for `identifications`, `user`, `visitor`,
+    `device` and `ip`. Session and cookie are identification fields, not resources.
+    The old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.
+    Keep server keys and webhook secrets off the browser; only the public browser key goes there.
+    Accounts and configuration are available in the dashboard at https://app.shieldlabs.ai.
 
-    ## Identifiers
+    ## Risk and availability
 
-    - `identification_id`: one identification, created in the browser (UUID v4). It joins the browser
-      call, the webhook and the History row.
-    - `session_id`: one visit on one origin (UUID v4).
-    - `cookie_id`: first-party browser identifier kept by the agent (UUID v4).
-    - `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private
-      windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.
-    - `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on
-      a known device keeps the visitor ID.
-    - `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.
-      `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean "no user". Leave
-      these values, `null` and the empty string out when you count accounts. Hex-encoded hashes
-      are the easiest values to search: see the `value` parameter of `searchHistory` for how to
-      encode other characters.
+    An identification card uses `type: identification`, `id`, `domain_id`, `domain`, nested
+    `risk` and `signals`. Use `risk.score` only when `risk.state` is `ok` and a score is present.
+    `risk.state: unavailable` is unknown, never Score 0. Bands are Trusted 0-29, Suspicious 30-59
+    and Dangerous 60-100. Missing signal weights do not mean nothing contributed to a score.
+    Entity counts are backend aggregates, not a list of analyzed identifications. Preserve
+    `high_risk_events` availability and confidence separately from Risk Score.
+    Scored webhook payloads use `identification_id`, `risk_score` and weighted `signals`.
+    Legacy 999 markers are not numeric risk scores and must not be fabricated from missing data.
 
-    Validate UUIDs with any version accepted, the nil UUID included.
+    ## Pagination and time
 
-    ## Risk Score, risk bands and the 999 marker
+    Lists return `data`, opaque `next_page_token` and optional `total`. Pass the token as
+    `page_token`, retaining the same resource, limit, filter, sort and window. Tokens can be
+    invalidated by a server restart. Do not silently combine a restarted traversal with an
+    earlier snapshot. Use paired RFC3339 `from` and `to`: from is inclusive and to exclusive.
+    Old `offset`, raw-score and boolean row-search query parameters are not accepted.
+    Identification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.
 
-    The Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to
-    100. Recognized good bots, including search bots, AI bots and AI browsers, always score 0. The three risk bands are computed on your side; no
-    band field exists on the wire:
+    ## Errors and retries
 
-    | Band | Score |
-    |---|---|
-    | trusted | 0-29 |
-    | suspicious | 30-59 |
-    | dangerous | 60-100 |
-
-    A value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over
-    the ingest rate limit, and the identification carries exactly one signal,
-    `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
-    100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued
-    while it stays blocked get no row and no webhook, so they stay unverified.
-
-    Branch on `detection_flags` and the Risk Score. Signal names are for display and logging;
-    weights can be negative or change between releases, so never add them up yourself. A missing
-    identification means "unverified", never "clean".
-
-    ## Countries, IP addresses and timestamps
-
-    - `country` values are English country names from IP intelligence, such as `Germany` or
-      `United States`, or an empty string when unknown.
-    - IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `""` and the History
-      API sends `0.0.0.0`; such identifications cannot be searched by IP.
-    - Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional
-      digits.
-    - The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;
-      older rows can lack the milliseconds.
-    - The Management API `CreatedAt` is RFC 3339 with second precision.
+    Entity errors use `{"error":{"code":"...","message":"..."}}`. Handle the controlled
+    code together with HTTP status. Missing entities return 404; retired routes return 410;
+    invalid queries return 400; snapshot failures return 503. Authentication and gateway errors
+    can use their own envelopes. Do not log credentials or raw private diagnostic bodies.
+    Retry reads within a bounded budget, respecting Retry-After and cancellation. Never retry
+    mutations automatically. A missing History result does not establish a billing cause.
 
     ## Webhooks
 
@@ -169,9 +102,10 @@ servers:
 tags:
   - name: History API
     description: >-
-      Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private
-      API Key. The canonical way to read a verdict: by `identification_id` right after a protected
-      action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks.
+      Read History entities for one public domain UUID on `https://account.shieldlabs.ai`
+      with the Private API Key. Lists are `identifications` and `user`. Cards are
+      `identifications`, `user`, `visitor`, `device` and `ip`. The old search route returns
+      `410 endpoint_retired`.
   - name: Management API
     description: >-
       Domain profile on `https://api.shieldlabs.ai`, authenticated with the Secret Key and the
@@ -186,6 +120,10 @@ tags:
 paths:
   /api/v1/history/{search_type}/{value}:
     $ref: ./paths/history.yaml
+  /api/v1/domains/{domain}/history/{resource}:
+    $ref: ./paths/history-entity-list.yaml
+  /api/v1/domains/{domain}/history/{resource}/{id}:
+    $ref: ./paths/history-entity-detail.yaml
   /v1/profile:
     $ref: ./paths/profile.yaml
   /v1/history/{type}/{value}:
