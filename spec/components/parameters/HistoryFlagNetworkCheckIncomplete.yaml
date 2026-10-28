@@ -1,8 +1,8 @@
-name: is_stun_not_checked
+name: network_check_incomplete
 in: query
 required: false
 description: >-
-  When set, keep only rows whose `is_stun_not_checked` equals this value. Omit the parameter to leave
+  When set, keep only rows whose `network_check_incomplete` equals this value. Omit the parameter to leave
   the flag unconstrained. The only accepted values are `true` and `false`.
 schema:
   type: string
@@ -11,5 +11,5 @@ schema:
     - 'false'
 examples:
   match:
-    summary: Only rows whose network check did not run
+    summary: Only rows whose network check is incomplete
     value: 'true'

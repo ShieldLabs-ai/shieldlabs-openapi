@@ -1,0 +1,10 @@
+name: ai_browser
+in: query
+required: false
+description: Keep only rows whose `ai_browser` equals this value. Omit to leave unconstrained.
+schema:
+  type: string
+  enum: ['true', 'false']
+examples:
+  match:
+    value: 'true'

@@ -1,0 +1,10 @@
+name: latency_test
+in: query
+required: false
+description: Keep only rows whose `latency_test` equals this value. Omit to leave unconstrained.
+schema:
+  type: string
+  enum: ['true', 'false']
+examples:
+  match:
+    value: 'true'

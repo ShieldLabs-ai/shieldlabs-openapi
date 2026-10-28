@@ -1,0 +1,10 @@
+name: ip_mismatch
+in: query
+required: false
+description: Keep only rows whose `ip_mismatch` equals this value. Omit to leave unconstrained.
+schema:
+  type: string
+  enum: ['true', 'false']
+examples:
+  match:
+    value: 'true'

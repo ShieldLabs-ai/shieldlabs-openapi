@@ -1,0 +1,10 @@
+name: device_spoofing
+in: query
+required: false
+description: Keep only rows whose `device_spoofing` equals this value. Omit to leave unconstrained.
+schema:
+  type: string
+  enum: ['true', 'false']
+examples:
+  match:
+    value: 'true'
