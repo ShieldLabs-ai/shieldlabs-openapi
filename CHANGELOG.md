@@ -43,6 +43,7 @@ All notable changes to this project are documented in this file. The format foll
 
 ### Added
 
+- History rows include `detection_flags`, the same 20 keys as the scored webhook. Flat History fields repeat those values. A search-engine crawler, an AI bot, or an AI browser clears `check_incomplete`, `javascript_disabled`, `incognito`, and `ip_mismatch`.
 - History API `searchHistory` accepts optional `from`, `to`, `score_from`, `score_to` and detection-flag query parameters. They narrow one identifier; omitting them keeps the previous page.
 
 ### Changed

@@ -40,6 +40,7 @@ properties:
     type: boolean
     description: Part of the browser checks timed out, so the verdict rests on
       partial data. Informational. Weight 0, and present in signals when true.
+      False for a search-engine crawler, an AI bot, or an AI browser.
   network_check_incomplete:
     type: boolean
     description: The browser network (STUN) check did not complete. Cleared again
@@ -54,6 +55,7 @@ properties:
   javascript_disabled:
     type: boolean
     description: JavaScript, or the browser APIs the checks need, were unavailable.
+      False for a search-engine crawler, an AI bot, or an AI browser.
   os_mismatch:
     type: boolean
     description: Either operating-system consistency detector fired. The two
@@ -61,7 +63,8 @@ properties:
   ip_mismatch:
     type: boolean
     description: "A qualifying mismatch between the public IP and the browser's
-      network evidence was detected. Nominal weight 45; read the returned Risk Score."
+      network evidence was detected. Nominal weight 45; read the returned Risk Score.
+      False for a search-engine crawler, an AI bot, or an AI browser."
   latency_test:
     type: boolean
     description: The WebSocket-to-TCP latency test fired. Older payloads used
@@ -77,7 +80,8 @@ properties:
       weight is 999. Older payloads used rate_limited.
   incognito:
     type: boolean
-    description: The browser runs in a private window. Weight 0, and present in
+    description: The browser runs in a private window. False for a search-engine
+      crawler, an AI bot, or an AI browser. Weight 0, and present in
       signals when true.
   search_bot:
     type: boolean

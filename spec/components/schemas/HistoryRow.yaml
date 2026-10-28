@@ -11,7 +11,7 @@ description: |-
   |---|---|
   | `risk_score` | `score` |
   | `signals` | not included in the current public History response |
-  | `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |
+  | `detection_flags` | `detection_flags`, the same 20 keys and meanings as the scored webhook. The flat fields below repeat those values under History names |
   | `domain` | `site_domain` when present, otherwise `domain` |
   | `public_ip` | `ip` (`0.0.0.0` instead of `""`) and `country` |
   | `local_ip` | not included in the current public History response |
@@ -51,6 +51,7 @@ required:
   - is_browser_automation
   - is_incognito
   - is_search_bot
+  - detection_flags
   - ip_mismatch
   - latency_test
   - device_spoofing
@@ -185,7 +186,7 @@ properties:
     description: Same meaning as `detection_flags.network_check_incomplete`.
   check_incomplete:
     type: boolean
-    description: Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers.
+    description: Same meaning as `detection_flags.check_incomplete`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
   is_antidetect:
     type: boolean
     description: Same meaning as `detection_flags.anti_detect_browser`.
@@ -200,16 +201,18 @@ properties:
     description: Same meaning as `detection_flags.timezone_mismatch`.
   is_js_disabled:
     type: boolean
-    description: Same meaning as `detection_flags.javascript_disabled`. Always `false` for search-engine crawlers.
+    description: Same meaning as `detection_flags.javascript_disabled`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
   is_browser_automation:
     type: boolean
     description: Same meaning as `detection_flags.browser_automation`.
   is_incognito:
     type: boolean
-    description: Same meaning as `detection_flags.incognito`. Always `false` for search-engine crawlers.
+    description: Same meaning as `detection_flags.incognito`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
   is_search_bot:
     type: boolean
     description: Same meaning as `detection_flags.search_bot`.
+  detection_flags:
+    $ref: ./DetectionFlags.yaml
   entry_url:
     type: string
     description: >-

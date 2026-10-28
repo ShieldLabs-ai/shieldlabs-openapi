@@ -61,7 +61,29 @@
       "device_spoofing": false,
       "banned_ip": false,
       "ai_bot": false,
-      "ai_browser": false
+      "ai_browser": false,
+      "detection_flags": {
+        "vpn": false,
+        "proxy": true,
+        "private_relay": false,
+        "check_incomplete": false,
+        "network_check_incomplete": false,
+        "os_not_detected": false,
+        "timezone_mismatch": false,
+        "javascript_disabled": false,
+        "os_mismatch": false,
+        "ip_mismatch": false,
+        "latency_test": false,
+        "anti_detect_browser": true,
+        "device_spoofing": false,
+        "banned_ip": false,
+        "incognito": false,
+        "search_bot": false,
+        "ai_bot": false,
+        "browser_automation": false,
+        "ai_browser": false,
+        "tor": false
+      }
     },
     {
       "identification_id": "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b",
@@ -116,7 +138,29 @@
       "device_spoofing": false,
       "banned_ip": false,
       "ai_bot": false,
-      "ai_browser": false
+      "ai_browser": false,
+      "detection_flags": {
+        "vpn": false,
+        "proxy": false,
+        "private_relay": false,
+        "check_incomplete": false,
+        "network_check_incomplete": false,
+        "os_not_detected": false,
+        "timezone_mismatch": true,
+        "javascript_disabled": false,
+        "os_mismatch": false,
+        "ip_mismatch": false,
+        "latency_test": false,
+        "anti_detect_browser": false,
+        "device_spoofing": false,
+        "banned_ip": false,
+        "incognito": true,
+        "search_bot": false,
+        "ai_bot": false,
+        "browser_automation": false,
+        "ai_browser": false,
+        "tor": false
+      }
     },
     {
       "identification_id": "9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0",
@@ -176,7 +220,29 @@
       "device_spoofing": false,
       "banned_ip": false,
       "ai_bot": false,
-      "ai_browser": false
+      "ai_browser": false,
+      "detection_flags": {
+        "vpn": true,
+        "proxy": false,
+        "private_relay": false,
+        "check_incomplete": true,
+        "network_check_incomplete": true,
+        "os_not_detected": false,
+        "timezone_mismatch": false,
+        "javascript_disabled": false,
+        "os_mismatch": false,
+        "ip_mismatch": false,
+        "latency_test": false,
+        "anti_detect_browser": false,
+        "device_spoofing": false,
+        "banned_ip": false,
+        "incognito": false,
+        "search_bot": false,
+        "ai_bot": false,
+        "browser_automation": false,
+        "ai_browser": false,
+        "tor": false
+      }
     },
     {
       "identification_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
@@ -231,7 +297,29 @@
       "device_spoofing": false,
       "banned_ip": true,
       "ai_bot": false,
-      "ai_browser": false
+      "ai_browser": false,
+      "detection_flags": {
+        "vpn": false,
+        "proxy": false,
+        "private_relay": false,
+        "check_incomplete": false,
+        "network_check_incomplete": false,
+        "os_not_detected": false,
+        "timezone_mismatch": false,
+        "javascript_disabled": false,
+        "os_mismatch": false,
+        "ip_mismatch": false,
+        "latency_test": false,
+        "anti_detect_browser": false,
+        "device_spoofing": false,
+        "banned_ip": true,
+        "incognito": false,
+        "search_bot": false,
+        "ai_bot": false,
+        "browser_automation": false,
+        "ai_browser": false,
+        "tor": false
+      }
     },
     {
       "identification_id": "4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f",
@@ -290,7 +378,29 @@
       "device_spoofing": false,
       "banned_ip": false,
       "ai_bot": false,
-      "ai_browser": false
+      "ai_browser": false,
+      "detection_flags": {
+        "vpn": false,
+        "proxy": false,
+        "private_relay": false,
+        "check_incomplete": false,
+        "network_check_incomplete": false,
+        "os_not_detected": false,
+        "timezone_mismatch": false,
+        "javascript_disabled": false,
+        "os_mismatch": false,
+        "ip_mismatch": false,
+        "latency_test": false,
+        "anti_detect_browser": false,
+        "device_spoofing": false,
+        "banned_ip": false,
+        "incognito": false,
+        "search_bot": true,
+        "ai_bot": false,
+        "browser_automation": false,
+        "ai_browser": false,
+        "tor": false
+      }
     }
   ],
   "total": 37
