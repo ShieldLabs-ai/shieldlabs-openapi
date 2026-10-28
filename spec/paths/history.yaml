@@ -30,7 +30,7 @@ get:
     rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
     `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
     search-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and
-    `is_suspicious_paid_click` return `400`, even when empty or `false`. Other unknown query
+    `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
     parameters are ignored.
 
     **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
@@ -61,7 +61,7 @@ get:
     - $ref: ../components/parameters/HistoryFlagTor.yaml
     - $ref: ../components/parameters/HistoryFlagProxy.yaml
     - $ref: ../components/parameters/HistoryFlagPrivacyRelay.yaml
-    - $ref: ../components/parameters/HistoryFlagStunNotChecked.yaml
+    - $ref: ../components/parameters/HistoryFlagNetworkCheckIncomplete.yaml
     - $ref: ../components/parameters/HistoryFlagCheckIncomplete.yaml
     - $ref: ../components/parameters/HistoryFlagAntidetect.yaml
     - $ref: ../components/parameters/HistoryFlagOsMismatch.yaml

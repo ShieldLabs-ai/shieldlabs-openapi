@@ -9,7 +9,8 @@
       "enum": [
         "is_abuser",
         "is_datacenter",
-        "is_suspicious_paid_click"
+        "is_suspicious_paid_click",
+        "is_stun_not_checked"
       ]
     }
   },
@@ -43,7 +44,7 @@
     "is_tor",
     "is_proxy",
     "is_privacy_relay",
-    "is_stun_not_checked",
+    "network_check_incomplete",
     "check_incomplete",
     "is_antidetect",
     "is_os_mismatch",
@@ -191,7 +192,7 @@
       "type": "boolean",
       "description": "Same meaning as `detection_flags.private_relay`."
     },
-    "is_stun_not_checked": {
+    "network_check_incomplete": {
       "type": "boolean",
       "description": "Same meaning as `detection_flags.network_check_incomplete`."
     },

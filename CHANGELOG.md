@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Rename the public History response field and query filter `is_stun_not_checked` to `network_check_incomplete`. The old query name returns `400`; the stored column and detector behavior are unchanged.
+
 - Remove `is_abuser`, `is_datacenter` and `is_suspicious_paid_click` from public History rows and filters. Requests containing these removed filters return `400`; the other 14 flag filters and date/score bounds are unchanged. Internal storage and historical webhook schemas are unaffected.
 
 - Scored webhook contract 2026-10-13 sends 20 public detection flags. `os_mismatch` folds both OS detectors, `vpn` includes browser VPN/proxy, `latency_test` is `ws_tcp_latency`, and `banned_ip` is `rate_limited`. Fired signals of weight 0 stay in `signals`. Schema 2026-10-12 remains valid for already delivered bodies.

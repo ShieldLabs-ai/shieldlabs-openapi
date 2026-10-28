@@ -2,7 +2,7 @@ type: object
 additionalProperties: true
 propertyNames:
   not:
-    enum: [is_abuser, is_datacenter, is_suspicious_paid_click]
+    enum: [is_abuser, is_datacenter, is_suspicious_paid_click, is_stun_not_checked]
 description: |-
   One identification as stored, in its latest version. It describes the same identification as a
   webhook `data` object, with different field names:
@@ -50,7 +50,7 @@ required:
   - is_tor
   - is_proxy
   - is_privacy_relay
-  - is_stun_not_checked
+  - network_check_incomplete
   - check_incomplete
   - is_antidetect
   - is_os_mismatch
@@ -183,7 +183,7 @@ properties:
   is_privacy_relay:
     type: boolean
     description: Same meaning as `detection_flags.private_relay`.
-  is_stun_not_checked:
+  network_check_incomplete:
     type: boolean
     description: Same meaning as `detection_flags.network_check_incomplete`.
   check_incomplete:

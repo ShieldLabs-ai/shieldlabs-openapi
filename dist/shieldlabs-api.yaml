@@ -209,7 +209,7 @@ paths:
         rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
         `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
         search-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and
-        `is_suspicious_paid_click` return `400`, even when empty or `false`. Other unknown query
+        `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
         parameters are ignored.
 
         **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
@@ -240,7 +240,7 @@ paths:
         - $ref: '#/components/parameters/HistoryFlagTor'
         - $ref: '#/components/parameters/HistoryFlagProxy'
         - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
-        - $ref: '#/components/parameters/HistoryFlagStunNotChecked'
+        - $ref: '#/components/parameters/HistoryFlagNetworkCheckIncomplete'
         - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
         - $ref: '#/components/parameters/HistoryFlagAntidetect'
         - $ref: '#/components/parameters/HistoryFlagOsMismatch'
@@ -1082,11 +1082,11 @@ components:
         match:
           summary: Only privacy-relay rows
           value: 'true'
-    HistoryFlagStunNotChecked:
-      name: is_stun_not_checked
+    HistoryFlagNetworkCheckIncomplete:
+      name: network_check_incomplete
       in: query
       required: false
-      description: When set, keep only rows whose `is_stun_not_checked` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      description: When set, keep only rows whose `network_check_incomplete` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
       schema:
         type: string
         enum:
@@ -1094,7 +1094,7 @@ components:
           - 'false'
       examples:
         match:
-          summary: Only rows whose network check did not run
+          summary: Only rows whose network check is incomplete
           value: 'true'
     HistoryFlagCheckIncomplete:
       name: check_incomplete
@@ -1683,6 +1683,7 @@ components:
             - is_abuser
             - is_datacenter
             - is_suspicious_paid_click
+            - is_stun_not_checked
       description: |-
         One identification as stored, in its latest version. It describes the same identification as a
         webhook `data` object, with different field names:
@@ -1730,7 +1731,7 @@ components:
         - is_tor
         - is_proxy
         - is_privacy_relay
-        - is_stun_not_checked
+        - network_check_incomplete
         - check_incomplete
         - is_antidetect
         - is_os_mismatch
@@ -1852,7 +1853,7 @@ components:
         is_privacy_relay:
           type: boolean
           description: Same meaning as `detection_flags.private_relay`.
-        is_stun_not_checked:
+        network_check_incomplete:
           type: boolean
           description: Same meaning as `detection_flags.network_check_incomplete`.
         check_incomplete:
@@ -3572,7 +3573,7 @@ components:
             is_tor: false
             is_proxy: true
             is_privacy_relay: false
-            is_stun_not_checked: false
+            network_check_incomplete: false
             check_incomplete: false
             is_antidetect: true
             is_os_mismatch: false
@@ -3626,7 +3627,7 @@ components:
             is_tor: false
             is_proxy: false
             is_privacy_relay: false
-            is_stun_not_checked: false
+            network_check_incomplete: false
             check_incomplete: false
             is_antidetect: false
             is_os_mismatch: false
@@ -3673,7 +3674,7 @@ components:
             is_tor: false
             is_proxy: false
             is_privacy_relay: false
-            is_stun_not_checked: true
+            network_check_incomplete: true
             check_incomplete: true
             is_antidetect: false
             is_os_mismatch: false
@@ -3725,7 +3726,7 @@ components:
             is_tor: false
             is_proxy: false
             is_privacy_relay: false
-            is_stun_not_checked: false
+            network_check_incomplete: false
             check_incomplete: false
             is_antidetect: false
             is_os_mismatch: false
@@ -3772,7 +3773,7 @@ components:
             is_tor: false
             is_proxy: false
             is_privacy_relay: false
-            is_stun_not_checked: false
+            network_check_incomplete: false
             check_incomplete: false
             is_antidetect: false
             is_os_mismatch: false
