@@ -10,17 +10,16 @@ description: |-
   | Webhook `data` | History row |
   |---|---|
   | `risk_score` | `score` |
-  | `signals` | `score_details` (JSON-encoded string, zero weights included) |
+  | `signals` | not included in the current public History response |
   | `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |
-  | `detection_flags.browser_vpn_proxy` | derive it: `connection_type == "browser_vpn_proxy"` |
   | `domain` | `site_domain` when present, otherwise `domain` |
   | `public_ip` | `ip` (`0.0.0.0` instead of `""`) and `country` |
-  | `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |
+  | `local_ip` | not included in the current public History response |
   | `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |
   | `observed_at` (when scoring finished) | `created_at` (when the identification was made) |
 
-  The `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and
-  STUN measurements) that are not part of the stable contract: ignore fields you do not know.
+  Current responses omit score details and low-level network diagnostics. The optional diagnostic
+  properties below describe historical responses; they are not required. Ignore fields you do not know.
 required:
   - identification_id
   - session_id
@@ -36,16 +35,8 @@ required:
   - country
   - connection_type
   - score
-  - score_details
   - created_at
   - ver
-  - web_rtc_ip
-  - web_rtc_country
-  - web_rtc_connection_type
-  - webrtc_leak_ip
-  - webrtc_leak_country
-  - webrtc_leak_connection_type
-  - webrtc_leak_source
   - is_vpn
   - is_tor
   - is_proxy
@@ -60,6 +51,12 @@ required:
   - is_browser_automation
   - is_incognito
   - is_search_bot
+  - ip_mismatch
+  - latency_test
+  - device_spoofing
+  - banned_ip
+  - ai_bot
+  - ai_browser
 properties:
   client_identity:
     $ref: ./ClientIdentity.yaml
@@ -264,3 +261,21 @@ properties:
   click_id_type:
     $ref: ./ClickIdType.yaml
     description: Ad click identifier type found in the landing URL. Omitted when empty.
+  ip_mismatch:
+    type: boolean
+    description: Same meaning as `detection_flags.ip_mismatch`.
+  latency_test:
+    type: boolean
+    description: Same meaning as `detection_flags.latency_test`.
+  device_spoofing:
+    type: boolean
+    description: Same meaning as `detection_flags.device_spoofing`.
+  banned_ip:
+    type: boolean
+    description: Same meaning as `detection_flags.banned_ip`.
+  ai_bot:
+    type: boolean
+    description: Same meaning as `detection_flags.ai_bot`.
+  ai_browser:
+    type: boolean
+    description: Same meaning as `detection_flags.ai_browser`.

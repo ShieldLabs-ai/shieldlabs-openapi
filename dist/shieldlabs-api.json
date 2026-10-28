@@ -61,7 +61,7 @@
           "History API"
         ],
         "summary": "Search identifications",
-        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\nsearch-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
+        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\naccepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
         "security": [
           {
             "historyApiKey": []
@@ -133,6 +133,24 @@
           },
           {
             "$ref": "#/components/parameters/HistoryFlagSearchBot"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagIpMismatch"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagLatencyTest"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagDeviceSpoofing"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagBannedIp"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagAiBot"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagAiBrowser"
           }
         ],
         "responses": {
@@ -1365,6 +1383,114 @@
           }
         }
       },
+      "HistoryFlagIpMismatch": {
+        "name": "ip_mismatch",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `ip_mismatch` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagLatencyTest": {
+        "name": "latency_test",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `latency_test` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagDeviceSpoofing": {
+        "name": "device_spoofing",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `device_spoofing` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagBannedIp": {
+        "name": "banned_ip",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `banned_ip` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagAiBot": {
+        "name": "ai_bot",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `ai_bot` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagAiBrowser": {
+        "name": "ai_browser",
+        "in": "query",
+        "required": false,
+        "description": "Keep only rows whose `ai_browser` equals this value. Omit to leave unconstrained.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "value": "true"
+          }
+        }
+      },
       "ShieldDomain": {
         "name": "X-Shield-Domain",
         "in": "header",
@@ -1923,7 +2049,7 @@
             ]
           }
         },
-        "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | `score_details` (JSON-encoded string, zero weights included) |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `detection_flags.browser_vpn_proxy` | derive it: `connection_type == \"browser_vpn_proxy\"` |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nThe `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and\nSTUN measurements) that are not part of the stable contract: ignore fields you do not know.",
+        "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | not included in the current public History response |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | not included in the current public History response |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nCurrent responses omit score details and low-level network diagnostics. The optional diagnostic\nproperties below describe historical responses; they are not required. Ignore fields you do not know.",
         "required": [
           "identification_id",
           "session_id",
@@ -1939,16 +2065,8 @@
           "country",
           "connection_type",
           "score",
-          "score_details",
           "created_at",
           "ver",
-          "web_rtc_ip",
-          "web_rtc_country",
-          "web_rtc_connection_type",
-          "webrtc_leak_ip",
-          "webrtc_leak_country",
-          "webrtc_leak_connection_type",
-          "webrtc_leak_source",
           "is_vpn",
           "is_tor",
           "is_proxy",
@@ -1962,7 +2080,13 @@
           "is_js_disabled",
           "is_browser_automation",
           "is_incognito",
-          "is_search_bot"
+          "is_search_bot",
+          "ip_mismatch",
+          "latency_test",
+          "device_spoofing",
+          "banned_ip",
+          "ai_bot",
+          "ai_browser"
         ],
         "properties": {
           "client_identity": {
@@ -2211,6 +2335,30 @@
           "click_id_type": {
             "$ref": "#/components/schemas/ClickIdType",
             "description": "Ad click identifier type found in the landing URL. Omitted when empty."
+          },
+          "ip_mismatch": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.ip_mismatch`."
+          },
+          "latency_test": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.latency_test`."
+          },
+          "device_spoofing": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.device_spoofing`."
+          },
+          "banned_ip": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.banned_ip`."
+          },
+          "ai_bot": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.ai_bot`."
+          },
+          "ai_browser": {
+            "type": "boolean",
+            "description": "Same meaning as `detection_flags.ai_browser`."
           }
         }
       },
@@ -4466,7 +4614,13 @@
               "traffic_channel": "Google Ads",
               "traffic_channel_group": "Paid Search",
               "traffic_reason": "gclid_present",
-              "click_id_type": "gclid"
+              "click_id_type": "gclid",
+              "ip_mismatch": false,
+              "latency_test": false,
+              "device_spoofing": false,
+              "banned_ip": false,
+              "ai_bot": false,
+              "ai_browser": false
             },
             {
               "identification_id": "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b",
@@ -4515,7 +4669,13 @@
               "is_search_bot": false,
               "stun_request_seen": true,
               "is_scanner_stun_passed": false,
-              "stun_flow_status": "ok"
+              "stun_flow_status": "ok",
+              "ip_mismatch": false,
+              "latency_test": false,
+              "device_spoofing": false,
+              "banned_ip": false,
+              "ai_bot": false,
+              "ai_browser": false
             },
             {
               "identification_id": "9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0",
@@ -4569,7 +4729,13 @@
               "referrer_domain": "news.example.org",
               "traffic_channel": "Referral",
               "traffic_channel_group": "Referral",
-              "traffic_reason": "external_referrer"
+              "traffic_reason": "external_referrer",
+              "ip_mismatch": false,
+              "latency_test": false,
+              "device_spoofing": false,
+              "banned_ip": false,
+              "ai_bot": false,
+              "ai_browser": false
             },
             {
               "identification_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
@@ -4618,7 +4784,13 @@
               "is_search_bot": false,
               "stun_request_seen": false,
               "is_scanner_stun_passed": false,
-              "stun_flow_status": ""
+              "stun_flow_status": "",
+              "ip_mismatch": false,
+              "latency_test": false,
+              "device_spoofing": false,
+              "banned_ip": true,
+              "ai_bot": false,
+              "ai_browser": false
             },
             {
               "identification_id": "4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f",
@@ -4671,7 +4843,13 @@
               "referrer_domain": "GoogleBot",
               "traffic_channel": "Search bot",
               "traffic_channel_group": "Bot",
-              "traffic_reason": "ip_crawler_detected"
+              "traffic_reason": "ip_crawler_detected",
+              "ip_mismatch": false,
+              "latency_test": false,
+              "device_spoofing": false,
+              "banned_ip": false,
+              "ai_bot": false,
+              "ai_browser": false
             }
           ],
           "total": 37

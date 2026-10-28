@@ -9,11 +9,11 @@ const FLAGS = [
   'is_vpn', 'is_tor', 'is_proxy', 'is_privacy_relay', 'network_check_incomplete',
   'check_incomplete', 'is_antidetect', 'is_os_mismatch', 'is_os_not_detected',
   'is_timezone_mismatch', 'is_js_disabled', 'is_browser_automation',
-  'is_incognito', 'is_search_bot',
+  'is_incognito', 'is_search_bot', 'ip_mismatch', 'latency_test', 'device_spoofing', 'banned_ip', 'ai_bot', 'ai_browser',
 ];
 
 describe('public History field cleanup', () => {
-  it('keeps the 14 supported flags, date/score bounds and paging parameters', () => {
+  it('keeps the 20 supported flags, date/score bounds and paging parameters', () => {
     const { doc } = freshBuild();
     const { operation } = operationById(doc, 'searchHistory');
     const names = operation.parameters.map((p) => deref(doc, p).name);
@@ -70,6 +70,16 @@ describe('public History field cleanup', () => {
     delete missing.network_check_incomplete;
     assert.equal(rowExport(missing), false);
     assert.equal(validator.validate({ $ref: '#/components/schemas/HistoryRow' }, missing).valid, false);
+  });
+
+  it('accepts the current public row without eight historical diagnostic fields', () => {
+    const { files, validator, doc } = freshBuild();
+    const row = structuredClone(readFixture('history-page.json').data[0]);
+    const obsolete = ['score_details', 'web_rtc_ip', 'web_rtc_country', 'web_rtc_connection_type', 'webrtc_leak_ip', 'webrtc_leak_country', 'webrtc_leak_connection_type', 'webrtc_leak_source'];
+    for (const name of obsolete) { delete row[name]; assert.equal(doc.components.schemas.HistoryRow.required.includes(name), false); }
+    assert.equal(validator.validate({ $ref: '#/components/schemas/HistoryRow' }, row).valid, true);
+    const validate = createAjv().compile(JSON.parse(files.get('schemas/history-row.schema.json')));
+    assert.equal(validate(row), true);
   });
 
 });

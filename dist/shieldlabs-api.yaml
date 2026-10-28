@@ -208,7 +208,7 @@ paths:
         `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
         rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
         `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-        search-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and
+        accepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and
         `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
         parameters are ignored.
 
@@ -250,6 +250,12 @@ paths:
         - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
         - $ref: '#/components/parameters/HistoryFlagIncognito'
         - $ref: '#/components/parameters/HistoryFlagSearchBot'
+        - $ref: '#/components/parameters/HistoryFlagIpMismatch'
+        - $ref: '#/components/parameters/HistoryFlagLatencyTest'
+        - $ref: '#/components/parameters/HistoryFlagDeviceSpoofing'
+        - $ref: '#/components/parameters/HistoryFlagBannedIp'
+        - $ref: '#/components/parameters/HistoryFlagAiBot'
+        - $ref: '#/components/parameters/HistoryFlagAiBrowser'
       responses:
         '200':
           description: Matching identifications, newest first. `data` is empty when nothing matched.
@@ -1222,6 +1228,84 @@ components:
         match:
           summary: Only search-engine crawler rows
           value: 'true'
+    HistoryFlagIpMismatch:
+      name: ip_mismatch
+      in: query
+      required: false
+      description: Keep only rows whose `ip_mismatch` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagLatencyTest:
+      name: latency_test
+      in: query
+      required: false
+      description: Keep only rows whose `latency_test` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagDeviceSpoofing:
+      name: device_spoofing
+      in: query
+      required: false
+      description: Keep only rows whose `device_spoofing` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagBannedIp:
+      name: banned_ip
+      in: query
+      required: false
+      description: Keep only rows whose `banned_ip` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagAiBot:
+      name: ai_bot
+      in: query
+      required: false
+      description: Keep only rows whose `ai_bot` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagAiBrowser:
+      name: ai_browser
+      in: query
+      required: false
+      description: Keep only rows whose `ai_browser` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
     ShieldDomain:
       name: X-Shield-Domain
       in: header
@@ -1691,17 +1775,16 @@ components:
         | Webhook `data` | History row |
         |---|---|
         | `risk_score` | `score` |
-        | `signals` | `score_details` (JSON-encoded string, zero weights included) |
+        | `signals` | not included in the current public History response |
         | `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |
-        | `detection_flags.browser_vpn_proxy` | derive it: `connection_type == "browser_vpn_proxy"` |
         | `domain` | `site_domain` when present, otherwise `domain` |
         | `public_ip` | `ip` (`0.0.0.0` instead of `""`) and `country` |
-        | `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |
+        | `local_ip` | not included in the current public History response |
         | `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |
         | `observed_at` (when scoring finished) | `created_at` (when the identification was made) |
 
-        The `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and
-        STUN measurements) that are not part of the stable contract: ignore fields you do not know.
+        Current responses omit score details and low-level network diagnostics. The optional diagnostic
+        properties below describe historical responses; they are not required. Ignore fields you do not know.
       required:
         - identification_id
         - session_id
@@ -1717,16 +1800,8 @@ components:
         - country
         - connection_type
         - score
-        - score_details
         - created_at
         - ver
-        - web_rtc_ip
-        - web_rtc_country
-        - web_rtc_connection_type
-        - webrtc_leak_ip
-        - webrtc_leak_country
-        - webrtc_leak_connection_type
-        - webrtc_leak_source
         - is_vpn
         - is_tor
         - is_proxy
@@ -1741,6 +1816,12 @@ components:
         - is_browser_automation
         - is_incognito
         - is_search_bot
+        - ip_mismatch
+        - latency_test
+        - device_spoofing
+        - banned_ip
+        - ai_bot
+        - ai_browser
       properties:
         client_identity:
           $ref: '#/components/schemas/ClientIdentity'
@@ -1930,6 +2011,24 @@ components:
         click_id_type:
           $ref: '#/components/schemas/ClickIdType'
           description: Ad click identifier type found in the landing URL. Omitted when empty.
+        ip_mismatch:
+          type: boolean
+          description: Same meaning as `detection_flags.ip_mismatch`.
+        latency_test:
+          type: boolean
+          description: Same meaning as `detection_flags.latency_test`.
+        device_spoofing:
+          type: boolean
+          description: Same meaning as `detection_flags.device_spoofing`.
+        banned_ip:
+          type: boolean
+          description: Same meaning as `detection_flags.banned_ip`.
+        ai_bot:
+          type: boolean
+          description: Same meaning as `detection_flags.ai_bot`.
+        ai_browser:
+          type: boolean
+          description: Same meaning as `detection_flags.ai_browser`.
     HistoryPage:
       type: object
       description: One page of identifications, newest first.
@@ -3593,6 +3692,12 @@ components:
             traffic_channel_group: Paid Search
             traffic_reason: gclid_present
             click_id_type: gclid
+            ip_mismatch: false
+            latency_test: false
+            device_spoofing: false
+            banned_ip: false
+            ai_bot: false
+            ai_browser: false
           - identification_id: 7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b
             session_id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
             cookie_id: f0e1d2c3-b4a5-4968-8776-655443322110
@@ -3640,6 +3745,12 @@ components:
             stun_request_seen: true
             is_scanner_stun_passed: false
             stun_flow_status: ok
+            ip_mismatch: false
+            latency_test: false
+            device_spoofing: false
+            banned_ip: false
+            ai_bot: false
+            ai_browser: false
           - identification_id: 9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0
             session_id: b0c1d2e3-f4a5-4b6c-9d7e-8f9a0b1c2d3e
             cookie_id: c3d4e5f6-a7b8-4c9d-8e0f-a1b2c3d4e5f6
@@ -3692,6 +3803,12 @@ components:
             traffic_channel: Referral
             traffic_channel_group: Referral
             traffic_reason: external_referrer
+            ip_mismatch: false
+            latency_test: false
+            device_spoofing: false
+            banned_ip: false
+            ai_bot: false
+            ai_browser: false
           - identification_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
             session_id: 00000000-0000-0000-0000-000000000000
             cookie_id: 00000000-0000-0000-0000-000000000000
@@ -3739,6 +3856,12 @@ components:
             stun_request_seen: false
             is_scanner_stun_passed: false
             stun_flow_status: ''
+            ip_mismatch: false
+            latency_test: false
+            device_spoofing: false
+            banned_ip: true
+            ai_bot: false
+            ai_browser: false
           - identification_id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
             session_id: 5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d
             cookie_id: 6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e
@@ -3790,6 +3913,12 @@ components:
             traffic_channel: Search bot
             traffic_channel_group: Bot
             traffic_reason: ip_crawler_detected
+            ip_mismatch: false
+            latency_test: false
+            device_spoofing: false
+            banned_ip: false
+            ai_bot: false
+            ai_browser: false
         total: 37
     HistoryPageEmpty:
       summary: Nothing matched

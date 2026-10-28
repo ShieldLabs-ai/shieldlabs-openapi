@@ -55,7 +55,13 @@
       "traffic_channel": "Google Ads",
       "traffic_channel_group": "Paid Search",
       "traffic_reason": "gclid_present",
-      "click_id_type": "gclid"
+      "click_id_type": "gclid",
+      "ip_mismatch": false,
+      "latency_test": false,
+      "device_spoofing": false,
+      "banned_ip": false,
+      "ai_bot": false,
+      "ai_browser": false
     },
     {
       "identification_id": "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b",
@@ -104,7 +110,13 @@
       "is_search_bot": false,
       "stun_request_seen": true,
       "is_scanner_stun_passed": false,
-      "stun_flow_status": "ok"
+      "stun_flow_status": "ok",
+      "ip_mismatch": false,
+      "latency_test": false,
+      "device_spoofing": false,
+      "banned_ip": false,
+      "ai_bot": false,
+      "ai_browser": false
     },
     {
       "identification_id": "9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0",
@@ -158,7 +170,13 @@
       "referrer_domain": "news.example.org",
       "traffic_channel": "Referral",
       "traffic_channel_group": "Referral",
-      "traffic_reason": "external_referrer"
+      "traffic_reason": "external_referrer",
+      "ip_mismatch": false,
+      "latency_test": false,
+      "device_spoofing": false,
+      "banned_ip": false,
+      "ai_bot": false,
+      "ai_browser": false
     },
     {
       "identification_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
@@ -207,7 +225,13 @@
       "is_search_bot": false,
       "stun_request_seen": false,
       "is_scanner_stun_passed": false,
-      "stun_flow_status": ""
+      "stun_flow_status": "",
+      "ip_mismatch": false,
+      "latency_test": false,
+      "device_spoofing": false,
+      "banned_ip": true,
+      "ai_bot": false,
+      "ai_browser": false
     },
     {
       "identification_id": "4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f",
@@ -260,7 +284,13 @@
       "referrer_domain": "GoogleBot",
       "traffic_channel": "Search bot",
       "traffic_channel_group": "Bot",
-      "traffic_reason": "ip_crawler_detected"
+      "traffic_reason": "ip_crawler_detected",
+      "ip_mismatch": false,
+      "latency_test": false,
+      "device_spoofing": false,
+      "banned_ip": false,
+      "ai_bot": false,
+      "ai_browser": false
     }
   ],
   "total": 37

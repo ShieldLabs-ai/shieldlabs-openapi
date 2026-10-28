@@ -14,7 +14,7 @@
       ]
     }
   },
-  "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | `score_details` (JSON-encoded string, zero weights included) |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `detection_flags.browser_vpn_proxy` | derive it: `connection_type == \"browser_vpn_proxy\"` |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not `none`, otherwise `web_rtc_ip` and `web_rtc_country` |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nThe `ip_mismatch` flag has no column. Rows also carry diagnostic network fields (TCP, MTU and\nSTUN measurements) that are not part of the stable contract: ignore fields you do not know.",
+  "description": "One identification as stored, in its latest version. It describes the same identification as a\nwebhook `data` object, with different field names:\n\n| Webhook `data` | History row |\n|---|---|\n| `risk_score` | `score` |\n| `signals` | not included in the current public History response |\n| `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |\n| `domain` | `site_domain` when present, otherwise `domain` |\n| `public_ip` | `ip` (`0.0.0.0` instead of `\"\"`) and `country` |\n| `local_ip` | not included in the current public History response |\n| `traffic_source` | `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type`, `utm_*` (omitted when empty) |\n| `observed_at` (when scoring finished) | `created_at` (when the identification was made) |\n\nCurrent responses omit score details and low-level network diagnostics. The optional diagnostic\nproperties below describe historical responses; they are not required. Ignore fields you do not know.",
   "required": [
     "identification_id",
     "session_id",
@@ -30,16 +30,8 @@
     "country",
     "connection_type",
     "score",
-    "score_details",
     "created_at",
     "ver",
-    "web_rtc_ip",
-    "web_rtc_country",
-    "web_rtc_connection_type",
-    "webrtc_leak_ip",
-    "webrtc_leak_country",
-    "webrtc_leak_connection_type",
-    "webrtc_leak_source",
     "is_vpn",
     "is_tor",
     "is_proxy",
@@ -53,7 +45,13 @@
     "is_js_disabled",
     "is_browser_automation",
     "is_incognito",
-    "is_search_bot"
+    "is_search_bot",
+    "ip_mismatch",
+    "latency_test",
+    "device_spoofing",
+    "banned_ip",
+    "ai_bot",
+    "ai_browser"
   ],
   "properties": {
     "client_identity": {
@@ -296,6 +294,30 @@
     "click_id_type": {
       "$ref": "#/$defs/ClickIdType",
       "description": "Ad click identifier type found in the landing URL. Omitted when empty."
+    },
+    "ip_mismatch": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.ip_mismatch`."
+    },
+    "latency_test": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.latency_test`."
+    },
+    "device_spoofing": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.device_spoofing`."
+    },
+    "banned_ip": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.banned_ip`."
+    },
+    "ai_bot": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.ai_bot`."
+    },
+    "ai_browser": {
+      "type": "boolean",
+      "description": "Same meaning as `detection_flags.ai_browser`."
     }
   },
   "$defs": {

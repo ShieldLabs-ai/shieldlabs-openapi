@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Public History exposes all 20 current detection flags, including six new predicates. Eight legacy diagnostic fields are no longer required by the row schema.
+
 - Rename the public History response field and query filter `is_stun_not_checked` to `network_check_incomplete`. The old query name returns `400`; the stored column and detector behavior are unchanged.
 
 - Remove `is_abuser`, `is_datacenter` and `is_suspicious_paid_click` from public History rows and filters. Requests containing these removed filters return `400`; the other 14 flag filters and date/score bounds are unchanged. Internal storage and historical webhook schemas are unaffected.

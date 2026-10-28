@@ -29,7 +29,7 @@ get:
     `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
     rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
     `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-    search-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and
+    accepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and
     `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
     parameters are ignored.
 
@@ -71,6 +71,12 @@ get:
     - $ref: ../components/parameters/HistoryFlagBrowserAutomation.yaml
     - $ref: ../components/parameters/HistoryFlagIncognito.yaml
     - $ref: ../components/parameters/HistoryFlagSearchBot.yaml
+    - $ref: ../components/parameters/HistoryFlagIpMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagLatencyTest.yaml
+    - $ref: ../components/parameters/HistoryFlagDeviceSpoofing.yaml
+    - $ref: ../components/parameters/HistoryFlagBannedIp.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBot.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBrowser.yaml
   responses:
     '200':
       description: Matching identifications, newest first. `data` is empty when nothing matched.
