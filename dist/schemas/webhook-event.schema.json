@@ -153,7 +153,7 @@
         },
         "check_incomplete": {
           "type": "boolean",
-          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true."
+          "description": "Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true. False for a search-engine crawler, an AI bot, or an AI browser."
         },
         "network_check_incomplete": {
           "type": "boolean",
@@ -169,7 +169,7 @@
         },
         "javascript_disabled": {
           "type": "boolean",
-          "description": "JavaScript, or the browser APIs the checks need, were unavailable."
+          "description": "JavaScript, or the browser APIs the checks need, were unavailable. False for a search-engine crawler, an AI bot, or an AI browser."
         },
         "os_mismatch": {
           "type": "boolean",
@@ -177,7 +177,7 @@
         },
         "ip_mismatch": {
           "type": "boolean",
-          "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Nominal weight 45; read the returned Risk Score."
+          "description": "A qualifying mismatch between the public IP and the browser's network evidence was detected. Nominal weight 45; read the returned Risk Score. False for a search-engine crawler, an AI bot, or an AI browser."
         },
         "latency_test": {
           "type": "boolean",
@@ -196,7 +196,7 @@
         },
         "incognito": {
           "type": "boolean",
-          "description": "The browser runs in a private window. Weight 0, and present in signals when true."
+          "description": "The browser runs in a private window. False for a search-engine crawler, an AI bot, or an AI browser. Weight 0, and present in signals when true."
         },
         "search_bot": {
           "type": "boolean",

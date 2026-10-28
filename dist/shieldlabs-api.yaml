@@ -1694,6 +1694,91 @@ components:
         - ''
       examples:
         - direct
+    DetectionFlags:
+      type: object
+      description: The 20 public detection signals in scored webhook contract 2026-10-13. os_mismatch is true when either OS detector fired. browser_vpn_proxy contributes to vpn and is not its own flag. Groups and owner attribution are separate from this set.
+      required:
+        - vpn
+        - proxy
+        - private_relay
+        - check_incomplete
+        - network_check_incomplete
+        - os_not_detected
+        - timezone_mismatch
+        - javascript_disabled
+        - os_mismatch
+        - ip_mismatch
+        - latency_test
+        - anti_detect_browser
+        - device_spoofing
+        - banned_ip
+        - incognito
+        - search_bot
+        - ai_bot
+        - browser_automation
+        - ai_browser
+        - tor
+      properties:
+        vpn:
+          type: boolean
+          description: A VPN was detected, including a VPN or proxy built into the browser. connection_type may still be browser_vpn_proxy.
+        proxy:
+          type: boolean
+          description: A proxy was detected.
+        private_relay:
+          type: boolean
+          description: A privacy relay such as iCloud Private Relay was detected. Older payloads used privacy_relay.
+        check_incomplete:
+          type: boolean
+          description: Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true. False for a search-engine crawler, an AI bot, or an AI browser.
+        network_check_incomplete:
+          type: boolean
+          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives. Older payloads used stun_not_checked.
+        os_not_detected:
+          type: boolean
+          description: The operating system could not be determined from the User-Agent or the network.
+        timezone_mismatch:
+          type: boolean
+          description: The browser timezone differs from the timezone of the IP location.
+        javascript_disabled:
+          type: boolean
+          description: JavaScript, or the browser APIs the checks need, were unavailable. False for a search-engine crawler, an AI bot, or an AI browser.
+        os_mismatch:
+          type: boolean
+          description: Either operating-system consistency detector fired. The two detectors are not separate public flags.
+        ip_mismatch:
+          type: boolean
+          description: A qualifying mismatch between the public IP and the browser's network evidence was detected. Nominal weight 45; read the returned Risk Score. False for a search-engine crawler, an AI bot, or an AI browser.
+        latency_test:
+          type: boolean
+          description: The WebSocket-to-TCP latency test fired. Older payloads used ws_tcp_latency.
+        anti_detect_browser:
+          type: boolean
+          description: An anti-detect browser was detected.
+        device_spoofing:
+          type: boolean
+        banned_ip:
+          type: boolean
+          description: The visitor IP is banned for this window. The matching signal weight is 999. Older payloads used rate_limited.
+        incognito:
+          type: boolean
+          description: The browser runs in a private window. False for a search-engine crawler, an AI bot, or an AI browser. Weight 0, and present in signals when true.
+        search_bot:
+          type: boolean
+          description: A search-engine crawler. Its Risk Score is always 0. Weight 0, and present in signals when true.
+        ai_bot:
+          type: boolean
+          description: A recognized AI bot or crawler. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true.
+        browser_automation:
+          type: boolean
+          description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
+        ai_browser:
+          type: boolean
+          description: A recognized AI browser. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true.
+        tor:
+          type: boolean
+          description: The request came through the Tor network.
+      additionalProperties: false
     TrafficChannel:
       type: string
       description: 'Marketing channel of the visit. Known values: `Google Ads`, `Meta`, `TikTok`, `LinkedIn`, `X`, `Pinterest`, `Microsoft Ads`, `Organic Search`, `Search bot`, `Referral`, `Direct`, `Other` and the empty string. Resolved in this order: a click ID, then UTM parameters, then the referrer (search engines give `Organic Search`, social networks give the platform name, other sites give `Referral`), otherwise `Direct`. Search-engine crawlers get `Search bot`. Empty string on identifications without attribution, such as rate-limit marker rows. The set is open: keep values added in later versions and treat them as `Other`.'
@@ -1776,7 +1861,7 @@ components:
         |---|---|
         | `risk_score` | `score` |
         | `signals` | not included in the current public History response |
-        | `detection_flags` | the `is_*` columns and `check_incomplete` (each column names its flag) |
+        | `detection_flags` | `detection_flags`, the same 20 keys and meanings as the scored webhook. The flat fields below repeat those values under History names |
         | `domain` | `site_domain` when present, otherwise `domain` |
         | `public_ip` | `ip` (`0.0.0.0` instead of `""`) and `country` |
         | `local_ip` | not included in the current public History response |
@@ -1816,6 +1901,7 @@ components:
         - is_browser_automation
         - is_incognito
         - is_search_bot
+        - detection_flags
         - ip_mismatch
         - latency_test
         - device_spoofing
@@ -1939,7 +2025,7 @@ components:
           description: Same meaning as `detection_flags.network_check_incomplete`.
         check_incomplete:
           type: boolean
-          description: Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers.
+          description: Same meaning as `detection_flags.check_incomplete`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
         is_antidetect:
           type: boolean
           description: Same meaning as `detection_flags.anti_detect_browser`.
@@ -1954,16 +2040,18 @@ components:
           description: Same meaning as `detection_flags.timezone_mismatch`.
         is_js_disabled:
           type: boolean
-          description: Same meaning as `detection_flags.javascript_disabled`. Always `false` for search-engine crawlers.
+          description: Same meaning as `detection_flags.javascript_disabled`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
         is_browser_automation:
           type: boolean
           description: Same meaning as `detection_flags.browser_automation`.
         is_incognito:
           type: boolean
-          description: Same meaning as `detection_flags.incognito`. Always `false` for search-engine crawlers.
+          description: Same meaning as `detection_flags.incognito`. Always `false` for a search-engine crawler, an AI bot, or an AI browser.
         is_search_bot:
           type: boolean
           description: Same meaning as `detection_flags.search_bot`.
+        detection_flags:
+          $ref: '#/components/schemas/DetectionFlags'
         entry_url:
           type: string
           description: Landing page URL without the `#fragment` (webhook `traffic_source.landing_url`). Omitted when empty. It keeps the query string, which can contain personal data.
@@ -2616,91 +2704,6 @@ components:
         ai_browser:
           type: boolean
           description: A browser has separately verified infrastructure or service attribution. A User-Agent claim or provider-only IP proof is insufficient.
-        tor:
-          type: boolean
-          description: The request came through the Tor network.
-      additionalProperties: false
-    DetectionFlags:
-      type: object
-      description: The 20 public detection signals in scored webhook contract 2026-10-13. os_mismatch is true when either OS detector fired. browser_vpn_proxy contributes to vpn and is not its own flag. Groups and owner attribution are separate from this set.
-      required:
-        - vpn
-        - proxy
-        - private_relay
-        - check_incomplete
-        - network_check_incomplete
-        - os_not_detected
-        - timezone_mismatch
-        - javascript_disabled
-        - os_mismatch
-        - ip_mismatch
-        - latency_test
-        - anti_detect_browser
-        - device_spoofing
-        - banned_ip
-        - incognito
-        - search_bot
-        - ai_bot
-        - browser_automation
-        - ai_browser
-        - tor
-      properties:
-        vpn:
-          type: boolean
-          description: A VPN was detected, including a VPN or proxy built into the browser. connection_type may still be browser_vpn_proxy.
-        proxy:
-          type: boolean
-          description: A proxy was detected.
-        private_relay:
-          type: boolean
-          description: A privacy relay such as iCloud Private Relay was detected. Older payloads used privacy_relay.
-        check_incomplete:
-          type: boolean
-          description: Part of the browser checks timed out, so the verdict rests on partial data. Informational. Weight 0, and present in signals when true.
-        network_check_incomplete:
-          type: boolean
-          description: The browser network (STUN) check did not complete. Cleared again when a late network result arrives. Older payloads used stun_not_checked.
-        os_not_detected:
-          type: boolean
-          description: The operating system could not be determined from the User-Agent or the network.
-        timezone_mismatch:
-          type: boolean
-          description: The browser timezone differs from the timezone of the IP location.
-        javascript_disabled:
-          type: boolean
-          description: JavaScript, or the browser APIs the checks need, were unavailable.
-        os_mismatch:
-          type: boolean
-          description: Either operating-system consistency detector fired. The two detectors are not separate public flags.
-        ip_mismatch:
-          type: boolean
-          description: A qualifying mismatch between the public IP and the browser's network evidence was detected. Nominal weight 45; read the returned Risk Score.
-        latency_test:
-          type: boolean
-          description: The WebSocket-to-TCP latency test fired. Older payloads used ws_tcp_latency.
-        anti_detect_browser:
-          type: boolean
-          description: An anti-detect browser was detected.
-        device_spoofing:
-          type: boolean
-        banned_ip:
-          type: boolean
-          description: The visitor IP is banned for this window. The matching signal weight is 999. Older payloads used rate_limited.
-        incognito:
-          type: boolean
-          description: The browser runs in a private window. Weight 0, and present in signals when true.
-        search_bot:
-          type: boolean
-          description: A search-engine crawler. Its Risk Score is always 0. Weight 0, and present in signals when true.
-        ai_bot:
-          type: boolean
-          description: A recognized AI bot or crawler. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true.
-        browser_automation:
-          type: boolean
-          description: Browser automation was detected, for example a WebDriver-controlled browser. Catalogue weight is 90 for task 204 scoring releases; historical result versions may retain the earlier weight 60.
-        ai_browser:
-          type: boolean
-          description: A recognized AI browser. Its Risk Score is always 0. ShieldLabs identifies the provider when available. Weight 0, and present in signals when true.
         tor:
           type: boolean
           description: The request came through the Tor network.
@@ -3698,6 +3701,27 @@ components:
             banned_ip: false
             ai_bot: false
             ai_browser: false
+            detection_flags:
+              vpn: false
+              proxy: true
+              private_relay: false
+              check_incomplete: false
+              network_check_incomplete: false
+              os_not_detected: false
+              timezone_mismatch: false
+              javascript_disabled: false
+              os_mismatch: false
+              ip_mismatch: false
+              latency_test: false
+              anti_detect_browser: true
+              device_spoofing: false
+              banned_ip: false
+              incognito: false
+              search_bot: false
+              ai_bot: false
+              browser_automation: false
+              ai_browser: false
+              tor: false
           - identification_id: 7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b
             session_id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
             cookie_id: f0e1d2c3-b4a5-4968-8776-655443322110
@@ -3751,6 +3775,27 @@ components:
             banned_ip: false
             ai_bot: false
             ai_browser: false
+            detection_flags:
+              vpn: false
+              proxy: false
+              private_relay: false
+              check_incomplete: false
+              network_check_incomplete: false
+              os_not_detected: false
+              timezone_mismatch: true
+              javascript_disabled: false
+              os_mismatch: false
+              ip_mismatch: false
+              latency_test: false
+              anti_detect_browser: false
+              device_spoofing: false
+              banned_ip: false
+              incognito: true
+              search_bot: false
+              ai_bot: false
+              browser_automation: false
+              ai_browser: false
+              tor: false
           - identification_id: 9e8d7c6b-5a49-4382-9716-05f4e3d2c1b0
             session_id: b0c1d2e3-f4a5-4b6c-9d7e-8f9a0b1c2d3e
             cookie_id: c3d4e5f6-a7b8-4c9d-8e0f-a1b2c3d4e5f6
@@ -3809,6 +3854,27 @@ components:
             banned_ip: false
             ai_bot: false
             ai_browser: false
+            detection_flags:
+              vpn: true
+              proxy: false
+              private_relay: false
+              check_incomplete: true
+              network_check_incomplete: true
+              os_not_detected: false
+              timezone_mismatch: false
+              javascript_disabled: false
+              os_mismatch: false
+              ip_mismatch: false
+              latency_test: false
+              anti_detect_browser: false
+              device_spoofing: false
+              banned_ip: false
+              incognito: false
+              search_bot: false
+              ai_bot: false
+              browser_automation: false
+              ai_browser: false
+              tor: false
           - identification_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
             session_id: 00000000-0000-0000-0000-000000000000
             cookie_id: 00000000-0000-0000-0000-000000000000
@@ -3862,6 +3928,27 @@ components:
             banned_ip: true
             ai_bot: false
             ai_browser: false
+            detection_flags:
+              vpn: false
+              proxy: false
+              private_relay: false
+              check_incomplete: false
+              network_check_incomplete: false
+              os_not_detected: false
+              timezone_mismatch: false
+              javascript_disabled: false
+              os_mismatch: false
+              ip_mismatch: false
+              latency_test: false
+              anti_detect_browser: false
+              device_spoofing: false
+              banned_ip: true
+              incognito: false
+              search_bot: false
+              ai_bot: false
+              browser_automation: false
+              ai_browser: false
+              tor: false
           - identification_id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
             session_id: 5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d
             cookie_id: 6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e
@@ -3919,6 +4006,27 @@ components:
             banned_ip: false
             ai_bot: false
             ai_browser: false
+            detection_flags:
+              vpn: false
+              proxy: false
+              private_relay: false
+              check_incomplete: false
+              network_check_incomplete: false
+              os_not_detected: false
+              timezone_mismatch: false
+              javascript_disabled: false
+              os_mismatch: false
+              ip_mismatch: false
+              latency_test: false
+              anti_detect_browser: false
+              device_spoofing: false
+              banned_ip: false
+              incognito: false
+              search_bot: true
+              ai_bot: false
+              browser_automation: false
+              ai_browser: false
+              tor: false
         total: 37
     HistoryPageEmpty:
       summary: Nothing matched
