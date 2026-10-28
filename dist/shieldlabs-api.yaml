@@ -890,7 +890,7 @@ webhooks:
                     detection_flags:
                       device_spoofing: false
                       latency_test: false
-                      banned_ip: false
+                      rate_limited: false
                       vpn: false
                       private_relay: false
                       tor: false
@@ -970,7 +970,7 @@ webhooks:
                     detection_flags:
                       device_spoofing: false
                       latency_test: false
-                      banned_ip: false
+                      rate_limited: false
                       vpn: false
                       private_relay: false
                       tor: false
@@ -1050,7 +1050,7 @@ webhooks:
                     detection_flags:
                       device_spoofing: false
                       latency_test: false
-                      banned_ip: false
+                      rate_limited: false
                       vpn: false
                       private_relay: false
                       tor: false
@@ -1518,10 +1518,10 @@ components:
         match:
           value: 'true'
     HistoryFlagBannedIp:
-      name: banned_ip
+      name: rate_limited
       in: query
       required: false
-      description: Keep only rows whose `banned_ip` equals this value. Omit to leave unconstrained.
+      description: Keep only rows whose `rate_limited` flag equals this value. Older clients may send `banned_ip`. Omit to leave unconstrained.
       schema:
         type: string
         enum:
@@ -1865,7 +1865,7 @@ components:
         - `vpn`: a VPN;
         - `proxy`: a proxy, datacenter or hosting network (search-engine crawlers are reported here too);
         - `tor`: the Tor network;
-        - `privacy_relay`: a privacy relay such as iCloud Private Relay;
+        - `private_relay`: a privacy relay such as iCloud Private Relay. Older visits may say `privacy_relay`;
         - `browser_vpn_proxy`: a VPN or proxy built into the browser or one of its extensions;
         - `unknown`: not enough data.
 
@@ -1878,6 +1878,7 @@ components:
         - vpn
         - proxy
         - tor
+        - private_relay
         - privacy_relay
         - browser_vpn_proxy
         - unknown
@@ -1896,7 +1897,7 @@ components:
 
         A value above 100 is not a score. `999` is the rate-limit marker: the visitor's IP went over the
         ingest rate limit, and the identification carries exactly one signal,
-        `{"name":"banned_ip","weight":999}`, usually with nil identifiers. Treat every value above
+        `{"name":"rate_limited","weight":999}`, usually with nil identifiers. Treat every value above
         100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued
         while it stays blocked get no row and no webhook, so they stay unverified.
 
@@ -1961,7 +1962,7 @@ components:
         - latency_test
         - anti_detect_browser
         - device_spoofing
-        - banned_ip
+        - rate_limited
         - incognito
         - search_bot
         - ai_bot
@@ -2007,9 +2008,9 @@ components:
           description: An anti-detect browser was detected.
         device_spoofing:
           type: boolean
-        banned_ip:
+        rate_limited:
           type: boolean
-          description: The visitor IP is banned for this window. The matching signal weight is 999. Older payloads used rate_limited.
+          description: The visitor exceeded the identification rate limit. Older payloads used banned_ip.
         incognito:
           type: boolean
           description: The browser runs in a private window. False for a search-engine crawler, an AI bot, or an AI browser. Weight 0, and present in signals when true.
@@ -2155,7 +2156,7 @@ components:
         - ip_mismatch
         - latency_test
         - device_spoofing
-        - banned_ip
+        - rate_limited
         - ai_bot
         - ai_browser
       properties:
@@ -2358,9 +2359,9 @@ components:
         device_spoofing:
           type: boolean
           description: Same meaning as `detection_flags.device_spoofing`.
-        banned_ip:
+        rate_limited:
           type: boolean
-          description: Same meaning as `detection_flags.banned_ip`.
+          description: Same meaning as `detection_flags.rate_limited`. Older payloads used banned_ip.
         ai_bot:
           type: boolean
           description: Same meaning as `detection_flags.ai_bot`.
@@ -3281,7 +3282,7 @@ components:
             - `network_check_incomplete`: the network (STUN) check did not complete;
             - `stun_late_correction`: a late network result arrived; negative weight that cancels
               `network_check_incomplete`;
-            - `banned_ip`: the rate-limit marker, weight 999.
+            - `rate_limited`: the rate-limit marker. Older payloads used `banned_ip`.
 
             A verdict carried forward from an earlier identification of the same device and IP (for
             example `antidetect_browser`) keeps a name derived from the original signal and can carry a
@@ -3291,7 +3292,7 @@ components:
             - antidetect_browser
         weight:
           type: integer
-          description: Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `banned_ip`. Weights can change between releases; never add them up yourself.
+          description: Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `rate_limited`. Older payloads used `banned_ip`. Weights can change between releases; never add them up yourself.
           examples:
             - 10
             - -30
@@ -3434,7 +3435,7 @@ components:
           $ref: '#/components/schemas/RiskScore'
         signals:
           type: array
-          description: Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{"name":"banned_ip","weight":999}`.
+          description: Weighted risk signals behind `risk_score`, in scoring order. Can be empty. The rate-limit marker carries exactly one entry, `{"name":"rate_limited","weight":999}`.
           items:
             $ref: '#/components/schemas/Signal'
         detection_flags:
@@ -3948,7 +3949,7 @@ components:
             ip_mismatch: false
             latency_test: false
             device_spoofing: false
-            banned_ip: false
+            rate_limited: false
             ai_bot: false
             ai_browser: false
             detection_flags:
@@ -3965,7 +3966,7 @@ components:
               latency_test: false
               anti_detect_browser: true
               device_spoofing: false
-              banned_ip: false
+              rate_limited: false
               incognito: false
               search_bot: false
               ai_bot: false
@@ -4022,7 +4023,7 @@ components:
             ip_mismatch: false
             latency_test: false
             device_spoofing: false
-            banned_ip: false
+            rate_limited: false
             ai_bot: false
             ai_browser: false
             detection_flags:
@@ -4039,7 +4040,7 @@ components:
               latency_test: false
               anti_detect_browser: false
               device_spoofing: false
-              banned_ip: false
+              rate_limited: false
               incognito: true
               search_bot: false
               ai_bot: false
@@ -4101,7 +4102,7 @@ components:
             ip_mismatch: false
             latency_test: false
             device_spoofing: false
-            banned_ip: false
+            rate_limited: false
             ai_bot: false
             ai_browser: false
             detection_flags:
@@ -4118,7 +4119,7 @@ components:
               latency_test: false
               anti_detect_browser: false
               device_spoofing: false
-              banned_ip: false
+              rate_limited: false
               incognito: false
               search_bot: false
               ai_bot: false
@@ -4175,7 +4176,7 @@ components:
             ip_mismatch: false
             latency_test: false
             device_spoofing: false
-            banned_ip: true
+            rate_limited: true
             ai_bot: false
             ai_browser: false
             detection_flags:
@@ -4192,7 +4193,7 @@ components:
               latency_test: false
               anti_detect_browser: false
               device_spoofing: false
-              banned_ip: true
+              rate_limited: true
               incognito: false
               search_bot: false
               ai_bot: false
@@ -4253,7 +4254,7 @@ components:
             ip_mismatch: false
             latency_test: false
             device_spoofing: false
-            banned_ip: false
+            rate_limited: false
             ai_bot: false
             ai_browser: false
             detection_flags:
@@ -4270,7 +4271,7 @@ components:
               latency_test: false
               anti_detect_browser: false
               device_spoofing: false
-              banned_ip: false
+              rate_limited: false
               incognito: false
               search_bot: true
               ai_bot: false
