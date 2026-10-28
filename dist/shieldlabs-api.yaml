@@ -208,7 +208,9 @@ paths:
         `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
         rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
         `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-        search-engine crawlers. Unknown query parameters are ignored.
+        search-engine crawlers. The removed filters `is_abuser`, `is_datacenter` and
+        `is_suspicious_paid_click` return `400`, even when empty or `false`. Other unknown query
+        parameters are ignored.
 
         **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
         outside 1-100, a negative `offset`, or a filter value the server does not accept returns
@@ -237,8 +239,6 @@ paths:
         - $ref: '#/components/parameters/HistoryFlagVpn'
         - $ref: '#/components/parameters/HistoryFlagTor'
         - $ref: '#/components/parameters/HistoryFlagProxy'
-        - $ref: '#/components/parameters/HistoryFlagDatacenter'
-        - $ref: '#/components/parameters/HistoryFlagAbuser'
         - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
         - $ref: '#/components/parameters/HistoryFlagStunNotChecked'
         - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
@@ -250,7 +250,6 @@ paths:
         - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
         - $ref: '#/components/parameters/HistoryFlagIncognito'
         - $ref: '#/components/parameters/HistoryFlagSearchBot'
-        - $ref: '#/components/parameters/HistoryFlagSuspiciousPaidClick'
       responses:
         '200':
           description: Matching identifications, newest first. `data` is empty when nothing matched.
@@ -1069,34 +1068,6 @@ components:
         match:
           summary: Only proxy rows
           value: 'true'
-    HistoryFlagDatacenter:
-      name: is_datacenter
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_datacenter` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only datacenter rows
-          value: 'true'
-    HistoryFlagAbuser:
-      name: is_abuser
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_abuser` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only abuser rows
-          value: 'true'
     HistoryFlagPrivacyRelay:
       name: is_privacy_relay
       in: query
@@ -1250,20 +1221,6 @@ components:
       examples:
         match:
           summary: Only search-engine crawler rows
-          value: 'true'
-    HistoryFlagSuspiciousPaidClick:
-      name: is_suspicious_paid_click
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_suspicious_paid_click` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only suspicious paid-click rows
           value: 'true'
     ShieldDomain:
       name: X-Shield-Domain
@@ -1720,6 +1677,12 @@ components:
     HistoryRow:
       type: object
       additionalProperties: true
+      propertyNames:
+        not:
+          enum:
+            - is_abuser
+            - is_datacenter
+            - is_suspicious_paid_click
       description: |-
         One identification as stored, in its latest version. It describes the same identification as a
         webhook `data` object, with different field names:
@@ -1766,8 +1729,6 @@ components:
         - is_vpn
         - is_tor
         - is_proxy
-        - is_datacenter
-        - is_abuser
         - is_privacy_relay
         - is_stun_not_checked
         - check_incomplete
@@ -1888,18 +1849,12 @@ components:
         is_proxy:
           type: boolean
           description: Same meaning as `detection_flags.proxy`.
-        is_datacenter:
-          type: boolean
-          description: Same meaning as `detection_flags.datacenter_ip`.
-        is_abuser:
-          type: boolean
-          description: Same meaning as `detection_flags.abuser`.
         is_privacy_relay:
           type: boolean
-          description: Same meaning as `detection_flags.privacy_relay`.
+          description: Same meaning as `detection_flags.private_relay`.
         is_stun_not_checked:
           type: boolean
-          description: Same meaning as `detection_flags.stun_not_checked`.
+          description: Same meaning as `detection_flags.network_check_incomplete`.
         check_incomplete:
           type: boolean
           description: Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers.
@@ -1927,9 +1882,6 @@ components:
         is_search_bot:
           type: boolean
           description: Same meaning as `detection_flags.search_bot`.
-        is_suspicious_paid_click:
-          type: boolean
-          description: Same meaning as `detection_flags.suspicious_paid_click`. Omitted when `false`.
         entry_url:
           type: string
           description: Landing page URL without the `#fragment` (webhook `traffic_source.landing_url`). Omitted when empty. It keeps the query string, which can contain personal data.
@@ -3619,8 +3571,6 @@ components:
             is_vpn: false
             is_tor: false
             is_proxy: true
-            is_datacenter: true
-            is_abuser: false
             is_privacy_relay: false
             is_stun_not_checked: false
             check_incomplete: false
@@ -3642,7 +3592,6 @@ components:
             traffic_channel_group: Paid Search
             traffic_reason: gclid_present
             click_id_type: gclid
-            is_suspicious_paid_click: true
           - identification_id: 7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b
             session_id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
             cookie_id: f0e1d2c3-b4a5-4968-8776-655443322110
@@ -3676,8 +3625,6 @@ components:
             is_vpn: false
             is_tor: false
             is_proxy: false
-            is_datacenter: false
-            is_abuser: false
             is_privacy_relay: false
             is_stun_not_checked: false
             check_incomplete: false
@@ -3725,8 +3672,6 @@ components:
             is_vpn: true
             is_tor: false
             is_proxy: false
-            is_datacenter: false
-            is_abuser: false
             is_privacy_relay: false
             is_stun_not_checked: true
             check_incomplete: true
@@ -3779,8 +3724,6 @@ components:
             is_vpn: false
             is_tor: false
             is_proxy: false
-            is_datacenter: false
-            is_abuser: false
             is_privacy_relay: false
             is_stun_not_checked: false
             check_incomplete: false
@@ -3828,8 +3771,6 @@ components:
             is_vpn: false
             is_tor: false
             is_proxy: false
-            is_datacenter: false
-            is_abuser: false
             is_privacy_relay: false
             is_stun_not_checked: false
             check_incomplete: false

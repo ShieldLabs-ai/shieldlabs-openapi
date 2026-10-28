@@ -1,5 +1,8 @@
 type: object
 additionalProperties: true
+propertyNames:
+  not:
+    enum: [is_abuser, is_datacenter, is_suspicious_paid_click]
 description: |-
   One identification as stored, in its latest version. It describes the same identification as a
   webhook `data` object, with different field names:
@@ -46,8 +49,6 @@ required:
   - is_vpn
   - is_tor
   - is_proxy
-  - is_datacenter
-  - is_abuser
   - is_privacy_relay
   - is_stun_not_checked
   - check_incomplete
@@ -179,18 +180,12 @@ properties:
   is_proxy:
     type: boolean
     description: Same meaning as `detection_flags.proxy`.
-  is_datacenter:
-    type: boolean
-    description: Same meaning as `detection_flags.datacenter_ip`.
-  is_abuser:
-    type: boolean
-    description: Same meaning as `detection_flags.abuser`.
   is_privacy_relay:
     type: boolean
-    description: Same meaning as `detection_flags.privacy_relay`.
+    description: Same meaning as `detection_flags.private_relay`.
   is_stun_not_checked:
     type: boolean
-    description: Same meaning as `detection_flags.stun_not_checked`.
+    description: Same meaning as `detection_flags.network_check_incomplete`.
   check_incomplete:
     type: boolean
     description: Same meaning as `detection_flags.check_incomplete`. Always `false` for search-engine crawlers.
@@ -218,9 +213,6 @@ properties:
   is_search_bot:
     type: boolean
     description: Same meaning as `detection_flags.search_bot`.
-  is_suspicious_paid_click:
-    type: boolean
-    description: Same meaning as `detection_flags.suspicious_paid_click`. Omitted when `false`.
   entry_url:
     type: string
     description: >-

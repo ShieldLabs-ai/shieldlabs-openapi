@@ -37,8 +37,6 @@ value:
       is_vpn: false
       is_tor: false
       is_proxy: true
-      is_datacenter: true
-      is_abuser: false
       is_privacy_relay: false
       is_stun_not_checked: false
       check_incomplete: false
@@ -60,7 +58,6 @@ value:
       traffic_channel_group: "Paid Search"
       traffic_reason: "gclid_present"
       click_id_type: "gclid"
-      is_suspicious_paid_click: true
     - identification_id: "7c1e2f4a-3b6d-4e8f-9a0b-1c2d3e4f5a6b"
       session_id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
       cookie_id: "f0e1d2c3-b4a5-4968-8776-655443322110"
@@ -94,8 +91,6 @@ value:
       is_vpn: false
       is_tor: false
       is_proxy: false
-      is_datacenter: false
-      is_abuser: false
       is_privacy_relay: false
       is_stun_not_checked: false
       check_incomplete: false
@@ -143,8 +138,6 @@ value:
       is_vpn: true
       is_tor: false
       is_proxy: false
-      is_datacenter: false
-      is_abuser: false
       is_privacy_relay: false
       is_stun_not_checked: true
       check_incomplete: true
@@ -197,8 +190,6 @@ value:
       is_vpn: false
       is_tor: false
       is_proxy: false
-      is_datacenter: false
-      is_abuser: false
       is_privacy_relay: false
       is_stun_not_checked: false
       check_incomplete: false
@@ -246,8 +237,6 @@ value:
       is_vpn: false
       is_tor: false
       is_proxy: false
-      is_datacenter: false
-      is_abuser: false
       is_privacy_relay: false
       is_stun_not_checked: false
       check_incomplete: false
