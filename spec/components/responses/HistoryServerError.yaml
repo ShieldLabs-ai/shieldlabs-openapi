@@ -1,8 +1,9 @@
 description: |-
   Server error.
-  - `application/json`: the query failed. A malformed UUID or IPv4 value always ends here with the
-    raw database message, so validate the path before sending and do not retry such a request.
-    Other failures are transient.
+  - `application/json`: the query failed. A value that is not a UUID can end here with the raw
+    database message, so validate identifier shape before sending and do not retry that request.
+    An invalid IPv4 address, an unknown search type, a bad page size and a bad filter return `400`
+    instead. Other `500` failures are transient.
   - `text/plain` (JSON text): the key lookup failed. Transient: retry with backoff.
 content:
   application/json:

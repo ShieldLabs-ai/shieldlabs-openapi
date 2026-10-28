@@ -1,0 +1,14 @@
+name: score_from
+in: query
+required: false
+description: >-
+  Inclusive minimum `score`, from 0 through 999. `0` is a real bound. `999` selects the rate-limit
+  marker. Omit it for no minimum. Any other value returns `400`.
+schema:
+  type: integer
+  minimum: 0
+  maximum: 999
+examples:
+  suspicious:
+    summary: Medium band and above
+    value: 30

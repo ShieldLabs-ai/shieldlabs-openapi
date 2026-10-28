@@ -23,13 +23,21 @@ get:
     IP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values
     that do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.
 
-    **Validate before sending.** The server does not validate the path: an unknown `search_type`
-    returns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4
-    value returns `500`, and a `limit` outside 1-100 silently becomes 20.
+    **Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a
+    parameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either
+    `YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.
+    `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
+    rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
+    `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
+    search-engine crawlers. Unknown query parameters are ignored.
+
+    **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
+    outside 1-100, a negative `offset`, or a filter value the server does not accept returns
+    `400`. A value that is not a UUID can still fail the query with `500`.
 
     **Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`
     only, so paging while new identifications arrive can repeat or skip rows: deduplicate on
-    `identification_id`.
+    `identification_id`. Filters apply to `total` as well as to `data`.
 
     **Latest state.** A row can be refined after the webhook was sent, for example when late
     network data re-scores it; its `ver` then increases. The History API always returns the latest
@@ -43,6 +51,27 @@ get:
     - $ref: ../components/parameters/HistoryValue.yaml
     - $ref: ../components/parameters/HistoryLimit.yaml
     - $ref: ../components/parameters/HistoryOffset.yaml
+    - $ref: ../components/parameters/HistoryFrom.yaml
+    - $ref: ../components/parameters/HistoryTo.yaml
+    - $ref: ../components/parameters/HistoryScoreFrom.yaml
+    - $ref: ../components/parameters/HistoryScoreTo.yaml
+    - $ref: ../components/parameters/HistoryFlagVpn.yaml
+    - $ref: ../components/parameters/HistoryFlagTor.yaml
+    - $ref: ../components/parameters/HistoryFlagProxy.yaml
+    - $ref: ../components/parameters/HistoryFlagDatacenter.yaml
+    - $ref: ../components/parameters/HistoryFlagAbuser.yaml
+    - $ref: ../components/parameters/HistoryFlagPrivacyRelay.yaml
+    - $ref: ../components/parameters/HistoryFlagStunNotChecked.yaml
+    - $ref: ../components/parameters/HistoryFlagCheckIncomplete.yaml
+    - $ref: ../components/parameters/HistoryFlagAntidetect.yaml
+    - $ref: ../components/parameters/HistoryFlagOsMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagOsNotDetected.yaml
+    - $ref: ../components/parameters/HistoryFlagTimezoneMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagJsDisabled.yaml
+    - $ref: ../components/parameters/HistoryFlagBrowserAutomation.yaml
+    - $ref: ../components/parameters/HistoryFlagIncognito.yaml
+    - $ref: ../components/parameters/HistoryFlagSearchBot.yaml
+    - $ref: ../components/parameters/HistoryFlagSuspiciousPaidClick.yaml
   responses:
     '200':
       description: Matching identifications, newest first. `data` is empty when nothing matched.
@@ -55,6 +84,8 @@ get:
               $ref: ../components/examples/HistoryPage.yaml
             empty:
               $ref: ../components/examples/HistoryPageEmpty.yaml
+    '400':
+      $ref: ../components/responses/HistoryBadRequest.yaml
     '401':
       $ref: ../components/responses/HistoryUnauthorized.yaml
     '404':

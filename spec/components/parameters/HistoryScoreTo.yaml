@@ -1,0 +1,14 @@
+name: score_to
+in: query
+required: false
+description: >-
+  Inclusive maximum `score`, from 0 through 999. Omit it for no maximum. A value below
+  `score_from`, or any other value, returns `400`.
+schema:
+  type: integer
+  minimum: 0
+  maximum: 999
+examples:
+  marker:
+    summary: Include the rate-limit marker
+    value: 999

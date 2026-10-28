@@ -4,7 +4,7 @@
     "title": "ShieldLabs API",
     "version": "1.0.1",
     "summary": "Identification results and risk scoring for your backend.",
-    "description": "The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent\nruns in a browser: the Risk Score, the risk signals behind it, the detection flags and the\nidentifiers (request, visitor, device, session, cookie and User HID) it belongs to.\n\n## How it fits\n\n1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification\n   and hands your page an Identification ID.\n2. **Your backend.** Your page sends the Identification ID along with the protected action (signup,\n   login, checkout). Your backend reads the verdict for it from the **History API**, or\n   receives it in a signed `identification.scored` **webhook**.\n3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`\n   and the identifiers, for example by counting how many accounts one `device_id` has used\n   (skipping the `user_hid` values that do not identify a user, listed under Identifiers).\n\nScoring is asynchronous. Start the identification when the user begins the\nprotected action (for example when the signup form opens), then either poll the History API by\n`identification_id` with a short backoff or wait for the webhook. Let one identification authorize one\nprotected action: reject Identification IDs you have already used and identifications older than your\nfreshness window.\n\n## Hosts and credentials\n\n| API | Host | Paths | Credentials |\n|---|---|---|---|\n| History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |\n| Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |\n| Health | both hosts | `/health` | none |\n\nEvery operation declares its own server, so generated clients send each call to the right\nhost. The History API serves its paths from the host root: the full URL is\n`https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that\nalready ends in `/api` produces `/api/api/v1/...` and a `404`.\n\nThe two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your\nserver; only the Public Key belongs in the browser. All keys are in the analytics dashboard at\nhttps://app.shieldlabs.ai.\n\n## Rate limits\n\n- **History API:** about 15 requests per second per domain, shared by every caller of that\n  domain. Requests over the limit get `429`; there is no ban, so retry after about a second.\n- **Management API:** 15 requests per minute per client IP. The request that goes over the\n  limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`\n  from this API; cache the profile instead.\n- **Health:** not rate limited.\n\nAPI calls and webhook deliveries are free: only identifications made by the browser agent use\nyour included volume.\n\n## Errors\n\nError bodies are not uniform. Branch on the HTTP status first, then try to parse the body as\nJSON whatever its content type.\n\n| API | Status | Body |\n|---|---|---|\n| History API | 401 | JSON text `{\"error\":\"...\"}`, sent as `text/plain` |\n| History API | 429 | `{\"error\":\"too many requests\"}` |\n| History API | 500 | `{\"error\":\"...\"}`. A malformed UUID or IPv4 value always ends here: validate before sending and do not retry it |\n| Management API | 401 | empty |\n| Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |\n| Management API | 429, 503 | `{\"error\":\"...\"}` |\n| Both | 404 | `404 page not found` as `text/plain` when no route matches |\n| Both | 502, 504 | an HTML page from the edge proxy |\n\nRetry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,\n`401` or `404`, nor a History API `500` caused by a malformed value.\n\n## Identifiers\n\n- `identification_id`: one identification, created in the browser (UUID v4). It joins the browser\n  call, the webhook and the History row.\n- `session_id`: one visit on one origin (UUID v4).\n- `cookie_id`: first-party browser identifier kept by the agent (UUID v4).\n- `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private\n  windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.\n- `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on\n  a known device keeps the visitor ID.\n- `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.\n  `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Leave\n  these values, `null` and the empty string out when you count accounts. Hex-encoded hashes\n  are the easiest values to search: see the `value` parameter of `searchHistory` for how to\n  encode other characters.\n\nValidate UUIDs with any version accepted, the nil UUID included.\n\n## Risk Score, risk bands and the 999 marker\n\nThe Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to\n100. Recognized good bots, including search bots, AI bots and AI browsers, always score 0. The three risk bands are computed on your side; no\nband field exists on the wire:\n\n| Band | Score |\n|---|---|\n| trusted | 0-29 |\n| suspicious | 30-59 |\n| dangerous | 60-100 |\n\nA value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over\nthe ingest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nBranch on `detection_flags` and the Risk Score. Signal names are for display and logging;\nweights can be negative or change between releases, so never add them up yourself. A missing\nidentification means \"unverified\", never \"clean\".\n\n## Countries, IP addresses and timestamps\n\n- `country` values are English country names from IP intelligence, such as `Germany` or\n  `United States`, or an empty string when unknown.\n- IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `\"\"` and the History\n  API sends `0.0.0.0`; such identifications cannot be searched by IP.\n- Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional\n  digits.\n- The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;\n  older rows can lack the milliseconds.\n- The Management API `CreatedAt` is RFC 3339 with second precision.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
+    "description": "The ShieldLabs API gives your backend the result of every identification the ShieldLabs agent\nruns in a browser: the Risk Score, the risk signals behind it, the detection flags and the\nidentifiers (request, visitor, device, session, cookie and User HID) it belongs to.\n\n## How it fits\n\n1. **Browser.** The ShieldLabs agent, loaded from `cdn.shieldlabs.ai`, runs an identification\n   and hands your page an Identification ID.\n2. **Your backend.** Your page sends the Identification ID along with the protected action (signup,\n   login, checkout). Your backend reads the verdict for it from the **History API**, or\n   receives it in a signed `identification.scored` **webhook**.\n3. **Decision.** Your backend acts on `risk_score`, the three risk bands, `detection_flags`\n   and the identifiers, for example by counting how many accounts one `device_id` has used\n   (skipping the `user_hid` values that do not identify a user, listed under Identifiers).\n\nScoring is asynchronous. Start the identification when the user begins the\nprotected action (for example when the signup form opens), then either poll the History API by\n`identification_id` with a short backoff or wait for the webhook. Let one identification authorize one\nprotected action: reject Identification IDs you have already used and identifications older than your\nfreshness window.\n\n## Hosts and credentials\n\n| API | Host | Paths | Credentials |\n|---|---|---|---|\n| History API | `https://account.shieldlabs.ai` | `/api/v1/...` | `Authorization: Bearer <Private API Key>` (`sec_...`, one per domain) |\n| Management API | `https://api.shieldlabs.ai` | `/v1/...` | `X-Shield-Domain: <registered domain>` and `Authorization: Bearer <Secret Key>` |\n| Health | both hosts | `/health` | none |\n\nEvery operation declares its own server, so generated clients send each call to the right\nhost. The History API serves its paths from the host root: the full URL is\n`https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}`, and a base URL that\nalready ends in `/api` produces `/api/api/v1/...` and a `404`.\n\nThe two credentials are not interchangeable. Keep the Private API Key and the Secret Key on your\nserver; only the Public Key belongs in the browser. All keys are in the analytics dashboard at\nhttps://app.shieldlabs.ai.\n\n## Rate limits\n\n- **History API:** about 15 requests per second per domain, shared by every caller of that\n  domain. Requests over the limit get `429`; there is no ban, so retry after about a second.\n- **Management API:** 15 requests per minute per client IP. The request that goes over the\n  limit starts a 10-minute block, during which every request gets `429`. Never retry a `429`\n  from this API; cache the profile instead.\n- **Health:** not rate limited.\n\nAPI calls and webhook deliveries are free: only identifications made by the browser agent use\nyour included volume.\n\n## Errors\n\nError bodies are not uniform. Branch on the HTTP status first, then try to parse the body as\nJSON whatever its content type.\n\n| API | Status | Body |\n|---|---|---|\n| History API | 400 | `{\"code\":\"invalid_request\",\"error\":\"invalid history input\"}` |\n| History API | 401 | JSON text `{\"error\":\"...\"}`, sent as `text/plain` |\n| History API | 429 | `{\"error\":\"too many requests\"}` |\n| History API | 500 | `{\"error\":\"...\"}`. A value that is not a UUID can still end here: validate before sending and do not retry it |\n| Management API | 401 | empty |\n| Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |\n| Management API | 429, 503 | `{\"error\":\"...\"}` |\n| Both | 404 | `404 page not found` as `text/plain` when no route matches |\n| Both | 502, 504 | an HTML page from the edge proxy |\n\nRetry `429` (History API only), `5xx` and network errors with backoff. Do not retry `400`,\n`401` or `404`, nor a History API `500` caused by a malformed value.\n\n## Identifiers\n\n- `identification_id`: one identification, created in the browser (UUID v4). It joins the browser\n  call, the webhook and the History row.\n- `session_id`: one visit on one origin (UUID v4).\n- `cookie_id`: first-party browser identifier kept by the agent (UUID v4).\n- `device_id`: server-side device identifier (UUID v5). It survives cleared cookies and private\n  windows. The nil UUID `00000000-0000-0000-0000-000000000000` means no usable device signals.\n- `visitor_id`: server-side visitor identifier (UUID v5), sticky to the device: a new cookie on\n  a known device keeps the visitor ID.\n- `user_hid`: your hashed or pseudonymous account identifier, as passed to the agent.\n  `anonymous` marks anonymous checks; `fail`, `-1` and `unknown` also mean \"no user\". Leave\n  these values, `null` and the empty string out when you count accounts. Hex-encoded hashes\n  are the easiest values to search: see the `value` parameter of `searchHistory` for how to\n  encode other characters.\n\nValidate UUIDs with any version accepted, the nil UUID included.\n\n## Risk Score, risk bands and the 999 marker\n\nThe Risk Score (`risk_score` on webhooks, `score` in the History API) is an integer from 0 to\n100. Recognized good bots, including search bots, AI bots and AI browsers, always score 0. The three risk bands are computed on your side; no\nband field exists on the wire:\n\n| Band | Score |\n|---|---|\n| trusted | 0-29 |\n| suspicious | 30-59 |\n| dangerous | 60-100 |\n\nA value above 100 is not a score. **999** is the rate-limit marker: the visitor's IP went over\nthe ingest rate limit, and the identification carries exactly one signal,\n`{\"name\":\"banned_ip\",\"weight\":999}`, usually with nil identifiers. Treat every value above\n100 as rate limited. One marker is written when the IP goes over the limit; Identification IDs issued\nwhile it stays blocked get no row and no webhook, so they stay unverified.\n\nBranch on `detection_flags` and the Risk Score. Signal names are for display and logging;\nweights can be negative or change between releases, so never add them up yourself. A missing\nidentification means \"unverified\", never \"clean\".\n\n## Countries, IP addresses and timestamps\n\n- `country` values are English country names from IP intelligence, such as `Germany` or\n  `United States`, or an empty string when unknown.\n- IP fields hold IPv4 addresses. Without an IPv4 address the webhook sends `\"\"` and the History\n  API sends `0.0.0.0`; such identifications cannot be searched by IP.\n- Webhook timestamps (`created_at`, `observed_at`) are RFC 3339 in UTC with up to 9 fractional\n  digits.\n- The History API `created_at` is `YYYY-MM-DD HH:MM:SS.mmm` in UTC without a zone designator;\n  older rows can lack the milliseconds.\n- The Management API `CreatedAt` is RFC 3339 with second precision.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
     "contact": {
       "name": "ShieldLabs",
       "url": "https://docs.shieldlabs.ai",
@@ -61,7 +61,7 @@
           "History API"
         ],
         "summary": "Search identifications",
-        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Validate before sending.** The server does not validate the path: an unknown `search_type`\nreturns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4\nvalue returns `500`, and a `limit` outside 1-100 silently becomes 20.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
+        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\nsearch-engine crawlers. Unknown query parameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
         "security": [
           {
             "historyApiKey": []
@@ -79,6 +79,69 @@
           },
           {
             "$ref": "#/components/parameters/HistoryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFrom"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryTo"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryScoreFrom"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryScoreTo"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagVpn"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagTor"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagProxy"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagDatacenter"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagAbuser"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagPrivacyRelay"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagStunNotChecked"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagCheckIncomplete"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagAntidetect"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagOsMismatch"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagOsNotDetected"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagTimezoneMismatch"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagJsDisabled"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagBrowserAutomation"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagIncognito"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagSearchBot"
+          },
+          {
+            "$ref": "#/components/parameters/HistoryFlagSuspiciousPaidClick"
           }
         ],
         "responses": {
@@ -99,6 +162,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/HistoryBadRequest"
           },
           "401": {
             "$ref": "#/components/responses/HistoryUnauthorized"
@@ -879,7 +945,7 @@
         "name": "search_type",
         "in": "path",
         "required": true,
-        "description": "Identifier to search by:\n- `identification_id`: one identification (read a verdict);\n- `device_id`: every identification of one device;\n- `user_hid`: every identification of one account;\n- `visitor_id`: every identification of one visitor;\n- `ip`: every identification from one public IPv4 address;\n- `session_id`: every identification of one visit;\n- `cookie_id`: every identification with one browser cookie.\n\n`request_id` is a legacy alias of `identification_id` and is still accepted.\nThe server does not reject other values: it ignores them and returns the latest identifications\nof the whole domain, so restrict the value on your side.",
+        "description": "Identifier to search by:\n- `identification_id`: one identification (read a verdict);\n- `device_id`: every identification of one device;\n- `user_hid`: every identification of one account;\n- `visitor_id`: every identification of one visitor;\n- `ip`: every identification from one public IPv4 address;\n- `session_id`: every identification of one visit;\n- `cookie_id`: every identification with one browser cookie.\n\n`request_id` is a legacy alias of `identification_id` and is still accepted.\nAny other value returns `400`.",
         "schema": {
           "type": "string",
           "enum": [
@@ -908,7 +974,7 @@
         "name": "value",
         "in": "path",
         "required": true,
-        "description": "Value of the identifier, validated on your side before sending:\n- `identification_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,\n  the nil UUID included, matching\n  `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it\n  lowercase.\n- `ip`: a dotted IPv4 address. IPv6 addresses cannot be searched.\n- `user_hid`: the exact, case-sensitive User HID as one path segment, encoded the way the\n  server reads it: send the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped and\n  percent-encode every other byte of the UTF-8 value as uppercase `%XX`, including\n  `! ' ( ) *`, spaces and `%` itself. The server compares any other encoding literally, so\n  `%40` instead of `@`, or lowercase hex digits, return an empty page instead of the matching\n  rows. Many HTTP clients and generated clients escape `$ & + , : ; = @` in path values: build\n  this path yourself when yours does. A User HID that contains `/` cannot be searched, and most\n  HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern\n  rejects these values. Hex-encoded hashes need no escaping at all.\n\nThe server does not validate the value: a malformed UUID or IPv4 address gets a `500`.",
+        "description": "Value of the identifier, validated on your side before sending:\n- `identification_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,\n  the nil UUID included, matching\n  `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it\n  lowercase.\n- `ip`: a dotted IPv4 address. IPv6 addresses cannot be searched.\n- `user_hid`: the exact, case-sensitive User HID as one path segment, encoded the way the\n  server reads it: send the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped and\n  percent-encode every other byte of the UTF-8 value as uppercase `%XX`, including\n  `! ' ( ) *`, spaces and `%` itself. The server compares any other encoding literally, so\n  `%40` instead of `@`, or lowercase hex digits, return an empty page instead of the matching\n  rows. Many HTTP clients and generated clients escape `$ & + , : ; = @` in path values: build\n  this path yourself when yours does. A User HID that contains `/` cannot be searched, and most\n  HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern\n  rejects these values. Hex-encoded hashes need no escaping at all.\n\nAn invalid IPv4 address returns `400`. A value that is not a UUID can still fail the query\nwith `500`, so check identifier shape before sending.",
         "schema": {
           "type": "string",
           "minLength": 1,
@@ -933,7 +999,7 @@
         "name": "limit",
         "in": "query",
         "required": false,
-        "description": "Maximum number of identifications to return, from 1 to 100. The server replaces any other value (and a non-numeric one) with 20 instead of clamping it, so validate it on your side.",
+        "description": "Maximum number of identifications to return, from 1 to 100. Omit it for 20. Any other value, including a non-numeric one, returns `400`.",
         "schema": {
           "type": "integer",
           "minimum": 1,
@@ -955,7 +1021,7 @@
         "name": "offset",
         "in": "query",
         "required": false,
-        "description": "Number of identifications to skip, for paging. The server treats negative or non-numeric values as 0. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.",
+        "description": "Number of identifications to skip, for paging. Omit it for 0. A negative or non-numeric value returns `400`. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.",
         "schema": {
           "type": "integer",
           "minimum": 0,
@@ -969,6 +1035,399 @@
           "second": {
             "summary": "Second page of 100",
             "value": 100
+          }
+        }
+      },
+      "HistoryFrom": {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "description": "Inclusive UTC start. `YYYY-MM-DD` means the start of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no start bound. Any other value returns `400`.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?)?$"
+        },
+        "examples": {
+          "day": {
+            "summary": "Start of a UTC day",
+            "value": "2026-08-01"
+          },
+          "instant": {
+            "summary": "An exact UTC time",
+            "value": "2026-08-04 12:00:00"
+          }
+        }
+      },
+      "HistoryTo": {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "description": "Inclusive UTC end. `YYYY-MM-DD` means the end of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no end bound. A value before `from`, or any other shape, returns `400`.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?)?$"
+        },
+        "examples": {
+          "day": {
+            "summary": "End of a UTC day",
+            "value": "2026-08-31"
+          }
+        }
+      },
+      "HistoryScoreFrom": {
+        "name": "score_from",
+        "in": "query",
+        "required": false,
+        "description": "Inclusive minimum `score`, from 0 through 999. `0` is a real bound. `999` selects the rate-limit marker. Omit it for no minimum. Any other value returns `400`.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "examples": {
+          "suspicious": {
+            "summary": "Medium band and above",
+            "value": 30
+          }
+        }
+      },
+      "HistoryScoreTo": {
+        "name": "score_to",
+        "in": "query",
+        "required": false,
+        "description": "Inclusive maximum `score`, from 0 through 999. Omit it for no maximum. A value below `score_from`, or any other value, returns `400`.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "examples": {
+          "marker": {
+            "summary": "Include the rate-limit marker",
+            "value": 999
+          }
+        }
+      },
+      "HistoryFlagVpn": {
+        "name": "is_vpn",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_vpn` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only VPN rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagTor": {
+        "name": "is_tor",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_tor` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only Tor rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagProxy": {
+        "name": "is_proxy",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_proxy` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only proxy rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagDatacenter": {
+        "name": "is_datacenter",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_datacenter` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only datacenter rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagAbuser": {
+        "name": "is_abuser",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_abuser` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only abuser rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagPrivacyRelay": {
+        "name": "is_privacy_relay",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_privacy_relay` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only privacy-relay rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagStunNotChecked": {
+        "name": "is_stun_not_checked",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_stun_not_checked` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only rows whose network check did not run",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagCheckIncomplete": {
+        "name": "check_incomplete",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `check_incomplete` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only rows whose check is incomplete",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagAntidetect": {
+        "name": "is_antidetect",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_antidetect` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only antidetect rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagOsMismatch": {
+        "name": "is_os_mismatch",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_os_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only OS-mismatch rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagOsNotDetected": {
+        "name": "is_os_not_detected",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_os_not_detected` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only rows whose OS was not detected",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagTimezoneMismatch": {
+        "name": "is_timezone_mismatch",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_timezone_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only timezone-mismatch rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagJsDisabled": {
+        "name": "is_js_disabled",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_js_disabled` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only rows with JavaScript disabled",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagBrowserAutomation": {
+        "name": "is_browser_automation",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_browser_automation` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only browser-automation rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagIncognito": {
+        "name": "is_incognito",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_incognito` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only incognito rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagSearchBot": {
+        "name": "is_search_bot",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_search_bot` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only search-engine crawler rows",
+            "value": "true"
+          }
+        }
+      },
+      "HistoryFlagSuspiciousPaidClick": {
+        "name": "is_suspicious_paid_click",
+        "in": "query",
+        "required": false,
+        "description": "When set, keep only rows whose `is_suspicious_paid_click` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "examples": {
+          "match": {
+            "summary": "Only suspicious paid-click rows",
+            "value": "true"
           }
         }
       },
@@ -4836,6 +5295,43 @@
       }
     },
     "responses": {
+      "HistoryBadRequest": {
+        "description": "The path or a query filter is not accepted: an unknown search type, an invalid IPv4 address, a page size outside 1-100, a bad offset, or a filter value the server does not accept. Do not retry.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "error"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "invalid_request"
+                },
+                "error": {
+                  "type": "string",
+                  "description": "Human-readable rejection. Branch on the HTTP status, not on this text.",
+                  "examples": [
+                    "invalid history input"
+                  ]
+                }
+              }
+            },
+            "examples": {
+              "rejected": {
+                "summary": "Rejected history input",
+                "value": {
+                  "code": "invalid_request",
+                  "error": "invalid history input"
+                }
+              }
+            }
+          }
+        }
+      },
       "HistoryUnauthorized": {
         "description": "The `Authorization` header is missing or is not a Bearer token, or the Private API Key is unknown, deleted or belongs to a disabled domain. The body is JSON text sent with `Content-Type: text/plain; charset=utf-8`: parse it as JSON anyway. Do not retry.",
         "content": {
@@ -4885,7 +5381,7 @@
         }
       },
       "HistoryServerError": {
-        "description": "Server error.\n- `application/json`: the query failed. A malformed UUID or IPv4 value always ends here with the\n  raw database message, so validate the path before sending and do not retry such a request.\n  Other failures are transient.\n- `text/plain` (JSON text): the key lookup failed. Transient: retry with backoff.",
+        "description": "Server error.\n- `application/json`: the query failed. A value that is not a UUID can end here with the raw\n  database message, so validate identifier shape before sending and do not retry that request.\n  An invalid IPv4 address, an unknown search type, a bad page size and a bad filter return `400`\n  instead. Other `500` failures are transient.\n- `text/plain` (JSON text): the key lookup failed. Transient: retry with backoff.",
         "content": {
           "application/json": {
             "schema": {

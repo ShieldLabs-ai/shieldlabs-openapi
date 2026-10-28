@@ -61,9 +61,10 @@ info:
 
     | API | Status | Body |
     |---|---|---|
+    | History API | 400 | `{"code":"invalid_request","error":"invalid history input"}` |
     | History API | 401 | JSON text `{"error":"..."}`, sent as `text/plain` |
     | History API | 429 | `{"error":"too many requests"}` |
-    | History API | 500 | `{"error":"..."}`. A malformed UUID or IPv4 value always ends here: validate before sending and do not retry it |
+    | History API | 500 | `{"error":"..."}`. A value that is not a UUID can still end here: validate before sending and do not retry it |
     | Management API | 401 | empty |
     | Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |
     | Management API | 429, 503 | `{"error":"..."}` |
@@ -201,13 +202,21 @@ paths:
         IP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values
         that do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.
 
-        **Validate before sending.** The server does not validate the path: an unknown `search_type`
-        returns the latest identifications of the whole domain unfiltered, a malformed UUID or IPv4
-        value returns `500`, and a `limit` outside 1-100 silently becomes 20.
+        **Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a
+        parameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either
+        `YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.
+        `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
+        rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
+        `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
+        search-engine crawlers. Unknown query parameters are ignored.
+
+        **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
+        outside 1-100, a negative `offset`, or a filter value the server does not accept returns
+        `400`. A value that is not a UUID can still fail the query with `500`.
 
         **Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`
         only, so paging while new identifications arrive can repeat or skip rows: deduplicate on
-        `identification_id`.
+        `identification_id`. Filters apply to `total` as well as to `data`.
 
         **Latest state.** A row can be refined after the webhook was sent, for example when late
         network data re-scores it; its `ver` then increases. The History API always returns the latest
@@ -221,6 +230,27 @@ paths:
         - $ref: '#/components/parameters/HistoryValue'
         - $ref: '#/components/parameters/HistoryLimit'
         - $ref: '#/components/parameters/HistoryOffset'
+        - $ref: '#/components/parameters/HistoryFrom'
+        - $ref: '#/components/parameters/HistoryTo'
+        - $ref: '#/components/parameters/HistoryScoreFrom'
+        - $ref: '#/components/parameters/HistoryScoreTo'
+        - $ref: '#/components/parameters/HistoryFlagVpn'
+        - $ref: '#/components/parameters/HistoryFlagTor'
+        - $ref: '#/components/parameters/HistoryFlagProxy'
+        - $ref: '#/components/parameters/HistoryFlagDatacenter'
+        - $ref: '#/components/parameters/HistoryFlagAbuser'
+        - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
+        - $ref: '#/components/parameters/HistoryFlagStunNotChecked'
+        - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
+        - $ref: '#/components/parameters/HistoryFlagAntidetect'
+        - $ref: '#/components/parameters/HistoryFlagOsMismatch'
+        - $ref: '#/components/parameters/HistoryFlagOsNotDetected'
+        - $ref: '#/components/parameters/HistoryFlagTimezoneMismatch'
+        - $ref: '#/components/parameters/HistoryFlagJsDisabled'
+        - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
+        - $ref: '#/components/parameters/HistoryFlagIncognito'
+        - $ref: '#/components/parameters/HistoryFlagSearchBot'
+        - $ref: '#/components/parameters/HistoryFlagSuspiciousPaidClick'
       responses:
         '200':
           description: Matching identifications, newest first. `data` is empty when nothing matched.
@@ -233,6 +263,8 @@ paths:
                   $ref: '#/components/examples/HistoryPage'
                 empty:
                   $ref: '#/components/examples/HistoryPageEmpty'
+        '400':
+          $ref: '#/components/responses/HistoryBadRequest'
         '401':
           $ref: '#/components/responses/HistoryUnauthorized'
         '404':
@@ -853,8 +885,7 @@ components:
         - `cookie_id`: every identification with one browser cookie.
 
         `request_id` is a legacy alias of `identification_id` and is still accepted.
-        The server does not reject other values: it ignores them and returns the latest identifications
-        of the whole domain, so restrict the value on your side.
+        Any other value returns `400`.
       schema:
         type: string
         enum:
@@ -894,7 +925,8 @@ components:
           HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern
           rejects these values. Hex-encoded hashes need no escaping at all.
 
-        The server does not validate the value: a malformed UUID or IPv4 address gets a `500`.
+        An invalid IPv4 address returns `400`. A value that is not a UUID can still fail the query
+        with `500`, so check identifier shape before sending.
       schema:
         type: string
         minLength: 1
@@ -913,7 +945,7 @@ components:
       name: limit
       in: query
       required: false
-      description: Maximum number of identifications to return, from 1 to 100. The server replaces any other value (and a non-numeric one) with 20 instead of clamping it, so validate it on your side.
+      description: Maximum number of identifications to return, from 1 to 100. Omit it for 20. Any other value, including a non-numeric one, returns `400`.
       schema:
         type: integer
         minimum: 1
@@ -930,7 +962,7 @@ components:
       name: offset
       in: query
       required: false
-      description: 'Number of identifications to skip, for paging. The server treats negative or non-numeric values as 0. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.'
+      description: 'Number of identifications to skip, for paging. Omit it for 0. A negative or non-numeric value returns `400`. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.'
       schema:
         type: integer
         minimum: 0
@@ -942,6 +974,297 @@ components:
         second:
           summary: Second page of 100
           value: 100
+    HistoryFrom:
+      name: from
+      in: query
+      required: false
+      description: Inclusive UTC start. `YYYY-MM-DD` means the start of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no start bound. Any other value returns `400`.
+      schema:
+        type: string
+        pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?)?$
+      examples:
+        day:
+          summary: Start of a UTC day
+          value: '2026-08-01'
+        instant:
+          summary: An exact UTC time
+          value: '2026-08-04 12:00:00'
+    HistoryTo:
+      name: to
+      in: query
+      required: false
+      description: Inclusive UTC end. `YYYY-MM-DD` means the end of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no end bound. A value before `from`, or any other shape, returns `400`.
+      schema:
+        type: string
+        pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?)?$
+      examples:
+        day:
+          summary: End of a UTC day
+          value: '2026-08-31'
+    HistoryScoreFrom:
+      name: score_from
+      in: query
+      required: false
+      description: Inclusive minimum `score`, from 0 through 999. `0` is a real bound. `999` selects the rate-limit marker. Omit it for no minimum. Any other value returns `400`.
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 999
+      examples:
+        suspicious:
+          summary: Medium band and above
+          value: 30
+    HistoryScoreTo:
+      name: score_to
+      in: query
+      required: false
+      description: Inclusive maximum `score`, from 0 through 999. Omit it for no maximum. A value below `score_from`, or any other value, returns `400`.
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 999
+      examples:
+        marker:
+          summary: Include the rate-limit marker
+          value: 999
+    HistoryFlagVpn:
+      name: is_vpn
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_vpn` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only VPN rows
+          value: 'true'
+    HistoryFlagTor:
+      name: is_tor
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_tor` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only Tor rows
+          value: 'true'
+    HistoryFlagProxy:
+      name: is_proxy
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_proxy` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only proxy rows
+          value: 'true'
+    HistoryFlagDatacenter:
+      name: is_datacenter
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_datacenter` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only datacenter rows
+          value: 'true'
+    HistoryFlagAbuser:
+      name: is_abuser
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_abuser` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only abuser rows
+          value: 'true'
+    HistoryFlagPrivacyRelay:
+      name: is_privacy_relay
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_privacy_relay` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only privacy-relay rows
+          value: 'true'
+    HistoryFlagStunNotChecked:
+      name: is_stun_not_checked
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_stun_not_checked` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose network check did not run
+          value: 'true'
+    HistoryFlagCheckIncomplete:
+      name: check_incomplete
+      in: query
+      required: false
+      description: When set, keep only rows whose `check_incomplete` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose check is incomplete
+          value: 'true'
+    HistoryFlagAntidetect:
+      name: is_antidetect
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_antidetect` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only antidetect rows
+          value: 'true'
+    HistoryFlagOsMismatch:
+      name: is_os_mismatch
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_os_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only OS-mismatch rows
+          value: 'true'
+    HistoryFlagOsNotDetected:
+      name: is_os_not_detected
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_os_not_detected` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose OS was not detected
+          value: 'true'
+    HistoryFlagTimezoneMismatch:
+      name: is_timezone_mismatch
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_timezone_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only timezone-mismatch rows
+          value: 'true'
+    HistoryFlagJsDisabled:
+      name: is_js_disabled
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_js_disabled` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows with JavaScript disabled
+          value: 'true'
+    HistoryFlagBrowserAutomation:
+      name: is_browser_automation
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_browser_automation` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only browser-automation rows
+          value: 'true'
+    HistoryFlagIncognito:
+      name: is_incognito
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_incognito` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only incognito rows
+          value: 'true'
+    HistoryFlagSearchBot:
+      name: is_search_bot
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_search_bot` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only search-engine crawler rows
+          value: 'true'
+    HistoryFlagSuspiciousPaidClick:
+      name: is_suspicious_paid_click
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_suspicious_paid_click` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only suspicious paid-click rows
+          value: 'true'
     ShieldDomain:
       name: X-Shield-Domain
       in: header
@@ -3964,6 +4287,31 @@ components:
         event_type: webhook.ping
         schema_version: '2026-06-01'
   responses:
+    HistoryBadRequest:
+      description: 'The path or a query filter is not accepted: an unknown search type, an invalid IPv4 address, a page size outside 1-100, a bad offset, or a filter value the server does not accept. Do not retry.'
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required:
+              - code
+              - error
+            properties:
+              code:
+                type: string
+                const: invalid_request
+              error:
+                type: string
+                description: Human-readable rejection. Branch on the HTTP status, not on this text.
+                examples:
+                  - invalid history input
+          examples:
+            rejected:
+              summary: Rejected history input
+              value:
+                code: invalid_request
+                error: invalid history input
     HistoryUnauthorized:
       description: 'The `Authorization` header is missing or is not a Bearer token, or the Private API Key is unknown, deleted or belongs to a disabled domain. The body is JSON text sent with `Content-Type: text/plain; charset=utf-8`: parse it as JSON anyway. Do not retry.'
       content:
@@ -3996,9 +4344,10 @@ components:
     HistoryServerError:
       description: |-
         Server error.
-        - `application/json`: the query failed. A malformed UUID or IPv4 value always ends here with the
-          raw database message, so validate the path before sending and do not retry such a request.
-          Other failures are transient.
+        - `application/json`: the query failed. A value that is not a UUID can end here with the raw
+          database message, so validate identifier shape before sending and do not retry that request.
+          An invalid IPv4 address, an unknown search type, a bad page size and a bad filter return `400`
+          instead. Other `500` failures are transient.
         - `text/plain` (JSON text): the key lookup failed. Transient: retry with backoff.
       content:
         application/json:

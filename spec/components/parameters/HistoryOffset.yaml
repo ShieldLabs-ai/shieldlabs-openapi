@@ -2,9 +2,9 @@ name: offset
 in: query
 required: false
 description: >-
-  Number of identifications to skip, for paging. The server treats negative or non-numeric values
-  as 0. Rows are ordered by `created_at` only, so paging while new identifications arrive can
-  repeat or skip rows: deduplicate on `identification_id`.
+  Number of identifications to skip, for paging. Omit it for 0. A negative or non-numeric value
+  returns `400`. Rows are ordered by `created_at` only, so paging while new identifications arrive
+  can repeat or skip rows: deduplicate on `identification_id`.
 schema:
   type: integer
   minimum: 0

@@ -1,0 +1,15 @@
+name: is_os_not_detected
+in: query
+required: false
+description: >-
+  When set, keep only rows whose `is_os_not_detected` equals this value. Omit the parameter to leave
+  the flag unconstrained. The only accepted values are `true` and `false`.
+schema:
+  type: string
+  enum:
+    - 'true'
+    - 'false'
+examples:
+  match:
+    summary: Only rows whose OS was not detected
+    value: 'true'

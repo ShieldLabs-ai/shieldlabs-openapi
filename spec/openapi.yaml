@@ -61,9 +61,10 @@ info:
 
     | API | Status | Body |
     |---|---|---|
+    | History API | 400 | `{"code":"invalid_request","error":"invalid history input"}` |
     | History API | 401 | JSON text `{"error":"..."}`, sent as `text/plain` |
     | History API | 429 | `{"error":"too many requests"}` |
-    | History API | 500 | `{"error":"..."}`. A malformed UUID or IPv4 value always ends here: validate before sending and do not retry it |
+    | History API | 500 | `{"error":"..."}`. A value that is not a UUID can still end here: validate before sending and do not retry it |
     | Management API | 401 | empty |
     | Management API | 400 | a bare JSON string or `null` (deprecated history endpoint) |
     | Management API | 429, 503 | `{"error":"..."}` |

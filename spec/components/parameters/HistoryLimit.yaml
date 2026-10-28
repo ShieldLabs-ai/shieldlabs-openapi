@@ -2,8 +2,8 @@ name: limit
 in: query
 required: false
 description: >-
-  Maximum number of identifications to return, from 1 to 100. The server replaces any other value
-  (and a non-numeric one) with 20 instead of clamping it, so validate it on your side.
+  Maximum number of identifications to return, from 1 to 100. Omit it for 20. Any other value,
+  including a non-numeric one, returns `400`.
 schema:
   type: integer
   minimum: 1
