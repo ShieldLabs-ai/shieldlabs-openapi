@@ -17,7 +17,7 @@ required:
   - latency_test
   - anti_detect_browser
   - device_spoofing
-  - banned_ip
+  - rate_limited
   - incognito
   - search_bot
   - ai_bot
@@ -74,10 +74,10 @@ properties:
     description: An anti-detect browser was detected.
   device_spoofing:
     type: boolean
-  banned_ip:
+  rate_limited:
     type: boolean
-    description: The visitor IP is banned for this window. The matching signal
-      weight is 999. Older payloads used rate_limited.
+    description: The visitor exceeded the identification rate limit. Older
+      payloads used banned_ip.
   incognito:
     type: boolean
     description: The browser runs in a private window. False for a search-engine

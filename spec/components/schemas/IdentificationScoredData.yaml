@@ -69,7 +69,7 @@ properties:
     type: array
     description: Weighted risk signals behind `risk_score`, in scoring order. Can be
       empty. The rate-limit marker carries exactly one entry,
-      `{"name":"banned_ip","weight":999}`.
+      `{"name":"rate_limited","weight":999}`.
     items:
       $ref: ./Signal.yaml
   detection_flags:
