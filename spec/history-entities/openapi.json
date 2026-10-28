@@ -72,15 +72,6 @@
             }
           },
           {
-            "name": "include_total",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
             "name": "page_token",
             "in": "query",
             "required": false,
@@ -321,15 +312,6 @@
               "minimum": 1,
               "maximum": 100,
               "default": 20
-            }
-          },
-          {
-            "name": "include_total",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           },
           {
@@ -890,15 +872,6 @@
             }
           },
           {
-            "name": "include_total",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
             "name": "page_token",
             "in": "query",
             "required": false,
@@ -1137,15 +1110,6 @@
               "minimum": 1,
               "maximum": 100,
               "default": 20
-            }
-          },
-          {
-            "name": "include_total",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           },
           {
@@ -2621,11 +2585,6 @@
               "null"
             ],
             "maxLength": 4096
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -2649,11 +2608,6 @@
               "null"
             ],
             "maxLength": 4096
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
           }
         },
         "required": [
