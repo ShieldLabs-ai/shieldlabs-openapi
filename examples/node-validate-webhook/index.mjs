@@ -16,7 +16,7 @@ import schema from '@shieldlabs-ai/openapi/schemas/webhook-event.schema.json' wi
 
 const SAMPLE = {
   body: fileURLToPath(new URL('../../test/fixtures/webhook-identification-scored.raw.txt', import.meta.url)),
-  header: 'sha256=ef87f1f65933ed7536236a3b2354c4ff657c6f7e852cb8d5a7a0ba2604951819',
+  header: 'sha256=2c8e643dcedf8b31e2ff36a64e5a7de165ea9d78e2330aee08aa6a725d670a65',
   secret: 'whsec_00112233445566778899aabbccddeeff',
 };
 

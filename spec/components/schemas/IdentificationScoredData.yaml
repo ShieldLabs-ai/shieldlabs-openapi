@@ -105,7 +105,6 @@ properties:
       browser_vpn_proxy: {type: boolean}
       datacenter_ip: {type: boolean}
       abuser: {type: boolean}
-      suspicious_paid_click: {type: boolean}
   observed_at:
     $ref: ./Rfc3339Timestamp.yaml
     description: Original snapshot scan clock, distinct from envelope created_at.

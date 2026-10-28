@@ -18,7 +18,6 @@
       "privacy_relay": false,
       "proxy": true,
       "stun_not_checked": false,
-      "suspicious_paid_click": false,
       "timezone_mismatch": false,
       "tor": false,
       "vpn": false

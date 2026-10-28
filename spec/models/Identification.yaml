@@ -20,7 +20,7 @@ description: |-
   - `detection_flags`: the `is_*` columns and `check_incomplete`; `browser_vpn_proxy` is
     `connection_type == "browser_vpn_proxy"`; `ip_mismatch` is true (except for search-engine
     crawlers) when a score detail starts with `IP ≠ leakIP` or when the public and the local IP
-    are both known and differ; `suspicious_paid_click` is `false` when omitted;
+    are both known and differ;
   - `observed_at`: `created_at` read as UTC.
 
   From a webhook, the fields are copied; a missing detection flag is `false` and `description` of

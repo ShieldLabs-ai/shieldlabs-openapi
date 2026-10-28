@@ -56,7 +56,6 @@
       "ip_mismatch": false,
       "incognito": false,
       "search_bot": false,
-      "suspicious_paid_click": false,
       "javascript_disabled": false,
       "stun_not_checked": false,
       "check_incomplete": false

@@ -35,8 +35,8 @@ get:
     `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
     rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
     `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-    accepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and
-    `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
+    accepted search bots, AI bots and AI browsers. The removed filters `is_abuser` and `is_datacenter`,
+    and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
     parameters are ignored.
 
     **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`

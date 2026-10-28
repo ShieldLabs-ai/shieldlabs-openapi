@@ -8,7 +8,8 @@ describe('Core 2026-10-09 fixtures',()=>{
   const fixture=JSON.parse(readFileSync(path.join(ROOT,'test/contracts',name+'.json'),'utf8'));
   const {doc,validator}=freshBuild();const schema=doc.components.schemas.IdentificationScoredEvent;
   const result=validator.validate(schema,fixture);assert.ok(result.valid,JSON.stringify(result.errors));
-  for (const key of ['browser_vpn_proxy','datacenter_ip','abuser','suspicious_paid_click']) {
+  assert.equal(JSON.stringify(doc).includes('suspicious_paid_click'), false);
+  for (const key of ['browser_vpn_proxy','datacenter_ip','abuser']) {
    assert.equal(fixture.data.detection_flags[key],undefined);
    const broken=structuredClone(fixture);broken.data.detection_flags[key]=false;
    assert.equal(validator.validate(schema,broken).valid,false,key+' forbidden');

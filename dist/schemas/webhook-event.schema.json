@@ -600,9 +600,6 @@
             },
             "abuser": {
               "type": "boolean"
-            },
-            "suspicious_paid_click": {
-              "type": "boolean"
             }
           }
         },
@@ -914,16 +911,6 @@
                           ],
                           "properties": {
                             "abuser": {}
-                          },
-                          "additionalProperties": true
-                        },
-                        {
-                          "type": "object",
-                          "required": [
-                            "suspicious_paid_click"
-                          ],
-                          "properties": {
-                            "suspicious_paid_click": {}
                           },
                           "additionalProperties": true
                         }
@@ -1268,11 +1255,6 @@
         "search_bot": {
           "type": "boolean",
           "description": "A search-engine crawler. Its Risk Score is always 0."
-        },
-        "suspicious_paid_click": {
-          "type": "boolean",
-          "deprecated": true,
-          "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
         },
         "javascript_disabled": {
           "type": "boolean",
