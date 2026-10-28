@@ -18,7 +18,8 @@ description: |-
     HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern
     rejects these values. Hex-encoded hashes need no escaping at all.
 
-  The server does not validate the value: a malformed UUID or IPv4 address gets a `500`.
+  An invalid IPv4 address returns `400`. A value that is not a UUID can still fail the query
+  with `500`, so check identifier shape before sending.
 schema:
   type: string
   minLength: 1

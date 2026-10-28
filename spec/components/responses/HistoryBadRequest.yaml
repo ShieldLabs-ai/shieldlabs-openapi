@@ -1,0 +1,26 @@
+description: >-
+  The path or a query filter is not accepted: an unknown search type, an invalid IPv4 address, a
+  page size outside 1-100, a bad offset, or a filter value the server does not accept. Do not retry.
+content:
+  application/json:
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - error
+      properties:
+        code:
+          type: string
+          const: invalid_request
+        error:
+          type: string
+          description: Human-readable rejection. Branch on the HTTP status, not on this text.
+          examples:
+            - invalid history input
+    examples:
+      rejected:
+        summary: Rejected history input
+        value:
+          code: invalid_request
+          error: invalid history input

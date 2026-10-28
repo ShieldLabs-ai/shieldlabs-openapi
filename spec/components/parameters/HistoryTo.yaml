@@ -1,0 +1,14 @@
+name: to
+in: query
+required: false
+description: >-
+  Inclusive UTC end. `YYYY-MM-DD` means the end of that day. `YYYY-MM-DD HH:MM:SS` is an exact time
+  and may include a fractional second. Omit it for no end bound. A value before `from`, or any
+  other shape, returns `400`.
+schema:
+  type: string
+  pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?)?$'
+examples:
+  day:
+    summary: End of a UTC day
+    value: '2026-08-31'

@@ -35,6 +35,10 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- History API `searchHistory` accepts optional `from`, `to`, `score_from`, `score_to` and detection-flag query parameters. They narrow one identifier; omitting them keeps the previous page.
+
 ### Changed
 
 - Remove the public `fingerprint` device-card block from webhook schemas and examples. Account sharing, takeover and travel remain available through `hre`; `device_id` remains the public device identity.
