@@ -165,7 +165,7 @@ servers:
     description: Management API (every operation also declares its own server)
 tags:
   - name: History API
-    description: 'Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private API Key. The canonical way to read a verdict: by `identification_id` right after a protected action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks.'
+    description: Read History entities for one public domain UUID on `https://account.shieldlabs.ai` with the Private API Key. Lists are `identifications` and `user`. Cards are `identifications`, `user`, `visitor`, `device` and `ip`. The old search route returns `410 endpoint_retired`.
   - name: Management API
     description: Domain profile on `https://api.shieldlabs.ai`, authenticated with the Secret Key and the `X-Shield-Domain` header. Also serves the deprecated history endpoint until 1 January 2027.
   - name: Health
@@ -184,8 +184,14 @@ paths:
       operationId: searchHistory
       tags:
         - History API
-      summary: Search identifications
+      summary: Retired identification search
       description: |-
+        This route returns `410 endpoint_retired` and does not run the search. Use
+        `GET /api/v1/domains/{domain}/history/{resource}` and
+        `GET /api/v1/domains/{domain}/history/{resource}/{id}`. `{domain}` is the public domain UUID.
+
+        The description below is the previous contract, kept so existing field docs stay attached to this operation until clients move.
+
         Returns the identifications of your domain that match one identifier, newest first, together
         with the total number of matches. The Private API Key selects the domain; identifications from
         its subdomains are included (`domain` holds the host, `site_domain` the registered domain).
@@ -274,6 +280,32 @@ paths:
           $ref: '#/components/responses/HistoryUnauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '410':
+          description: The unscoped search route is retired. `error.code` is `endpoint_retired`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: object
+                    required:
+                      - code
+                      - message
+                    properties:
+                      code:
+                        type: string
+                        const: endpoint_retired
+                      message:
+                        type: string
+              examples:
+                retired:
+                  value:
+                    error:
+                      code: endpoint_retired
+                      message: endpoint_retired
         '429':
           $ref: '#/components/responses/HistoryTooManyRequests'
         '500':
@@ -288,6 +320,291 @@ paths:
           source: |
             curl "https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
               -H "Authorization: Bearer $SHIELDLABS_API_KEY"
+  /api/v1/domains/{domain}/history/{resource}:
+    servers:
+      - url: https://account.shieldlabs.ai
+        description: History API
+    get:
+      operationId: listHistoryEntities
+      tags:
+        - History API
+      summary: List History entities
+      description: |-
+        Lists `identifications` or `user` for one domain. `{domain}` is the public domain UUID.
+        Literal `all` returns `403 domain_scope_not_supported`. A list of `visitor`, `device` or `ip`
+        returns `403 entity_list_disabled`. `session` and `cookie` are not resources.
+
+        The old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.
+        Page with `page_token`, not `offset`. `from` and `to` are both required when either is set,
+        RFC3339, and the window is half-open.
+      security:
+        - historyApiKey: []
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          description: Public domain UUID of the site whose History is being read.
+          schema:
+            type: string
+            format: uuid
+          examples:
+            owned:
+              value: 00000000-0000-4000-8000-000000000031
+        - name: resource
+          in: path
+          required: true
+          description: History resource. Lists are enabled for identifications and user only.
+          schema:
+            type: string
+            enum:
+              - identifications
+              - user
+              - visitor
+              - device
+              - ip
+          examples:
+            identifications:
+              value: identifications
+        - name: limit
+          in: query
+          required: false
+          description: Maximum records in the page, from 1 through 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          examples:
+            page:
+              value: 20
+        - name: page_token
+          in: query
+          required: false
+          description: Opaque token from the previous page. Omit it on the first page.
+          schema:
+            type: string
+          examples:
+            next:
+              value: next-page
+        - name: from
+          in: query
+          required: false
+          description: Inclusive RFC3339 start. Send `to` as well, or send neither.
+          schema:
+            type: string
+            format: date-time
+          examples:
+            start:
+              value: '2026-10-27T00:00:00Z'
+        - name: to
+          in: query
+          required: false
+          description: Exclusive RFC3339 end. Send `from` as well, or send neither.
+          schema:
+            type: string
+            format: date-time
+          examples:
+            end:
+              value: '2026-10-28T00:00:00Z'
+      responses:
+        '200':
+          description: A page of entity records.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - type
+                        - id
+                        - risk
+                        - signals
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - identification
+                            - user
+                            - visitor
+                            - device
+                            - ip
+                        id:
+                          type: string
+                        risk:
+                          type: object
+                          required:
+                            - state
+                          properties:
+                            state:
+                              type: string
+                              enum:
+                                - ok
+                                - unavailable
+                            band:
+                              type: string
+                              enum:
+                                - trusted
+                                - suspicious
+                                - dangerous
+                            score:
+                              type: integer
+                              minimum: 0
+                              maximum: 100
+                        signals:
+                          type: object
+                          required:
+                            - state
+                            - items
+                          properties:
+                            state:
+                              type: string
+                              enum:
+                                - ok
+                                - unavailable
+                            items:
+                              type: array
+                              items:
+                                type: string
+                  next_page_token:
+                    type: string
+                  total:
+                    type: integer
+                    minimum: 0
+              examples:
+                identifications:
+                  value:
+                    data:
+                      - type: identification
+                        id: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+                        risk:
+                          state: ok
+                          band: suspicious
+                          score: 42
+                        signals:
+                          state: unavailable
+                          items: []
+        '400':
+          description: The query is not valid. `error.code` is `invalid_query` or `invalid_domain_scope`.
+        '401':
+          $ref: '#/components/responses/HistoryUnauthorized'
+        '403':
+          description: '`domain_scope_not_supported` or `entity_list_disabled`.'
+  /api/v1/domains/{domain}/history/{resource}/{id}:
+    servers:
+      - url: https://account.shieldlabs.ai
+        description: History API
+    get:
+      operationId: getHistoryEntity
+      tags:
+        - History API
+      summary: Read one History entity
+      description: |-
+        Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.
+        `{domain}` is the public domain UUID. The identification record uses `type: identification`.
+        An unknown id returns `404 not_found`. The same id on more than one owned domain returns
+        `409 ambiguous_entity_id`.
+      security:
+        - historyApiKey: []
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          description: Public domain UUID of the site whose History is being read.
+          schema:
+            type: string
+            format: uuid
+          examples:
+            owned:
+              value: 00000000-0000-4000-8000-000000000031
+        - name: resource
+          in: path
+          required: true
+          description: History resource. A card exists for identifications, user, visitor, device and ip.
+          schema:
+            type: string
+            enum:
+              - identifications
+              - user
+              - visitor
+              - device
+              - ip
+          examples:
+            identifications:
+              value: identifications
+        - name: id
+          in: path
+          required: true
+          description: Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+          schema:
+            type: string
+          examples:
+            identification:
+              value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+      responses:
+        '200':
+          description: The entity card.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - type
+                      - id
+                    properties:
+                      type:
+                        type: string
+                      id:
+                        type: string
+                      risk:
+                        type: object
+                        properties:
+                          state:
+                            type: string
+                          band:
+                            type: string
+                          score:
+                            type: integer
+                            minimum: 0
+                            maximum: 100
+                      signals:
+                        type: object
+                        properties:
+                          state:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: string
+              examples:
+                identification:
+                  value:
+                    data:
+                      type: identification
+                      id: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+                      risk:
+                        state: ok
+                        band: trusted
+                        score: 10
+                      signals:
+                        state: unavailable
+                        items: []
+        '401':
+          $ref: '#/components/responses/HistoryUnauthorized'
+        '404':
+          description: '`not_found` when the id is not in this domain.'
+        '409':
+          description: '`ambiguous_entity_id` when the id matches more than one domain.'
   /v1/profile:
     servers:
       - url: https://api.shieldlabs.ai

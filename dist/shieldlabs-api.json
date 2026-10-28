@@ -28,7 +28,7 @@
   "tags": [
     {
       "name": "History API",
-      "description": "Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private API Key. The canonical way to read a verdict: by `identification_id` right after a protected action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks."
+      "description": "Read History entities for one public domain UUID on `https://account.shieldlabs.ai` with the Private API Key. Lists are `identifications` and `user`. Cards are `identifications`, `user`, `visitor`, `device` and `ip`. The old search route returns `410 endpoint_retired`."
     },
     {
       "name": "Management API",
@@ -60,8 +60,8 @@
         "tags": [
           "History API"
         ],
-        "summary": "Search identifications",
-        "description": "Returns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\naccepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
+        "summary": "Retired identification search",
+        "description": "This route returns `410 endpoint_retired` and does not run the search. Use\n`GET /api/v1/domains/{domain}/history/{resource}` and\n`GET /api/v1/domains/{domain}/history/{resource}/{id}`. `{domain}` is the public domain UUID.\n\nThe description below is the previous contract, kept so existing field docs stay attached to this operation until clients move.\n\nReturns the identifications of your domain that match one identifier, newest first, together\nwith the total number of matches. The Private API Key selects the domain; identifications from\nits subdomains are included (`domain` holds the host, `site_domain` the registered domain).\n\n**Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row\nbecomes available asynchronously, so start the identification when the user begins the\naction (for example when the signup form opens), not when the form is submitted. An empty\n`data` array means \"not scored yet\", never \"clean\". Poll with backoff (first try at once, then\nwait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as\n\"wait longer\". The official server SDKs do this for you.\n\n**Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how\nmany accounts share a device, how many devices one account uses, or what else came from one\nIP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values\nthat do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.\n\n**Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a\nparameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either\n`YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.\n`score_from` and `score_to` are integers from 0 through 999, so `999` still selects the\nrate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.\n`check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for\naccepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and\n`is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query\nparameters are ignored.\n\n**Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`\noutside 1-100, a negative `offset`, or a filter value the server does not accept returns\n`400`. A value that is not a UUID can still fail the query with `500`.\n\n**Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`\nonly, so paging while new identifications arrive can repeat or skip rows: deduplicate on\n`identification_id`. Filters apply to `total` as well as to `data`.\n\n**Latest state.** A row can be refined after the webhook was sent, for example when late\nnetwork data re-scores it; its `ver` then increases. The History API always returns the latest\nversion, which makes it the guaranteed read path.\n\nReads are free: they do not use your included identifications.",
         "security": [
           {
             "historyApiKey": []
@@ -181,6 +181,47 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "410": {
+            "description": "The unscoped search route is retired. `error.code` is `endpoint_retired`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "const": "endpoint_retired"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "retired": {
+                    "value": {
+                      "error": {
+                        "code": "endpoint_retired",
+                        "message": "endpoint_retired"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "$ref": "#/components/responses/HistoryTooManyRequests"
           },
@@ -201,6 +242,420 @@
             "source": "curl \"https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1\" \\\n  -H \"Authorization: Bearer $SHIELDLABS_API_KEY\"\n"
           }
         ]
+      }
+    },
+    "/api/v1/domains/{domain}/history/{resource}": {
+      "servers": [
+        {
+          "url": "https://account.shieldlabs.ai",
+          "description": "History API"
+        }
+      ],
+      "get": {
+        "operationId": "listHistoryEntities",
+        "tags": [
+          "History API"
+        ],
+        "summary": "List History entities",
+        "description": "Lists `identifications` or `user` for one domain. `{domain}` is the public domain UUID.\nLiteral `all` returns `403 domain_scope_not_supported`. A list of `visitor`, `device` or `ip`\nreturns `403 entity_list_disabled`. `session` and `cookie` are not resources.\n\nThe old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.\nPage with `page_token`, not `offset`. `from` and `to` are both required when either is set,\nRFC3339, and the window is half-open.",
+        "security": [
+          {
+            "historyApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "description": "Public domain UUID of the site whose History is being read.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "examples": {
+              "owned": {
+                "value": "00000000-0000-4000-8000-000000000031"
+              }
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "History resource. Lists are enabled for identifications and user only.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            },
+            "examples": {
+              "identifications": {
+                "value": "identifications"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum records in the page, from 1 through 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "examples": {
+              "page": {
+                "value": 20
+              }
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "description": "Opaque token from the previous page. Omit it on the first page.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "next": {
+                "value": "next-page"
+              }
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive RFC3339 start. Send `to` as well, or send neither.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "examples": {
+              "start": {
+                "value": "2026-10-27T00:00:00Z"
+              }
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Exclusive RFC3339 end. Send `from` as well, or send neither.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "examples": {
+              "end": {
+                "value": "2026-10-28T00:00:00Z"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of entity records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "id",
+                          "risk",
+                          "signals"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "identification",
+                              "user",
+                              "visitor",
+                              "device",
+                              "ip"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "risk": {
+                            "type": "object",
+                            "required": [
+                              "state"
+                            ],
+                            "properties": {
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "unavailable"
+                                ]
+                              },
+                              "band": {
+                                "type": "string",
+                                "enum": [
+                                  "trusted",
+                                  "suspicious",
+                                  "dangerous"
+                                ]
+                              },
+                              "score": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              }
+                            }
+                          },
+                          "signals": {
+                            "type": "object",
+                            "required": [
+                              "state",
+                              "items"
+                            ],
+                            "properties": {
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "unavailable"
+                                ]
+                              },
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next_page_token": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "examples": {
+                  "identifications": {
+                    "value": {
+                      "data": [
+                        {
+                          "type": "identification",
+                          "id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+                          "risk": {
+                            "state": "ok",
+                            "band": "suspicious",
+                            "score": 42
+                          },
+                          "signals": {
+                            "state": "unavailable",
+                            "items": []
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query is not valid. `error.code` is `invalid_query` or `invalid_domain_scope`."
+          },
+          "401": {
+            "$ref": "#/components/responses/HistoryUnauthorized"
+          },
+          "403": {
+            "description": "`domain_scope_not_supported` or `entity_list_disabled`."
+          }
+        }
+      }
+    },
+    "/api/v1/domains/{domain}/history/{resource}/{id}": {
+      "servers": [
+        {
+          "url": "https://account.shieldlabs.ai",
+          "description": "History API"
+        }
+      ],
+      "get": {
+        "operationId": "getHistoryEntity",
+        "tags": [
+          "History API"
+        ],
+        "summary": "Read one History entity",
+        "description": "Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.\n`{domain}` is the public domain UUID. The identification record uses `type: identification`.\nAn unknown id returns `404 not_found`. The same id on more than one owned domain returns\n`409 ambiguous_entity_id`.",
+        "security": [
+          {
+            "historyApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "description": "Public domain UUID of the site whose History is being read.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "examples": {
+              "owned": {
+                "value": "00000000-0000-4000-8000-000000000031"
+              }
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "History resource. A card exists for identifications, user, visitor, device and ip.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "identifications",
+                "user",
+                "visitor",
+                "device",
+                "ip"
+              ]
+            },
+            "examples": {
+              "identifications": {
+                "value": "identifications"
+              }
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "identification": {
+                "value": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The entity card.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "id"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "type": "string"
+                            },
+                            "band": {
+                              "type": "string"
+                            },
+                            "score": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 100
+                            }
+                          }
+                        },
+                        "signals": {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "type": "string"
+                            },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "identification": {
+                    "value": {
+                      "data": {
+                        "type": "identification",
+                        "id": "a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d",
+                        "risk": {
+                          "state": "ok",
+                          "band": "trusted",
+                          "score": 10
+                        },
+                        "signals": {
+                          "state": "unavailable",
+                          "items": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HistoryUnauthorized"
+          },
+          "404": {
+            "description": "`not_found` when the id is not in this domain."
+          },
+          "409": {
+            "description": "`ambiguous_entity_id` when the id matches more than one domain."
+          }
+        }
       }
     },
     "/v1/profile": {

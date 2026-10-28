@@ -64,6 +64,8 @@ describe('document', () => {
     const { doc } = freshBuild();
     const found = operations(doc).map((op) => [op.kind, op.key, op.method, op.operation.operationId]);
     assert.deepEqual(found.sort(), [
+      ['path', '/api/v1/domains/{domain}/history/{resource}', 'get', 'listHistoryEntities'],
+      ['path', '/api/v1/domains/{domain}/history/{resource}/{id}', 'get', 'getHistoryEntity'],
       ['path', '/api/v1/history/{search_type}/{value}', 'get', 'searchHistory'],
       ['path', '/health', 'get', 'getHealth'],
       ['path', '/v1/history/{type}/{value}', 'get', 'searchHistoryDeprecated'],

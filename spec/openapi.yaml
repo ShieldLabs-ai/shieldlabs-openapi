@@ -169,9 +169,10 @@ servers:
 tags:
   - name: History API
     description: >-
-      Read identifications by one identifier on `https://account.shieldlabs.ai` with the Private
-      API Key. The canonical way to read a verdict: by `identification_id` right after a protected
-      action, or by `device_id`, `user_hid`, `visitor_id` or `ip` for account-level checks.
+      Read History entities for one public domain UUID on `https://account.shieldlabs.ai`
+      with the Private API Key. Lists are `identifications` and `user`. Cards are
+      `identifications`, `user`, `visitor`, `device` and `ip`. The old search route returns
+      `410 endpoint_retired`.
   - name: Management API
     description: >-
       Domain profile on `https://api.shieldlabs.ai`, authenticated with the Secret Key and the
@@ -186,6 +187,10 @@ tags:
 paths:
   /api/v1/history/{search_type}/{value}:
     $ref: ./paths/history.yaml
+  /api/v1/domains/{domain}/history/{resource}:
+    $ref: ./paths/history-entity-list.yaml
+  /api/v1/domains/{domain}/history/{resource}/{id}:
+    $ref: ./paths/history-entity-detail.yaml
   /v1/profile:
     $ref: ./paths/profile.yaml
   /v1/history/{type}/{value}:

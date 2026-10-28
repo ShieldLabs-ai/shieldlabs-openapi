@@ -1,0 +1,101 @@
+servers:
+  - url: https://account.shieldlabs.ai
+    description: History API
+get:
+  operationId: getHistoryEntity
+  tags:
+    - History API
+  summary: Read one History entity
+  description: |-
+    Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.
+    `{domain}` is the public domain UUID. The identification record uses `type: identification`.
+    An unknown id returns `404 not_found`. The same id on more than one owned domain returns
+    `409 ambiguous_entity_id`.
+  security:
+    - historyApiKey: []
+  parameters:
+    - name: domain
+      in: path
+      required: true
+      description: Public domain UUID of the site whose History is being read.
+      schema:
+        type: string
+        format: uuid
+      examples:
+        owned:
+          value: 00000000-0000-4000-8000-000000000031
+    - name: resource
+      in: path
+      required: true
+      description: History resource. A card exists for identifications, user, visitor, device and ip.
+      schema:
+        type: string
+        enum: [identifications, user, visitor, device, ip]
+      examples:
+        identifications:
+          value: identifications
+    - name: id
+      in: path
+      required: true
+      description: Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+      schema:
+        type: string
+      examples:
+        identification:
+          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+  responses:
+    '200':
+      description: The entity card.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                  id:
+                    type: string
+                  risk:
+                    type: object
+                    properties:
+                      state:
+                        type: string
+                      band:
+                        type: string
+                      score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                  signals:
+                    type: object
+                    properties:
+                      state:
+                        type: string
+                      items:
+                        type: array
+                        items:
+                          type: string
+          examples:
+            identification:
+              value:
+                data:
+                  type: identification
+                  id: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+                  risk:
+                    state: ok
+                    band: trusted
+                    score: 10
+                  signals:
+                    state: unavailable
+                    items: []
+    '404':
+      description: '`not_found` when the id is not in this domain.'
+    '409':
+      description: '`ambiguous_entity_id` when the id matches more than one domain.'
+    '401':
+      $ref: ../components/responses/HistoryUnauthorized.yaml
