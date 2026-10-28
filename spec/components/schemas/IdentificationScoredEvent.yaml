@@ -178,12 +178,6 @@ allOf:
                     properties:
                       abuser: {}
                     additionalProperties: true
-                  - type: object
-                    required:
-                      - suspicious_paid_click
-                    properties:
-                      suspicious_paid_click: {}
-                    additionalProperties: true
               additionalProperties: true
           additionalProperties: true
       additionalProperties: true

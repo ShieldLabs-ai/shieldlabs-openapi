@@ -388,7 +388,6 @@
           "enum": [
             "is_abuser",
             "is_datacenter",
-            "is_suspicious_paid_click",
             "is_stun_not_checked"
           ]
         }

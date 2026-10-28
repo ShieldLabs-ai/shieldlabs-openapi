@@ -32,7 +32,7 @@
     {
       "name": "valid_utf8_multibyte_body",
       "secret": "whsec_test_4f1a9c2e7b5d3a8f6e0c1b2d9a7e5f3c",
-      "body": "{\"event_type\":\"webhook.ping\",\"schema_version\":\"2026-06-01\",\"created_at\":\"2026-09-30T10:15:00Z\",\"note\":\"проверка ✓ 日本\"}",
+      "body": "{\"event_type\":\"webhook.ping\",\"schema_version\":\"2026-06-01\",\"created_at\":\"2026-09-30T10:15:00Z\",\"note\":\"\u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u2713 \u65e5\u672c\"}",
       "body_base64": "eyJldmVudF90eXBlIjoid2ViaG9vay5waW5nIiwic2NoZW1hX3ZlcnNpb24iOiIyMDI2LTA2LTAxIiwiY3JlYXRlZF9hdCI6IjIwMjYtMDktMzBUMTA6MTU6MDBaIiwibm90ZSI6ItC/0YDQvtCy0LXRgNC60LAg4pyTIOaXpeacrCJ9",
       "signature_header": "sha256=64a1212632b11b58dde55df7689bad609ae82f84681608ce3394da4d399b4362",
       "valid": true,

@@ -57,7 +57,6 @@ value:
       ip_mismatch: true
       incognito: false
       search_bot: false
-      suspicious_paid_click: true
       javascript_disabled: false
       stun_not_checked: false
       check_incomplete: false

@@ -4,7 +4,7 @@
   "title": "Identification",
   "type": "object",
   "additionalProperties": true,
-  "description": "One identification in the shape the official ShieldLabs server SDKs return, whether it was read\nfrom the History API or received in an `identification.scored` webhook. Field names follow the\nwebhook `data` object. Conversion rules from a History row:\n- `user_hid`: an empty string becomes `null`; `anonymous` and the other markers stay strings;\n- `domain`: `site_domain` when present, otherwise `domain`;\n- `public_ip`: `ip` (`0.0.0.0` becomes `\"\"`) and `country`;\n- `local_ip`: `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not\n  `none`, otherwise `web_rtc_ip` and `web_rtc_country` (`0.0.0.0` becomes `\"\"`);\n- `traffic_source`: `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type` and the\n  `utm_*` fields, `\"\"` when omitted;\n- `risk_score`: `score`;\n- `signals`: the `score_details` entries with a non-zero `Value`, in order, each with a signal\n  name derived from its description, the weight and the original description;\n- `detection_flags`: the `is_*` columns and `check_incomplete`; `browser_vpn_proxy` is\n  `connection_type == \"browser_vpn_proxy\"`; `ip_mismatch` is true (except for search-engine\n  crawlers) when a score detail starts with `IP ≠ leakIP` or when the public and the local IP\n  are both known and differ; `suspicious_paid_click` is `false` when omitted;\n- `observed_at`: `created_at` read as UTC.\n\nFrom a webhook, the fields are copied; a missing detection flag is `false` and `description` of\nevery signal is `null`. In JSON, `observed_at` is RFC 3339 in UTC with millisecond precision\n(truncated, never rounded).",
+  "description": "One identification in the shape the official ShieldLabs server SDKs return, whether it was read\nfrom the History API or received in an `identification.scored` webhook. Field names follow the\nwebhook `data` object. Conversion rules from a History row:\n- `user_hid`: an empty string becomes `null`; `anonymous` and the other markers stay strings;\n- `domain`: `site_domain` when present, otherwise `domain`;\n- `public_ip`: `ip` (`0.0.0.0` becomes `\"\"`) and `country`;\n- `local_ip`: `webrtc_leak_ip` and `webrtc_leak_country` when `webrtc_leak_source` is set and not\n  `none`, otherwise `web_rtc_ip` and `web_rtc_country` (`0.0.0.0` becomes `\"\"`);\n- `traffic_source`: `traffic_channel`, `referrer_domain`, `entry_url`, `click_id_type` and the\n  `utm_*` fields, `\"\"` when omitted;\n- `risk_score`: `score`;\n- `signals`: the `score_details` entries with a non-zero `Value`, in order, each with a signal\n  name derived from its description, the weight and the original description;\n- `detection_flags`: the `is_*` columns and `check_incomplete`; `browser_vpn_proxy` is\n  `connection_type == \"browser_vpn_proxy\"`; `ip_mismatch` is true (except for search-engine\n  crawlers) when a score detail starts with `IP ≠ leakIP` or when the public and the local IP\n  are both known and differ;\n- `observed_at`: `created_at` read as UTC.\n\nFrom a webhook, the fields are copied; a missing detection flag is `false` and `description` of\nevery signal is `null`. In JSON, `observed_at` is RFC 3339 in UTC with millisecond precision\n(truncated, never rounded).",
   "required": [
     "identification_id",
     "visitor_id",
@@ -512,11 +512,6 @@
         "search_bot": {
           "type": "boolean",
           "description": "A search-engine crawler. Its Risk Score is always 0."
-        },
-        "suspicious_paid_click": {
-          "type": "boolean",
-          "deprecated": true,
-          "description": "The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included)."
         },
         "javascript_disabled": {
           "type": "boolean",

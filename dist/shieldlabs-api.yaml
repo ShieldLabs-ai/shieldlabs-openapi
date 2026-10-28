@@ -147,8 +147,8 @@ paths:
         `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
         rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
         `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-        accepted search bots, AI bots and AI browsers. The removed filters `is_abuser`, `is_datacenter` and
-        `is_suspicious_paid_click`, and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
+        accepted search bots, AI bots and AI browsers. The removed filters `is_abuser` and `is_datacenter`,
+        and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
         parameters are ignored.
 
         **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
@@ -1634,7 +1634,7 @@ components:
       examples:
         identificationScored:
           summary: Signature of the identification.scored example
-          value: sha256=ef87f1f65933ed7536236a3b2354c4ff657c6f7e852cb8d5a7a0ba2604951819
+          value: sha256=2c8e643dcedf8b31e2ff36a64e5a7de165ea9d78e2330aee08aa6a725d670a65
         webhookPing:
           summary: Signature of the webhook.ping example
           value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8
@@ -2102,7 +2102,6 @@ components:
           enum:
             - is_abuser
             - is_datacenter
-            - is_suspicious_paid_click
             - is_stun_not_checked
       description: |-
         One identification as stored, in its latest version. It describes the same identification as a
@@ -2835,10 +2834,6 @@ components:
         search_bot:
           type: boolean
           description: A search-engine crawler. Its Risk Score is always 0.
-        suspicious_paid_click:
-          type: boolean
-          deprecated: true
-          description: The visit came from a paid ad click (Google Ads, Meta, TikTok, Microsoft Ads, LinkedIn, Pinterest or X) and the Risk Score is 60 or more (the 999 marker included).
         javascript_disabled:
           type: boolean
           description: JavaScript, or the browser APIs the checks need, were unavailable.
@@ -3499,8 +3494,6 @@ components:
               type: boolean
             abuser:
               type: boolean
-            suspicious_paid_click:
-              type: boolean
         observed_at:
           $ref: '#/components/schemas/Rfc3339Timestamp'
           description: Original snapshot scan clock, distinct from envelope created_at. RFC 3339 in UTC with up to 9 fractional digits.
@@ -3717,12 +3710,6 @@ components:
                             - abuser
                           properties:
                             abuser: {}
-                          additionalProperties: true
-                        - type: object
-                          required:
-                            - suspicious_paid_click
-                          properties:
-                            suspicious_paid_click: {}
                           additionalProperties: true
                     additionalProperties: true
                 additionalProperties: true
@@ -4582,7 +4569,6 @@ components:
             ip_mismatch: true
             incognito: false
             search_bot: false
-            suspicious_paid_click: true
             javascript_disabled: false
             stun_not_checked: false
             check_incomplete: false
@@ -4642,7 +4628,6 @@ components:
             ip_mismatch: false
             incognito: false
             search_bot: false
-            suspicious_paid_click: false
             javascript_disabled: false
             stun_not_checked: false
             check_incomplete: false
@@ -4670,7 +4655,6 @@ components:
             privacy_relay: false
             proxy: true
             stun_not_checked: false
-            suspicious_paid_click: false
             timezone_mismatch: false
             tor: false
             vpn: false

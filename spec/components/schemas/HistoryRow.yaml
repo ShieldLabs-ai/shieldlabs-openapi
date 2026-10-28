@@ -2,7 +2,7 @@ type: object
 additionalProperties: true
 propertyNames:
   not:
-    enum: [is_abuser, is_datacenter, is_suspicious_paid_click, is_stun_not_checked]
+    enum: [is_abuser, is_datacenter, is_stun_not_checked]
 description: |-
   One identification as stored, in its latest version. It describes the same identification as a
   webhook `data` object, with different field names:

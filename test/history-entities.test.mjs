@@ -27,9 +27,11 @@ test('golden shapes and exact counts validate, utility fields and old envelope d
  assert.equal(validate('UserPage',{data:[],total:0,offset:0}).ok,false);
  assert.equal(validate('UserPage',{data:[],next_page_token:null,total:9007199254740992}).ok,false);
 });
-test('atomic filter accepts browser-vpn independently and rejects grouped-only aliases',()=>{
- assert.ok(validate('Filter',{identification:{chips:[{dimension:'risk_signal',value:'browser_vpn_proxy'}]}}).ok);
- assert.equal(validate('Filter',{identification:{chips:[{dimension:'risk_signal',value:'banned_ip'}]}}).ok,false);
+test('search filter accepts risk bands and rejects ids, chips, device source and sort keys',()=>{
+ assert.ok(validate('Filter',{identification:{risk_bands:['trusted','dangerous'],hre_min_accounts:3,hre_min_devices:4}}).ok);
+ assert.equal(validate('Filter',{identification:{ids:{user_hid:'customer'}}}).ok,false);
+ assert.equal(validate('Filter',{identification:{device_id_source:'legacy'}}).ok,false);
+ assert.equal(validate('Filter',{identification:{chips:[{dimension:'country',value:'US'}]}}).ok,false);
  assert.equal(validate('Filter',{domain:'a.test'}).ok,false);
  assert.equal(validate('Filter',{entity:{ids:null}}).ok,false);
 });

@@ -4,7 +4,7 @@ import { createAjv } from '../scripts/lib/validator.mjs';
 import { readFixture } from '../scripts/lib/fixtures.mjs';
 import { deref, freshBuild, operationById } from './helpers.mjs';
 
-const RETIRED = ['is_abuser', 'is_datacenter', 'is_suspicious_paid_click', 'is_stun_not_checked'];
+const RETIRED = ['is_abuser', 'is_datacenter', 'is_stun_not_checked'];
 const FLAGS = [
   'is_vpn', 'is_tor', 'is_proxy', 'is_privacy_relay', 'network_check_incomplete',
   'check_incomplete', 'is_antidetect', 'is_os_mismatch', 'is_os_not_detected',
