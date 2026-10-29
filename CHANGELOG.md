@@ -8,7 +8,7 @@
 
 - Remove `is_abuser`, `is_datacenter` and `is_suspicious_paid_click` from public History rows and filters. Requests containing these removed filters return `400`; the other 14 flag filters and date/score bounds are unchanged. Internal storage and historical webhook schemas are unaffected.
 
-- Scored webhook contract 2026-10-13 sends 20 public detection flags. `os_mismatch` folds both OS detectors, `vpn` includes browser VPN/proxy, `latency_test` is `ws_tcp_latency`, and `banned_ip` is `rate_limited`. Fired signals of weight 0 stay in `signals`. Schema 2026-10-12 remains valid for already delivered bodies.
+- Scored webhook contract 2026-10-13 sends 20 public detection flags. `os_mismatch` folds both OS detectors, `vpn` includes browser VPN/proxy, `latency_test` is `ws_tcp_latency`, and `banned_ip` is `banned_ip`. Fired signals of weight 0 stay in `signals`. Schema 2026-10-12 remains valid for already delivered bodies.
 
 ## Unreleased
 
@@ -94,7 +94,7 @@ Schema exports. Every point below is a change against that file.
 - **Webhook `data`.** All 18 keys are required (none is ever omitted), with `user_hid` nullable.
   `public_ip`, `local_ip` and `traffic_source` list their keys as required too.
 - **999 rate-limit marker.** `risk_score` no longer has `maximum: 100`: 999 marks a rate-limited
-  identification and arrives with the single `rate_limited` signal.
+  identification and arrives with the single `banned_ip` signal.
 - **Country names.** `country` values are documented as English country names (`Germany`,
   `United States`), not ISO codes; examples now use names.
 - **Error bodies as sent.** History API `401` is JSON text sent as `text/plain`; `429` and `500`

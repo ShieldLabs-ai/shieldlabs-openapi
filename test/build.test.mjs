@@ -14,7 +14,7 @@ const FLAGS = [
   'os_mismatch', 'os_not_detected', 'timezone_mismatch', 'anti_detect_browser',
   'browser_automation', 'ip_mismatch', 'incognito', 'search_bot',
   'javascript_disabled', 'network_check_incomplete', 'check_incomplete',
-  'device_spoofing', 'latency_test', 'rate_limited', 'ai_bot', 'ai_browser',
+  'device_spoofing', 'latency_test', 'banned_ip', 'ai_bot', 'ai_browser',
 ];
 const WEBHOOK_DATA_KEYS = [
   'identification_id', 'visitor_id', 'device_id', 'session_id', 'cookie_id', 'user_hid', 'domain',
@@ -320,7 +320,7 @@ describe('schemas', () => {
     const name = doc.components.schemas.Signal.properties.name;
     assert.equal(name.type, 'string');
     assert.equal(name.enum, undefined);
-    for (const slug of ['vpn', 'proxy', 'antidetect_browser', 'stun_late_correction', 'rate_limited']) {
+    for (const slug of ['vpn', 'proxy', 'antidetect_browser', 'stun_late_correction', 'banned_ip']) {
       assert.match(name.description, new RegExp(`\`${slug}\``), slug);
     }
   });

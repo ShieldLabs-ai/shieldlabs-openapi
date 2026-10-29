@@ -55,7 +55,7 @@ required:
   - ip_mismatch
   - latency_test
   - device_spoofing
-  - rate_limited
+  - banned_ip
   - ai_bot
   - ai_browser
 properties:
@@ -273,9 +273,9 @@ properties:
   device_spoofing:
     type: boolean
     description: Same meaning as `detection_flags.device_spoofing`.
-  rate_limited:
+  banned_ip:
     type: boolean
-    description: Same meaning as `detection_flags.rate_limited`. Older payloads used banned_ip.
+    description: Same meaning as `detection_flags.banned_ip`.
   ai_bot:
     type: boolean
     description: Same meaning as `detection_flags.ai_bot`.

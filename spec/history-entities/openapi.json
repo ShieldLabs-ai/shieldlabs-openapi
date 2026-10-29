@@ -2500,7 +2500,7 @@
           "os_mismatch",
           "os_not_detected",
           "proxy",
-          "rate_limited",
+          "banned_ip",
           "search_bot",
           "timezone_mismatch",
           "tor",

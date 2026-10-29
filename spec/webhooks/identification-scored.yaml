@@ -104,7 +104,7 @@ post:
                 detection_flags:
                   device_spoofing: false
                   latency_test: false
-                  rate_limited: false
+                  banned_ip: false
                   vpn: false
                   private_relay: false
                   tor: false
@@ -185,7 +185,7 @@ post:
                 detection_flags:
                   device_spoofing: false
                   latency_test: false
-                  rate_limited: false
+                  banned_ip: false
                   vpn: false
                   private_relay: false
                   tor: false
@@ -266,7 +266,7 @@ post:
                 detection_flags:
                   device_spoofing: false
                   latency_test: false
-                  rate_limited: false
+                  banned_ip: false
                   vpn: false
                   private_relay: false
                   tor: false

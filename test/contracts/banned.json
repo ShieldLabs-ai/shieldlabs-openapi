@@ -61,7 +61,7 @@
     "risk_score": 999,
     "signals": [
       {
-        "name": "rate_limited",
+        "name": "banned_ip",
         "weight": 999
       }
     ],

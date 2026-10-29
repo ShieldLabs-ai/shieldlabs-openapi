@@ -95,12 +95,7 @@ properties:
       2026-10-13 payloads use latency_test.
   banned_ip:
     type: boolean
-    description: Current public name of the banned-IP flag. Payloads from
-      schema 2026-10-13 before the slug rename used rate_limited.
-  rate_limited:
-    type: boolean
-    description: Previous public name of the banned-IP flag. Current
-      2026-10-13 payloads use banned_ip.
+    description: Current public name of the banned-IP flag.
   ai_bot:
     type: boolean
     description: An accepted bot is classified as AI training or user-requested

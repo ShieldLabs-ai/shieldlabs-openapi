@@ -65,7 +65,7 @@ describe('webhook fixtures', () => {
     }
     const marker = readFixture('webhook-rate-limited.json').data;
     assert.equal(marker.risk_score, 999);
-    assert.deepEqual(marker.signals, [{ name: 'rate_limited', weight: 999 }]);
+    assert.deepEqual(marker.signals, [{ name: 'banned_ip', weight: 999 }]);
   });
 
   it('the ping is a valid webhook.ping event', () => {
@@ -196,7 +196,7 @@ describe('error responses', () => {
 
 describe('risk band cases', () => {
   const band = (score) => {
-    if (score > 100) return 'rate_limited';
+    if (score > 100) return 'banned_ip';
     if (score >= 60) return 'dangerous';
     if (score >= 30) return 'suspicious';
     return 'trusted';

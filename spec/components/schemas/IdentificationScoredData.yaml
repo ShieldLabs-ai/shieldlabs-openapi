@@ -69,7 +69,7 @@ properties:
     type: array
     description: Weighted risk signals behind `risk_score`, in scoring order. Can be
       empty. The rate-limit marker carries exactly one entry,
-      `{"name":"rate_limited","weight":999}`.
+      `{"name":"banned_ip","weight":999}`.
     items:
       $ref: ./Signal.yaml
   detection_flags:
@@ -87,7 +87,6 @@ properties:
       latency_test: {type: boolean}
       ws_tcp_latency: {type: boolean}
       banned_ip: {type: boolean}
-      rate_limited: {type: boolean}
       check_incomplete: {type: boolean}
       os_not_detected: {type: boolean}
       timezone_mismatch: {type: boolean}
