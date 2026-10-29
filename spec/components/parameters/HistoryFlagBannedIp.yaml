@@ -1,7 +1,7 @@
-name: rate_limited
+name: banned_ip
 in: query
 required: false
-description: Keep only rows whose `rate_limited` flag equals this value. Older clients may send `banned_ip`. Omit to leave unconstrained.
+description: Keep only rows whose `banned_ip` flag equals this value. Omit to leave unconstrained.
 schema:
   type: string
   enum: ['true', 'false']

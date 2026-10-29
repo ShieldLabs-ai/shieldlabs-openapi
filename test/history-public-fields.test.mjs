@@ -9,7 +9,7 @@ const FLAGS = [
   'is_vpn', 'is_tor', 'is_proxy', 'is_privacy_relay', 'network_check_incomplete',
   'check_incomplete', 'is_antidetect', 'is_os_mismatch', 'is_os_not_detected',
   'is_timezone_mismatch', 'is_js_disabled', 'is_browser_automation',
-  'is_incognito', 'is_search_bot', 'ip_mismatch', 'latency_test', 'device_spoofing', 'rate_limited', 'ai_bot', 'ai_browser',
+  'is_incognito', 'is_search_bot', 'ip_mismatch', 'latency_test', 'device_spoofing', 'banned_ip', 'ai_bot', 'ai_browser',
 ];
 
 describe('public History field cleanup', () => {

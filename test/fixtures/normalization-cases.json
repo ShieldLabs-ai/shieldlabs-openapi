@@ -63,7 +63,7 @@
         "ip_mismatch": false,
         "latency_test": false,
         "device_spoofing": false,
-        "rate_limited": false,
+        "banned_ip": false,
         "ai_bot": false,
         "ai_browser": false,
         "detection_flags": {
@@ -80,7 +80,7 @@
           "latency_test": false,
           "anti_detect_browser": true,
           "device_spoofing": false,
-          "rate_limited": false,
+          "banned_ip": false,
           "incognito": false,
           "search_bot": false,
           "ai_bot": false,
@@ -216,7 +216,7 @@
         "ip_mismatch": false,
         "latency_test": false,
         "device_spoofing": false,
-        "rate_limited": false,
+        "banned_ip": false,
         "ai_bot": false,
         "ai_browser": false,
         "detection_flags": {
@@ -233,7 +233,7 @@
           "latency_test": false,
           "anti_detect_browser": false,
           "device_spoofing": false,
-          "rate_limited": false,
+          "banned_ip": false,
           "incognito": true,
           "search_bot": false,
           "ai_bot": false,
@@ -364,7 +364,7 @@
         "ip_mismatch": false,
         "latency_test": false,
         "device_spoofing": false,
-        "rate_limited": false,
+        "banned_ip": false,
         "ai_bot": false,
         "ai_browser": false,
         "detection_flags": {
@@ -381,7 +381,7 @@
           "latency_test": false,
           "anti_detect_browser": false,
           "device_spoofing": false,
-          "rate_limited": false,
+          "banned_ip": false,
           "incognito": false,
           "search_bot": false,
           "ai_bot": false,
@@ -522,7 +522,7 @@
         "ip_mismatch": false,
         "latency_test": false,
         "device_spoofing": false,
-        "rate_limited": true,
+        "banned_ip": true,
         "ai_bot": false,
         "ai_browser": false,
         "detection_flags": {
@@ -539,7 +539,7 @@
           "latency_test": false,
           "anti_detect_browser": false,
           "device_spoofing": false,
-          "rate_limited": true,
+          "banned_ip": true,
           "incognito": false,
           "search_bot": false,
           "ai_bot": false,
@@ -582,7 +582,7 @@
         "risk_score": 999,
         "signals": [
           {
-            "name": "rate_limited",
+            "name": "banned_ip",
             "weight": 999,
             "description": "User has been banned 1H, to many requests"
           }
@@ -669,7 +669,7 @@
         "ip_mismatch": false,
         "latency_test": false,
         "device_spoofing": false,
-        "rate_limited": false,
+        "banned_ip": false,
         "ai_bot": false,
         "ai_browser": false,
         "detection_flags": {
@@ -686,7 +686,7 @@
           "latency_test": false,
           "anti_detect_browser": false,
           "device_spoofing": false,
-          "rate_limited": false,
+          "banned_ip": false,
           "incognito": false,
           "search_bot": true,
           "ai_bot": false,
@@ -933,7 +933,7 @@
         "risk_score": 999,
         "signals": [
           {
-            "name": "rate_limited",
+            "name": "banned_ip",
             "weight": 999
           }
         ],
@@ -993,7 +993,7 @@
         "risk_score": 999,
         "signals": [
           {
-            "name": "rate_limited",
+            "name": "banned_ip",
             "weight": 999,
             "description": null
           }

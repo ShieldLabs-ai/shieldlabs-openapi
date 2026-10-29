@@ -66,7 +66,7 @@ export const FIXTURE_EXAMPLES = [
     file: 'webhook-rate-limited.json',
     summary: 'Rate-limit marker (999)',
     description:
-      'The 999 rate-limit marker: one `rate_limited` signal, nil identifiers and no attribution. ' +
+      'The 999 rate-limit marker: one `banned_ip` signal, nil identifiers and no attribution. ' +
       'It is not a Risk Score.',
   },
   {

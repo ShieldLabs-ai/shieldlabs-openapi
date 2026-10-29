@@ -34,7 +34,7 @@ properties:
       - `network_check_incomplete`: the network (STUN) check did not complete;
       - `stun_late_correction`: a late network result arrived; negative weight that cancels
         `network_check_incomplete`;
-      - `rate_limited`: the rate-limit marker. Older payloads used `banned_ip`.
+      - `banned_ip`: the rate-limit marker. Older payloads used `banned_ip`.
 
       A verdict carried forward from an earlier identification of the same device and IP (for
       example `antidetect_browser`) keeps a name derived from the original signal and can carry a
@@ -46,7 +46,7 @@ properties:
     type: integer
     description: >-
       Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999
-      for `rate_limited`. Older payloads used `banned_ip`. Weights can change between releases; never add them up yourself.
+      for `banned_ip`. Older payloads used `banned_ip`. Weights can change between releases; never add them up yourself.
     examples:
       - 10
       - -30
