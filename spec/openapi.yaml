@@ -11,7 +11,7 @@ info:
     ## How it fits
 
     1. The browser SDK returns an identification ID for a visit or protected action.
-    2. Your backend reads its card at `/api/v1/domains/{domain}/history/identifications/{id}`
+    2. Your backend reads its card at `/api/v1/domains/{domain_id}/history/identifications/{resource_id}`
        or receives a signed `identification.scored` webhook.
     3. Check ownership, freshness, replay protection and the actual availability state before
        applying your application's policy. An ID alone does not prove successful ingest.
@@ -23,9 +23,9 @@ info:
     | History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |
     | Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |
 
-    `{domain}` in History is the public domain UUID, not a hostname. Lists are available for
-    `identifications` and `user`. Cards are available for `identifications`, `user`, `visitor`,
-    `device` and `ip`. Session and cookie are identification fields, not resources.
+    `{domain_id}` in History is the public domain UUID from `GET /api/v1/domains`, not a hostname.
+    Lists are available for `identifications` and `user`. Cards are available for `identifications`,
+    `user`, `visitor`, `device` and `ip`. Session and cookie are identification fields, not resources.
     The old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.
     Keep server keys and webhook secrets off the browser; only the public browser key goes there.
     Accounts and configuration are available in the dashboard at https://app.shieldlabs.ai.
@@ -43,11 +43,11 @@ info:
 
     ## Pagination and time
 
-    Lists return `data`, opaque `next_page_token` and optional `total`. Pass the token as
-    `page_token`, retaining the same resource, limit, filter, sort and window. Tokens can be
-    invalidated by a server restart. Do not silently combine a restarted traversal with an
-    earlier snapshot. Use paired RFC3339 `from` and `to`: from is inclusive and to exclusive.
-    Old `offset`, raw-score and boolean row-search query parameters are not accepted.
+    Lists return `data` and an opaque `next_page_token`. Pass the token as `page_token`.
+    Filters are repeated query parameters: `risk_bands`, `is_*` flags (`true` or `false`, AND),
+    `risk_signals` (OR), and `source` with `campaign` (one OR group, at most 8). A nested `filter`,
+    `chips`, and `offset` return `400`. `is_abuser`, `is_datacenter` and
+    `is_stun_not_checked` return `400`.
     Identification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.
 
     ## Errors and retries
@@ -118,11 +118,11 @@ tags:
       Signed events ShieldLabs sends to your webhook endpoints: `identification.scored` for every
       identification and `webhook.ping` when you verify an endpoint.
 paths:
-  /api/v1/history/{search_type}/{value}:
-    $ref: ./paths/history.yaml
-  /api/v1/domains/{domain}/history/{resource}:
+  /api/v1/domains:
+    $ref: ./paths/domains.yaml
+  /api/v1/domains/{domain_id}/history/{resource}:
     $ref: ./paths/history-entity-list.yaml
-  /api/v1/domains/{domain}/history/{resource}/{id}:
+  /api/v1/domains/{domain_id}/history/{resource}/{resource_id}:
     $ref: ./paths/history-entity-detail.yaml
   /v1/profile:
     $ref: ./paths/profile.yaml

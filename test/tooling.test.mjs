@@ -39,17 +39,20 @@ async function startMockApi({ corruptRow = false } = {}) {
       res.end(`${JSON.stringify(body)}\n`);
     };
     const url = new URL(req.url, 'http://localhost');
-    if (url.pathname.startsWith('/api/v1/history/identification_id/')) {
-      if (req.headers.authorization !== 'Bearer sec_test0000-test0000-test0000') {
-        res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('{"error":"invalid api key"}\n');
-        return;
-      }
+    if (url.pathname.startsWith('/api/v1/') && !req.headers.authorization?.startsWith('Bearer sec_test0000')) {
+      res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('{"error":"invalid api key"}\n');
+      return;
+    }
+    if (url.pathname === '/api/v1/domains') {
+      return json(200, { domains: [{ id: '7c9e6679-7425-40de-944b-e07fc1f90ae7', domain: 'example.com' }] });
+    }
+    if (url.pathname.startsWith('/api/v1/domains/') && url.pathname.includes('/history/identifications/')) {
       const id = url.pathname.split('/').pop();
-      if (id !== liveId) return json(200, { data: [], total: 0 });
+      if (id !== liveId) return json(404, { error: { code: 'not_found', message: 'not_found' } });
       const row = structuredClone(readFixture('history-page.json').data[0]);
       if (corruptRow) delete row.score;
-      return json(200, { data: [row], total: 1 });
+      return json(200, { data: row });
     }
     if (url.pathname === '/v1/profile') {
       if (req.headers['x-shield-domain'] !== 'example.com' || req.headers.authorization !== 'Bearer secret0000') {
@@ -89,9 +92,9 @@ describe('check:live', () => {
       assert.match(output, /check:live passed/);
       assert.equal((output.match(/^ok {4}/gm) ?? []).length, 3, output);
       assert.ok(!output.includes('sec_test0000') && !output.includes('secret0000'), 'a key was printed');
-      assert.equal(api.seen.length, 3, 'one call per check');
+      assert.equal(api.seen.length, 4, 'domain list, two history reads, and profile');
       assert.ok(api.seen.every((call) => !call.url.includes('/api/api/')));
-      assert.equal(api.seen[2].headers['x-shield-domain'], 'example.com');
+      assert.equal(api.seen.at(-1).headers['x-shield-domain'], 'example.com');
     } finally {
       await api.close();
     }
@@ -176,7 +179,7 @@ describe('examples', () => {
   it('node-list-operations prints every operation with its server', async () => {
     const { code, stdout } = await runExample('node-list-operations');
     assert.equal(code, 0);
-    assert.match(stdout, /GET https:\/\/account\.shieldlabs\.ai\/api\/v1\/history\/\{search_type\}\/\{value\}/);
+    assert.match(stdout, /GET https:\/\/account\.shieldlabs\.ai\/api\/v1\/domains\/\{domain_id\}\/history\/\{resource\}/);
     assert.match(stdout, /GET https:\/\/api\.shieldlabs\.ai\/v1\/profile/);
     assert.match(stdout, /searchHistoryDeprecated \(deprecated\)/);
     assert.match(stdout, /event_type: webhook\.ping/);

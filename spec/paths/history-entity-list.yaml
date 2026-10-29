@@ -7,17 +7,21 @@ get:
     - History API
   summary: List History entities
   description: |-
-    Lists `identifications` or `user` for one domain. `{domain}` is the public domain UUID.
-    Literal `all` returns `403 domain_scope_not_supported`. A list of `visitor`, `device` or `ip`
-    returns `403 entity_list_disabled`. `session` and `cookie` are not resources.
+    Lists `identifications` or `user` for one domain. `{domain_id}` is the public domain UUID
+    from `GET /api/v1/domains`. Literal `all` returns `403 domain_scope_not_supported`. A list of
+    `visitor`, `device` or `ip` returns `403 entity_list_disabled`.
+
+    Repeat `risk_bands`, `risk_signals`, `source`, `campaign` and `ids`. Flags are `true` or `false`
+    and combine with AND. Signal codes combine with OR. `source` and `campaign` are one OR group,
+    at most 8 values together. `is_abuser`, `is_datacenter` and
+    `is_stun_not_checked` return `400`. A nested `filter` or `chips` returns `400`.
 
     The old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.
-    Page with `page_token`, not `offset`. `from` and `to` are both required when either is set,
-    RFC3339, and the window is half-open.
+    Page with `page_token`, not `offset`. `from` and `to` are both required when either is set.
   security:
     - historyApiKey: []
   parameters:
-    - name: domain
+    - name: domain_id
       in: path
       required: true
       description: Public domain UUID of the site whose History is being read.
@@ -78,56 +82,176 @@ get:
       examples:
         end:
           value: '2026-10-28T00:00:00Z'
+    - name: snapshot
+      in: query
+      required: false
+      description: Value of the History-Snapshot header. Continues that read.
+      schema:
+        type: string
+      examples:
+        pin:
+          value: snapshot-1
+    - name: risk_bands
+      in: query
+      required: false
+      description: Repeat for trusted, suspicious, or dangerous.
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [trusted, suspicious, dangerous]
+      style: form
+      explode: true
+      examples:
+        dangerous:
+          value: [dangerous]
+    - name: hre_min_accounts
+      in: query
+      required: false
+      description: Minimum linked accounts for a high-risk event, from 3 to 99.
+      schema:
+        type: integer
+        minimum: 3
+        maximum: 99
+        default: 3
+      examples:
+        minimum:
+          value: 3
+    - name: hre_min_devices
+      in: query
+      required: false
+      description: Minimum linked devices for a high-risk event, from 4 to 99.
+      schema:
+        type: integer
+        minimum: 4
+        maximum: 99
+        default: 4
+      examples:
+        minimum:
+          value: 4
+    - name: ids
+      in: query
+      required: false
+      description: User ids. Repeat the key. User list only, at most 100.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        one:
+          value: [customer]
+    - $ref: ../components/parameters/HistoryFlagVpn.yaml
+    - $ref: ../components/parameters/HistoryFlagTor.yaml
+    - $ref: ../components/parameters/HistoryFlagProxy.yaml
+    - $ref: ../components/parameters/HistoryFlagPrivacyRelay.yaml
+    - $ref: ../components/parameters/HistoryFlagNetworkCheckIncomplete.yaml
+    - $ref: ../components/parameters/HistoryFlagCheckIncomplete.yaml
+    - $ref: ../components/parameters/HistoryFlagAntidetect.yaml
+    - $ref: ../components/parameters/HistoryFlagOsMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagOsNotDetected.yaml
+    - $ref: ../components/parameters/HistoryFlagTimezoneMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagJsDisabled.yaml
+    - $ref: ../components/parameters/HistoryFlagBrowserAutomation.yaml
+    - $ref: ../components/parameters/HistoryFlagIncognito.yaml
+    - $ref: ../components/parameters/HistoryFlagSearchBot.yaml
+    - $ref: ../components/parameters/HistoryFlagIpMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagLatencyTest.yaml
+    - $ref: ../components/parameters/HistoryFlagDeviceSpoofing.yaml
+    - $ref: ../components/parameters/HistoryFlagRateLimited.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBot.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBrowser.yaml
+    - name: risk_signals
+      in: query
+      required: false
+      description: Repeat a public signal code. Several codes combine with OR.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        vpn:
+          value: [vpn]
+    - name: source
+      in: query
+      required: false
+      description: Traffic source. Together with campaign, at most 8 values, matched if any value matches. _empty means no referrer.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        google:
+          value: [google]
+    - name: campaign
+      in: query
+      required: false
+      description: Campaign name. No campaign matches visits with no campaign.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        none:
+          value: ["No campaign"]
   responses:
     '200':
       description: A page of entity records.
       content:
         application/json:
           schema:
-            type: object
-            required: [data]
-            properties:
-              data:
-                type: array
-                items:
-                  type: object
-                  required: [type, id, risk, signals]
-                  properties:
-                    type:
-                      type: string
-                      enum: [identification, user, visitor, device, ip]
-                    id:
-                      type: string
-                    risk:
+            oneOf:
+              - $ref: ../components/schemas/HistoryPage.yaml
+              - type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
                       type: object
-                      required: [state]
+                      additionalProperties: false
+                      required: [type, id, risk, signals]
                       properties:
-                        state:
+                        type:
                           type: string
-                          enum: [ok, unavailable]
-                        band:
+                          enum: [identification, user, visitor, device, ip]
+                        id:
                           type: string
-                          enum: [trusted, suspicious, dangerous]
-                        score:
-                          type: integer
-                          minimum: 0
-                          maximum: 100
-                    signals:
-                      type: object
-                      required: [state, items]
-                      properties:
-                        state:
-                          type: string
-                          enum: [ok, unavailable]
-                        items:
-                          type: array
-                          items:
-                            type: string
-              next_page_token:
-                type: string
-              total:
-                type: integer
-                minimum: 0
+                        risk:
+                          type: object
+                          required: [state]
+                          properties:
+                            state:
+                              type: string
+                              enum: [ok, unavailable]
+                            band:
+                              type: string
+                              enum: [trusted, suspicious, dangerous]
+                            score:
+                              type: integer
+                              minimum: 0
+                              maximum: 100
+                        signals:
+                          type: object
+                          required: [state, items]
+                          properties:
+                            state:
+                              type: string
+                              enum: [ok, unavailable]
+                            items:
+                              type: array
+                              items:
+                                type: string
+                  next_page_token:
+                    type: string
           examples:
             identifications:
               value:
@@ -141,9 +265,23 @@ get:
                     signals:
                       state: unavailable
                       items: []
+            page:
+              $ref: ../components/examples/HistoryPage.yaml
+            empty:
+              $ref: ../components/examples/HistoryPageEmpty.yaml
     '400':
       description: The query is not valid. `error.code` is `invalid_query` or `invalid_domain_scope`.
     '403':
       description: '`domain_scope_not_supported` or `entity_list_disabled`.'
     '401':
       $ref: ../components/responses/HistoryUnauthorized.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '429':
+      $ref: ../components/responses/HistoryTooManyRequests.yaml
+    '500':
+      $ref: ../components/responses/HistoryServerError.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml

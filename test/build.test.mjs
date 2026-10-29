@@ -64,9 +64,9 @@ describe('document', () => {
     const { doc } = freshBuild();
     const found = operations(doc).map((op) => [op.kind, op.key, op.method, op.operation.operationId]);
     assert.deepEqual(found.sort(), [
-      ['path', '/api/v1/domains/{domain}/history/{resource}', 'get', 'listHistoryEntities'],
-      ['path', '/api/v1/domains/{domain}/history/{resource}/{id}', 'get', 'getHistoryEntity'],
-      ['path', '/api/v1/history/{search_type}/{value}', 'get', 'searchHistory'],
+      ['path', '/api/v1/domains', 'get', 'listDomains'],
+      ['path', '/api/v1/domains/{domain_id}/history/{resource}', 'get', 'listHistoryEntities'],
+      ['path', '/api/v1/domains/{domain_id}/history/{resource}/{resource_id}', 'get', 'getHistoryEntity'],
       ['path', '/health', 'get', 'getHealth'],
       ['path', '/v1/history/{type}/{value}', 'get', 'searchHistoryDeprecated'],
       ['path', '/v1/profile', 'get', 'getDomainProfile'],
@@ -79,7 +79,9 @@ describe('document', () => {
       const { pathItem, operation } = operationById(doc, id);
       return (operation.servers ?? pathItem.servers).map((s) => s.url);
     };
-    assert.deepEqual(servers('searchHistory'), [HISTORY_HOST]);
+    assert.deepEqual(servers('listHistoryEntities'), [HISTORY_HOST]);
+    assert.deepEqual(servers('getHistoryEntity'), [HISTORY_HOST]);
+    assert.deepEqual(servers('listDomains'), [HISTORY_HOST]);
     assert.deepEqual(servers('getDomainProfile'), [MANAGEMENT_HOST]);
     assert.deepEqual(servers('searchHistoryDeprecated'), [MANAGEMENT_HOST]);
     assert.deepEqual(servers('getHealth').sort(), [HISTORY_HOST, MANAGEMENT_HOST].sort());
@@ -104,7 +106,7 @@ describe('document', () => {
     assert.equal(historyApiKey.scheme, 'bearer');
     assert.equal(managementSecretKey.type, 'http');
     assert.equal(managementSecretKey.scheme, 'bearer');
-    assert.deepEqual(operationById(doc, 'searchHistory').operation.security, [{ historyApiKey: [] }]);
+    assert.deepEqual(operationById(doc, 'listHistoryEntities').operation.security, [{ historyApiKey: [] }]);
     for (const id of ['getDomainProfile', 'searchHistoryDeprecated']) {
       const { operation } = operationById(doc, id);
       assert.deepEqual(operation.security, [{ managementSecretKey: [] }], id);
@@ -123,7 +125,7 @@ describe('document', () => {
     const { operation } = operationById(doc, 'searchHistoryDeprecated');
     assert.equal(operation.deprecated, true);
     assert.match(operation.description, /Sat, 01 Jan 2027 00:00:00 GMT/);
-    assert.match(operation.description, /https:\/\/account\.shieldlabs\.ai\/api\/v1\/history/);
+    assert.match(operation.description, /https:\/\/account\.shieldlabs\.ai\/api\/v1\/domains\/\{domain_id\}\/history\/identifications/);
     // The router answers unrouted paths before the route adds its headers.
     assert.match(deref(doc, operation.responses['404']).description, /router and carries no\s+deprecation headers/);
     for (const status of ['200', '400', '401', '404']) {
@@ -132,7 +134,7 @@ describe('document', () => {
       assert.equal(deref(doc, headers.Sunset).schema.const, 'Sat, 01 Jan 2027 00:00:00 GMT', status);
       assert.equal(
         deref(doc, headers.Link).schema.const,
-        '<https://account.shieldlabs.ai/api/v1/history>; rel="successor-version"',
+        '<https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/identifications/{resource_id}>; rel="successor-version"',
         status,
       );
     }
@@ -188,12 +190,12 @@ describe('document', () => {
   it('documents error bodies as the servers send them', () => {
     const { doc } = freshBuild();
     const content = (id, status) => deref(doc, operationById(doc, id).operation.responses[status]).content;
-    assert.deepEqual(Object.keys(content('searchHistory', '401')), ['text/plain']);
-    assert.deepEqual(Object.keys(content('searchHistory', '429')), ['application/json']);
-    assert.deepEqual(Object.keys(content('searchHistory', '500')).sort(), ['application/json', 'text/plain']);
+    assert.deepEqual(Object.keys(content('listHistoryEntities', '401')), ['text/plain']);
+    assert.deepEqual(Object.keys(content('listHistoryEntities', '429')), ['application/json']);
+    assert.deepEqual(Object.keys(content('listHistoryEntities', '500')).sort(), ['application/json', 'text/plain']);
     assert.equal(content('getDomainProfile', '401'), undefined, 'Management 401 has an empty body');
     assert.equal(content('searchHistoryDeprecated', '401'), undefined, 'Management 401 has an empty body');
-    for (const id of ['searchHistory', 'getDomainProfile', 'getHealth']) {
+    for (const id of ['listHistoryEntities', 'getDomainProfile', 'getHealth']) {
       assert.deepEqual(Object.keys(content(id, '404')), ['text/plain'], `${id} 404`);
     }
     assert.deepEqual(Object.keys(content('searchHistoryDeprecated', '404')).sort(), ['application/json', 'text/plain']);
@@ -302,7 +304,8 @@ describe('schemas', () => {
 
   it('describe how to send a User HID in the History API path', () => {
     const { doc } = freshBuild();
-    const value = deref(doc, doc.components.parameters.HistoryValue);
+    const { operation } = operationById(doc, 'getHistoryEntity');
+    const value = operation.parameters.map((p) => deref(doc, p)).find((p) => p.name === 'resource_id');
     assert.match(value.description, /`A-Z a-z 0-9 - \. _ ~ \$ & \+ , : ; = @` unescaped/);
     assert.match(value.description, /uppercase `%XX`/);
     const pattern = new RegExp(value.schema.pattern);

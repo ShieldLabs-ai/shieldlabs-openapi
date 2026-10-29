@@ -1,0 +1,49 @@
+servers:
+  - url: https://account.shieldlabs.ai
+    description: History API
+get:
+  operationId: listDomains
+  tags:
+    - History API
+  summary: List domains for this key
+  description: |-
+    Returns the public domain id for the Private API Key. A site key returns one enabled domain.
+    Use `id` as `{domain_id}` on History paths. `domain` is the hostname and is not a path value.
+  security:
+    - historyApiKey: []
+  responses:
+    '200':
+      description: Domains visible to this key.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [domains]
+            properties:
+              domains:
+                type: array
+                items:
+                  type: object
+                  required: [id, domain]
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    domain:
+                      type: string
+          examples:
+            site:
+              value:
+                domains:
+                  - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                    domain: myshop.com
+    '401':
+      $ref: ../components/responses/HistoryUnauthorized.yaml
+    '429':
+      $ref: ../components/responses/HistoryTooManyRequests.yaml
+    '500':
+      $ref: ../components/responses/HistoryServerError.yaml
+    '502':
+      $ref: ../components/responses/BadGateway.yaml
+    '504':
+      $ref: ../components/responses/GatewayTimeout.yaml

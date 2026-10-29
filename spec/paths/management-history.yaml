@@ -10,7 +10,8 @@ get:
   x-sunset: '2027-01-01'
   description: |-
     **Deprecated.** This endpoint stops working after Sat, 01 Jan 2027 00:00:00 GMT. Use
-    `searchHistory` on the History API instead: `https://account.shieldlabs.ai/api/v1/history`.
+    `listHistoryEntities` on the History API instead:
+    `https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/identifications`.
     Every answer of this route except `429` and `503` carries `Deprecation: true`, a `Sunset`
     header and a `Link` header with `rel="successor-version"` pointing there. The plain-text `404`
     for a path that matches no route and the edge proxy errors do not carry them.

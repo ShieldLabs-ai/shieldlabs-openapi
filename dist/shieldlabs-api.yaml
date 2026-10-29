@@ -11,7 +11,7 @@ info:
     ## How it fits
 
     1. The browser SDK returns an identification ID for a visit or protected action.
-    2. Your backend reads its card at `/api/v1/domains/{domain}/history/identifications/{id}`
+    2. Your backend reads its card at `/api/v1/domains/{domain_id}/history/identifications/{resource_id}`
        or receives a signed `identification.scored` webhook.
     3. Check ownership, freshness, replay protection and the actual availability state before
        applying your application's policy. An ID alone does not prove successful ingest.
@@ -23,9 +23,9 @@ info:
     | History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |
     | Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |
 
-    `{domain}` in History is the public domain UUID, not a hostname. Lists are available for
-    `identifications` and `user`. Cards are available for `identifications`, `user`, `visitor`,
-    `device` and `ip`. Session and cookie are identification fields, not resources.
+    `{domain_id}` in History is the public domain UUID from `GET /api/v1/domains`, not a hostname.
+    Lists are available for `identifications` and `user`. Cards are available for `identifications`,
+    `user`, `visitor`, `device` and `ip`. Session and cookie are identification fields, not resources.
     The old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.
     Keep server keys and webhook secrets off the browser; only the public browser key goes there.
     Accounts and configuration are available in the dashboard at https://app.shieldlabs.ai.
@@ -43,11 +43,11 @@ info:
 
     ## Pagination and time
 
-    Lists return `data`, opaque `next_page_token` and optional `total`. Pass the token as
-    `page_token`, retaining the same resource, limit, filter, sort and window. Tokens can be
-    invalidated by a server restart. Do not silently combine a restarted traversal with an
-    earlier snapshot. Use paired RFC3339 `from` and `to`: from is inclusive and to exclusive.
-    Old `offset`, raw-score and boolean row-search query parameters are not accepted.
+    Lists return `data` and an opaque `next_page_token`. Pass the token as `page_token`.
+    Filters are repeated query parameters: `risk_bands`, `is_*` flags (`true` or `false`, AND),
+    `risk_signals` (OR), and `source` with `campaign` (one OR group, at most 8). A nested `filter`,
+    `chips`, and `offset` return `400`. `is_abuser`, `is_datacenter` and
+    `is_stun_not_checked` return `400`.
     Identification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.
 
     ## Errors and retries
@@ -109,136 +109,51 @@ externalDocs:
   description: ShieldLabs documentation
   url: https://docs.shieldlabs.ai
 paths:
-  /api/v1/history/{search_type}/{value}:
+  /api/v1/domains:
     servers:
       - url: https://account.shieldlabs.ai
         description: History API
     get:
-      operationId: searchHistory
+      operationId: listDomains
       tags:
         - History API
-      summary: Retired identification search
+      summary: List domains for this key
       description: |-
-        This route returns `410 endpoint_retired` and does not run the search. Use
-        `GET /api/v1/domains/{domain}/history/{resource}` and
-        `GET /api/v1/domains/{domain}/history/{resource}/{id}`. `{domain}` is the public domain UUID.
-
-        The description below is the previous contract, kept so existing field docs stay attached to this operation until clients move.
-
-        Returns the identifications of your domain that match one identifier, newest first, together
-        with the total number of matches. The Private API Key selects the domain; identifications from
-        its subdomains are included (`domain` holds the host, `site_domain` the registered domain).
-
-        **Read one verdict.** After a protected action, search by `identification_id` with `limit=1`. The row
-        becomes available asynchronously, so start the identification when the user begins the
-        action (for example when the signup form opens), not when the form is submitted. An empty
-        `data` array means "not scored yet", never "clean". Poll with backoff (first try at once, then
-        wait 250 ms, 500 ms, 1 s, then steps of about 1.5 s) and treat a `429` inside that loop as
-        "wait longer". The official server SDKs do this for you.
-
-        **Account-level checks.** Search by `device_id`, `user_hid`, `visitor_id` or `ip` to see how
-        many accounts share a device, how many devices one account uses, or what else came from one
-        IP address. When you count accounts, skip rows whose `user_hid` is empty or one of the values
-        that do not identify a user: `anonymous`, `fail`, `-1` and `unknown`.
-
-        **Narrow the page.** Optional filters keep rows that match every supplied constraint. Omit a
-        parameter to leave that field unconstrained. `from` and `to` are inclusive UTC bounds, either
-        `YYYY-MM-DD` (the whole day) or `YYYY-MM-DD HH:MM:SS` with optional fractional seconds.
-        `score_from` and `score_to` are integers from 0 through 999, so `999` still selects the
-        rate-limit marker. Each detection flag is `true` or `false` and uses the row's field name.
-        `check_incomplete`, `is_js_disabled` and `is_incognito` follow the row: they are false for
-        accepted search bots, AI bots and AI browsers. The removed filters `is_abuser` and `is_datacenter`,
-        and the old name `is_stun_not_checked` return `400`, even when empty or `false`. Other unknown query
-        parameters are ignored.
-
-        **Validate before sending.** An unknown `search_type`, an invalid IPv4 address, a `limit`
-        outside 1-100, a negative `offset`, or a filter value the server does not accept returns
-        `400`. A value that is not a UUID can still fail the query with `500`.
-
-        **Paging.** Page with `offset` while it is below `total`. Rows are ordered by `created_at`
-        only, so paging while new identifications arrive can repeat or skip rows: deduplicate on
-        `identification_id`. Filters apply to `total` as well as to `data`.
-
-        **Latest state.** A row can be refined after the webhook was sent, for example when late
-        network data re-scores it; its `ver` then increases. The History API always returns the latest
-        version, which makes it the guaranteed read path.
-
-        Reads are free: they do not use your included identifications.
+        Returns the public domain id for the Private API Key. A site key returns one enabled domain.
+        Use `id` as `{domain_id}` on History paths. `domain` is the hostname and is not a path value.
       security:
         - historyApiKey: []
-      parameters:
-        - $ref: '#/components/parameters/HistorySearchType'
-        - $ref: '#/components/parameters/HistoryValue'
-        - $ref: '#/components/parameters/HistoryLimit'
-        - $ref: '#/components/parameters/HistoryOffset'
-        - $ref: '#/components/parameters/HistoryFrom'
-        - $ref: '#/components/parameters/HistoryTo'
-        - $ref: '#/components/parameters/HistoryScoreFrom'
-        - $ref: '#/components/parameters/HistoryScoreTo'
-        - $ref: '#/components/parameters/HistoryFlagVpn'
-        - $ref: '#/components/parameters/HistoryFlagTor'
-        - $ref: '#/components/parameters/HistoryFlagProxy'
-        - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
-        - $ref: '#/components/parameters/HistoryFlagNetworkCheckIncomplete'
-        - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
-        - $ref: '#/components/parameters/HistoryFlagAntidetect'
-        - $ref: '#/components/parameters/HistoryFlagOsMismatch'
-        - $ref: '#/components/parameters/HistoryFlagOsNotDetected'
-        - $ref: '#/components/parameters/HistoryFlagTimezoneMismatch'
-        - $ref: '#/components/parameters/HistoryFlagJsDisabled'
-        - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
-        - $ref: '#/components/parameters/HistoryFlagIncognito'
-        - $ref: '#/components/parameters/HistoryFlagSearchBot'
-        - $ref: '#/components/parameters/HistoryFlagIpMismatch'
-        - $ref: '#/components/parameters/HistoryFlagLatencyTest'
-        - $ref: '#/components/parameters/HistoryFlagDeviceSpoofing'
-        - $ref: '#/components/parameters/HistoryFlagBannedIp'
-        - $ref: '#/components/parameters/HistoryFlagAiBot'
-        - $ref: '#/components/parameters/HistoryFlagAiBrowser'
       responses:
         '200':
-          description: Matching identifications, newest first. `data` is empty when nothing matched.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HistoryPage'
-              examples:
-                page:
-                  $ref: '#/components/examples/HistoryPage'
-                empty:
-                  $ref: '#/components/examples/HistoryPageEmpty'
-        '400':
-          $ref: '#/components/responses/HistoryBadRequest'
-        '401':
-          $ref: '#/components/responses/HistoryUnauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '410':
-          description: The unscoped search route is retired. `error.code` is `endpoint_retired`.
+          description: Domains visible to this key.
           content:
             application/json:
               schema:
                 type: object
                 required:
-                  - error
+                  - domains
                 properties:
-                  error:
-                    type: object
-                    required:
-                      - code
-                      - message
-                    properties:
-                      code:
-                        type: string
-                        const: endpoint_retired
-                      message:
-                        type: string
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - domain
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        domain:
+                          type: string
               examples:
-                retired:
+                site:
                   value:
-                    error:
-                      code: endpoint_retired
-                      message: endpoint_retired
+                    domains:
+                      - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                        domain: myshop.com
+        '401':
+          $ref: '#/components/responses/HistoryUnauthorized'
         '429':
           $ref: '#/components/responses/HistoryTooManyRequests'
         '500':
@@ -247,13 +162,7 @@ paths:
           $ref: '#/components/responses/BadGateway'
         '504':
           $ref: '#/components/responses/GatewayTimeout'
-      x-codeSamples:
-        - lang: Shell
-          label: curl
-          source: |
-            curl "https://account.shieldlabs.ai/api/v1/history/identification_id/a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d?limit=1" \
-              -H "Authorization: Bearer $SHIELDLABS_API_KEY"
-  /api/v1/domains/{domain}/history/{resource}:
+  /api/v1/domains/{domain_id}/history/{resource}:
     servers:
       - url: https://account.shieldlabs.ai
         description: History API
@@ -263,17 +172,21 @@ paths:
         - History API
       summary: List History entities
       description: |-
-        Lists `identifications` or `user` for one domain. `{domain}` is the public domain UUID.
-        Literal `all` returns `403 domain_scope_not_supported`. A list of `visitor`, `device` or `ip`
-        returns `403 entity_list_disabled`. `session` and `cookie` are not resources.
+        Lists `identifications` or `user` for one domain. `{domain_id}` is the public domain UUID
+        from `GET /api/v1/domains`. Literal `all` returns `403 domain_scope_not_supported`. A list of
+        `visitor`, `device` or `ip` returns `403 entity_list_disabled`.
+
+        Repeat `risk_bands`, `risk_signals`, `source`, `campaign` and `ids`. Flags are `true` or `false`
+        and combine with AND. Signal codes combine with OR. `source` and `campaign` are one OR group,
+        at most 8 values together. `is_abuser`, `is_datacenter` and
+        `is_stun_not_checked` return `400`. A nested `filter` or `chips` returns `400`.
 
         The old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.
-        Page with `page_token`, not `offset`. `from` and `to` are both required when either is set,
-        RFC3339, and the window is half-open.
+        Page with `page_token`, not `offset`. `from` and `to` are both required when either is set.
       security:
         - historyApiKey: []
       parameters:
-        - name: domain
+        - name: domain_id
           in: path
           required: true
           description: Public domain UUID of the site whose History is being read.
@@ -339,76 +252,204 @@ paths:
           examples:
             end:
               value: '2026-10-28T00:00:00Z'
+        - name: snapshot
+          in: query
+          required: false
+          description: Value of the History-Snapshot header. Continues that read.
+          schema:
+            type: string
+          examples:
+            pin:
+              value: snapshot-1
+        - name: risk_bands
+          in: query
+          required: false
+          description: Repeat for trusted, suspicious, or dangerous.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - trusted
+                - suspicious
+                - dangerous
+          style: form
+          explode: true
+          examples:
+            dangerous:
+              value:
+                - dangerous
+        - name: hre_min_accounts
+          in: query
+          required: false
+          description: Minimum linked accounts for a high-risk event, from 3 to 99.
+          schema:
+            type: integer
+            minimum: 3
+            maximum: 99
+            default: 3
+          examples:
+            minimum:
+              value: 3
+        - name: hre_min_devices
+          in: query
+          required: false
+          description: Minimum linked devices for a high-risk event, from 4 to 99.
+          schema:
+            type: integer
+            minimum: 4
+            maximum: 99
+            default: 4
+          examples:
+            minimum:
+              value: 4
+        - name: ids
+          in: query
+          required: false
+          description: User ids. Repeat the key. User list only, at most 100.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            one:
+              value:
+                - customer
+        - $ref: '#/components/parameters/HistoryFlagVpn'
+        - $ref: '#/components/parameters/HistoryFlagTor'
+        - $ref: '#/components/parameters/HistoryFlagProxy'
+        - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
+        - $ref: '#/components/parameters/HistoryFlagNetworkCheckIncomplete'
+        - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
+        - $ref: '#/components/parameters/HistoryFlagAntidetect'
+        - $ref: '#/components/parameters/HistoryFlagOsMismatch'
+        - $ref: '#/components/parameters/HistoryFlagOsNotDetected'
+        - $ref: '#/components/parameters/HistoryFlagTimezoneMismatch'
+        - $ref: '#/components/parameters/HistoryFlagJsDisabled'
+        - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
+        - $ref: '#/components/parameters/HistoryFlagIncognito'
+        - $ref: '#/components/parameters/HistoryFlagSearchBot'
+        - $ref: '#/components/parameters/HistoryFlagIpMismatch'
+        - $ref: '#/components/parameters/HistoryFlagLatencyTest'
+        - $ref: '#/components/parameters/HistoryFlagDeviceSpoofing'
+        - $ref: '#/components/parameters/HistoryFlagRateLimited'
+        - $ref: '#/components/parameters/HistoryFlagAiBot'
+        - $ref: '#/components/parameters/HistoryFlagAiBrowser'
+        - name: risk_signals
+          in: query
+          required: false
+          description: Repeat a public signal code. Several codes combine with OR.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            vpn:
+              value:
+                - vpn
+        - name: source
+          in: query
+          required: false
+          description: Traffic source. Together with campaign, at most 8 values, matched if any value matches. _empty means no referrer.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            google:
+              value:
+                - google
+        - name: campaign
+          in: query
+          required: false
+          description: Campaign name. No campaign matches visits with no campaign.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            none:
+              value:
+                - No campaign
       responses:
         '200':
           description: A page of entity records.
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      required:
-                        - type
-                        - id
-                        - risk
-                        - signals
-                      properties:
-                        type:
-                          type: string
-                          enum:
-                            - identification
-                            - user
-                            - visitor
-                            - device
-                            - ip
-                        id:
-                          type: string
-                        risk:
+                oneOf:
+                  - $ref: '#/components/schemas/HistoryPage'
+                  - type: object
+                    additionalProperties: false
+                    required:
+                      - data
+                    properties:
+                      data:
+                        type: array
+                        items:
                           type: object
+                          additionalProperties: false
                           required:
-                            - state
+                            - type
+                            - id
+                            - risk
+                            - signals
                           properties:
-                            state:
+                            type:
                               type: string
                               enum:
-                                - ok
-                                - unavailable
-                            band:
+                                - identification
+                                - user
+                                - visitor
+                                - device
+                                - ip
+                            id:
                               type: string
-                              enum:
-                                - trusted
-                                - suspicious
-                                - dangerous
-                            score:
-                              type: integer
-                              minimum: 0
-                              maximum: 100
-                        signals:
-                          type: object
-                          required:
-                            - state
-                            - items
-                          properties:
-                            state:
-                              type: string
-                              enum:
-                                - ok
-                                - unavailable
-                            items:
-                              type: array
-                              items:
-                                type: string
-                  next_page_token:
-                    type: string
-                  total:
-                    type: integer
-                    minimum: 0
+                            risk:
+                              type: object
+                              required:
+                                - state
+                              properties:
+                                state:
+                                  type: string
+                                  enum:
+                                    - ok
+                                    - unavailable
+                                band:
+                                  type: string
+                                  enum:
+                                    - trusted
+                                    - suspicious
+                                    - dangerous
+                                score:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 100
+                            signals:
+                              type: object
+                              required:
+                                - state
+                                - items
+                              properties:
+                                state:
+                                  type: string
+                                  enum:
+                                    - ok
+                                    - unavailable
+                                items:
+                                  type: array
+                                  items:
+                                    type: string
+                      next_page_token:
+                        type: string
               examples:
                 identifications:
                   value:
@@ -422,13 +463,27 @@ paths:
                         signals:
                           state: unavailable
                           items: []
+                page:
+                  $ref: '#/components/examples/HistoryPage'
+                empty:
+                  $ref: '#/components/examples/HistoryPageEmpty'
         '400':
           description: The query is not valid. `error.code` is `invalid_query` or `invalid_domain_scope`.
         '401':
           $ref: '#/components/responses/HistoryUnauthorized'
         '403':
           description: '`domain_scope_not_supported` or `entity_list_disabled`.'
-  /api/v1/domains/{domain}/history/{resource}/{id}:
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/HistoryTooManyRequests'
+        '500':
+          $ref: '#/components/responses/HistoryServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+  /api/v1/domains/{domain_id}/history/{resource}/{resource_id}:
     servers:
       - url: https://account.shieldlabs.ai
         description: History API
@@ -439,13 +494,13 @@ paths:
       summary: Read one History entity
       description: |-
         Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.
-        `{domain}` is the public domain UUID. The identification record uses `type: identification`.
-        An unknown id returns `404 not_found`. The same id on more than one owned domain returns
-        `409 ambiguous_entity_id`.
+        `{domain_id}` is the public domain UUID. `{resource_id}` is that record's id.
+        The list query parameters also apply. A device card accepts `device_id_source`.
+        An unknown id returns `404 not_found`.
       security:
         - historyApiKey: []
       parameters:
-        - name: domain
+        - name: domain_id
           in: path
           required: true
           description: Public domain UUID of the site whose History is being read.
@@ -470,15 +525,232 @@ paths:
           examples:
             identifications:
               value: identifications
-        - name: id
+        - name: resource_id
           in: path
           required: true
-          description: Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+          description: |-
+            Record id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+            Send a User HID as one path segment: the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped
+            and every other byte as uppercase `%XX`.
           schema:
             type: string
+            minLength: 1
+            pattern: ^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$
           examples:
             identification:
               value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+        - name: limit
+          in: query
+          required: false
+          description: Maximum records in the page, from 1 through 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          examples:
+            page:
+              value: 20
+        - name: page_token
+          in: query
+          required: false
+          description: Opaque token from the previous page. Omit it on the first page.
+          schema:
+            type: string
+          examples:
+            next:
+              value: next-page
+        - name: from
+          in: query
+          required: false
+          description: Inclusive RFC3339 start. Send `to` as well, or send neither.
+          schema:
+            type: string
+            format: date-time
+          examples:
+            start:
+              value: '2026-10-27T00:00:00Z'
+        - name: to
+          in: query
+          required: false
+          description: Exclusive RFC3339 end. Send `from` as well, or send neither.
+          schema:
+            type: string
+            format: date-time
+          examples:
+            end:
+              value: '2026-10-28T00:00:00Z'
+        - name: snapshot
+          in: query
+          required: false
+          description: Value of the History-Snapshot header. Continues that read.
+          schema:
+            type: string
+          examples:
+            pin:
+              value: snapshot-1
+        - name: risk_bands
+          in: query
+          required: false
+          description: Repeat for trusted, suspicious, or dangerous.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - trusted
+                - suspicious
+                - dangerous
+          style: form
+          explode: true
+          examples:
+            dangerous:
+              value:
+                - dangerous
+        - name: hre_min_accounts
+          in: query
+          required: false
+          description: Minimum linked accounts for a high-risk event, from 3 to 99.
+          schema:
+            type: integer
+            minimum: 3
+            maximum: 99
+            default: 3
+          examples:
+            minimum:
+              value: 3
+        - name: hre_min_devices
+          in: query
+          required: false
+          description: Minimum linked devices for a high-risk event, from 4 to 99.
+          schema:
+            type: integer
+            minimum: 4
+            maximum: 99
+            default: 4
+          examples:
+            minimum:
+              value: 4
+        - $ref: '#/components/parameters/HistoryFlagVpn'
+        - $ref: '#/components/parameters/HistoryFlagTor'
+        - $ref: '#/components/parameters/HistoryFlagProxy'
+        - $ref: '#/components/parameters/HistoryFlagPrivacyRelay'
+        - $ref: '#/components/parameters/HistoryFlagNetworkCheckIncomplete'
+        - $ref: '#/components/parameters/HistoryFlagCheckIncomplete'
+        - $ref: '#/components/parameters/HistoryFlagAntidetect'
+        - $ref: '#/components/parameters/HistoryFlagOsMismatch'
+        - $ref: '#/components/parameters/HistoryFlagOsNotDetected'
+        - $ref: '#/components/parameters/HistoryFlagTimezoneMismatch'
+        - $ref: '#/components/parameters/HistoryFlagJsDisabled'
+        - $ref: '#/components/parameters/HistoryFlagBrowserAutomation'
+        - $ref: '#/components/parameters/HistoryFlagIncognito'
+        - $ref: '#/components/parameters/HistoryFlagSearchBot'
+        - $ref: '#/components/parameters/HistoryFlagIpMismatch'
+        - $ref: '#/components/parameters/HistoryFlagLatencyTest'
+        - $ref: '#/components/parameters/HistoryFlagDeviceSpoofing'
+        - $ref: '#/components/parameters/HistoryFlagRateLimited'
+        - $ref: '#/components/parameters/HistoryFlagAiBot'
+        - $ref: '#/components/parameters/HistoryFlagAiBrowser'
+        - name: risk_signals
+          in: query
+          required: false
+          description: Repeat a public signal code. Several codes combine with OR.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            vpn:
+              value:
+                - vpn
+        - name: source
+          in: query
+          required: false
+          description: Traffic source. Together with campaign, at most 8 values, matched if any value matches. _empty means no referrer.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            google:
+              value:
+                - google
+        - name: campaign
+          in: query
+          required: false
+          description: Campaign name. No campaign matches visits with no campaign.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          examples:
+            none:
+              value:
+                - No campaign
+        - name: device_id_source
+          in: query
+          required: false
+          description: Device cards only. `legacy` or `fp21_record`.
+          schema:
+            type: string
+            enum:
+              - legacy
+              - fp21_record
+          examples:
+            legacy:
+              value: legacy
+        - name: relation
+          in: query
+          required: false
+          description: Linked-id page for this card. Identification cards reject this parameter.
+          schema:
+            type: string
+            enum:
+              - visitors
+              - devices
+              - users
+              - public_ips
+              - sessions
+              - cookies
+              - local_ips
+              - countries
+              - local_countries
+              - browsers
+              - os
+              - device_types
+              - connection_types
+              - risk_signals
+              - high_risk_events
+          examples:
+            visitors:
+              value: visitors
+        - name: relation_limit
+          in: query
+          required: false
+          description: Linked records in one page, from 1 through 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          examples:
+            page:
+              value: 20
+        - name: relation_page_token
+          in: query
+          required: false
+          description: Opaque token from the previous linked-id page.
+          schema:
+            type: string
+          examples:
+            next:
+              value: next-page
       responses:
         '200':
           description: The entity card.
@@ -606,7 +878,8 @@ paths:
       x-sunset: '2027-01-01'
       description: |-
         **Deprecated.** This endpoint stops working after Sat, 01 Jan 2027 00:00:00 GMT. Use
-        `searchHistory` on the History API instead: `https://account.shieldlabs.ai/api/v1/history`.
+        `listHistoryEntities` on the History API instead:
+        `https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/identifications`.
         Every answer of this route except `429` and `503` carries `Deprecation: true`, a `Sunset`
         header and a `Link` header with `rel="successor-version"` pointing there. The plain-text `404`
         for a path that matches no route and the edge proxy errors do not carry them.
@@ -1124,532 +1397,32 @@ components:
       type: http
       scheme: bearer
       description: 'Secret Key of the domain, sent as `Authorization: Bearer <key>` together with the registered domain in the `X-Shield-Domain` header. Treat the key as opaque. Find it in the analytics dashboard; keep it on your server.'
-  parameters:
-    HistorySearchType:
-      name: search_type
-      in: path
-      required: true
-      description: |-
-        Identifier to search by:
-        - `identification_id`: one identification (read a verdict);
-        - `device_id`: every identification of one device;
-        - `user_hid`: every identification of one account;
-        - `visitor_id`: every identification of one visitor;
-        - `ip`: every identification from one public IPv4 address;
-        - `session_id`: every identification of one visit;
-        - `cookie_id`: every identification with one browser cookie.
-
-        `request_id` is a legacy alias of `identification_id` and is still accepted.
-        Any other value returns `400`.
-      schema:
-        type: string
-        enum:
-          - identification_id
-          - request_id
-          - device_id
-          - user_hid
-          - visitor_id
-          - ip
-          - session_id
-          - cookie_id
-      examples:
-        identificationId:
-          summary: Read one verdict
-          value: identification_id
-        deviceId:
-          summary: All identifications of one device
-          value: device_id
-    HistoryValue:
-      name: value
-      in: path
-      required: true
-      description: |-
-        Value of the identifier, validated on your side before sending:
-        - `identification_id`, `device_id`, `visitor_id`, `session_id`, `cookie_id`: a UUID of any version,
-          the nil UUID included, matching
-          `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`. Send it
-          lowercase.
-        - `ip`: a dotted IPv4 address. IPv6 addresses cannot be searched.
-        - `user_hid`: the exact, case-sensitive User HID as one path segment, encoded the way the
-          server reads it: send the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped and
-          percent-encode every other byte of the UTF-8 value as uppercase `%XX`, including
-          `! ' ( ) *`, spaces and `%` itself. The server compares any other encoding literally, so
-          `%40` instead of `@`, or lowercase hex digits, return an empty page instead of the matching
-          rows. Many HTTP clients and generated clients escape `$ & + , : ; = @` in path values: build
-          this path yourself when yours does. A User HID that contains `/` cannot be searched, and most
-          HTTP clients cannot send `.` or `..` because they remove them as dot segments; the pattern
-          rejects these values. Hex-encoded hashes need no escaping at all.
-
-        An invalid IPv4 address returns `400`. A value that is not a UUID can still fail the query
-        with `500`, so check identifier shape before sending.
-      schema:
-        type: string
-        minLength: 1
-        pattern: ^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$
-      examples:
-        identificationId:
-          summary: An Identification ID
-          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
-        ip:
-          summary: A public IPv4 address
-          value: 203.0.113.24
-        userHid:
-          summary: A User HID
-          value: 9f86d081884c7d659a2feaa0c55ad015
-    HistoryLimit:
-      name: limit
-      in: query
-      required: false
-      description: Maximum number of identifications to return, from 1 to 100. Omit it for 20. Any other value, including a non-numeric one, returns `400`.
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
-      examples:
-        one:
-          summary: Read one verdict
-          value: 1
-        page:
-          summary: A full page
-          value: 100
-    HistoryOffset:
-      name: offset
-      in: query
-      required: false
-      description: 'Number of identifications to skip, for paging. Omit it for 0. A negative or non-numeric value returns `400`. Rows are ordered by `created_at` only, so paging while new identifications arrive can repeat or skip rows: deduplicate on `identification_id`.'
-      schema:
-        type: integer
-        minimum: 0
-        default: 0
-      examples:
-        first:
-          summary: First page
-          value: 0
-        second:
-          summary: Second page of 100
-          value: 100
-    HistoryFrom:
-      name: from
-      in: query
-      required: false
-      description: Inclusive UTC start. `YYYY-MM-DD` means the start of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no start bound. Any other value returns `400`.
-      schema:
-        type: string
-        pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?)?$
-      examples:
-        day:
-          summary: Start of a UTC day
-          value: '2026-08-01'
-        instant:
-          summary: An exact UTC time
-          value: '2026-08-04 12:00:00'
-    HistoryTo:
-      name: to
-      in: query
-      required: false
-      description: Inclusive UTC end. `YYYY-MM-DD` means the end of that day. `YYYY-MM-DD HH:MM:SS` is an exact time and may include a fractional second. Omit it for no end bound. A value before `from`, or any other shape, returns `400`.
-      schema:
-        type: string
-        pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?)?$
-      examples:
-        day:
-          summary: End of a UTC day
-          value: '2026-08-31'
-    HistoryScoreFrom:
-      name: score_from
-      in: query
-      required: false
-      description: Inclusive minimum `score`, from 0 through 999. `0` is a real bound. `999` selects the rate-limit marker. Omit it for no minimum. Any other value returns `400`.
-      schema:
-        type: integer
-        minimum: 0
-        maximum: 999
-      examples:
-        suspicious:
-          summary: Medium band and above
-          value: 30
-    HistoryScoreTo:
-      name: score_to
-      in: query
-      required: false
-      description: Inclusive maximum `score`, from 0 through 999. Omit it for no maximum. A value below `score_from`, or any other value, returns `400`.
-      schema:
-        type: integer
-        minimum: 0
-        maximum: 999
-      examples:
-        marker:
-          summary: Include the rate-limit marker
-          value: 999
-    HistoryFlagVpn:
-      name: is_vpn
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_vpn` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only VPN rows
-          value: 'true'
-    HistoryFlagTor:
-      name: is_tor
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_tor` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only Tor rows
-          value: 'true'
-    HistoryFlagProxy:
-      name: is_proxy
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_proxy` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only proxy rows
-          value: 'true'
-    HistoryFlagPrivacyRelay:
-      name: is_privacy_relay
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_privacy_relay` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only privacy-relay rows
-          value: 'true'
-    HistoryFlagNetworkCheckIncomplete:
-      name: network_check_incomplete
-      in: query
-      required: false
-      description: When set, keep only rows whose `network_check_incomplete` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only rows whose network check is incomplete
-          value: 'true'
-    HistoryFlagCheckIncomplete:
-      name: check_incomplete
-      in: query
-      required: false
-      description: When set, keep only rows whose `check_incomplete` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only rows whose check is incomplete
-          value: 'true'
-    HistoryFlagAntidetect:
-      name: is_antidetect
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_antidetect` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only antidetect rows
-          value: 'true'
-    HistoryFlagOsMismatch:
-      name: is_os_mismatch
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_os_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only OS-mismatch rows
-          value: 'true'
-    HistoryFlagOsNotDetected:
-      name: is_os_not_detected
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_os_not_detected` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only rows whose OS was not detected
-          value: 'true'
-    HistoryFlagTimezoneMismatch:
-      name: is_timezone_mismatch
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_timezone_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only timezone-mismatch rows
-          value: 'true'
-    HistoryFlagJsDisabled:
-      name: is_js_disabled
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_js_disabled` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only rows with JavaScript disabled
-          value: 'true'
-    HistoryFlagBrowserAutomation:
-      name: is_browser_automation
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_browser_automation` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only browser-automation rows
-          value: 'true'
-    HistoryFlagIncognito:
-      name: is_incognito
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_incognito` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only incognito rows
-          value: 'true'
-    HistoryFlagSearchBot:
-      name: is_search_bot
-      in: query
-      required: false
-      description: When set, keep only rows whose `is_search_bot` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          summary: Only search-engine crawler rows
-          value: 'true'
-    HistoryFlagIpMismatch:
-      name: ip_mismatch
-      in: query
-      required: false
-      description: Keep only rows whose `ip_mismatch` equals this value. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    HistoryFlagLatencyTest:
-      name: latency_test
-      in: query
-      required: false
-      description: Keep only rows whose `latency_test` equals this value. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    HistoryFlagDeviceSpoofing:
-      name: device_spoofing
-      in: query
-      required: false
-      description: Keep only rows whose `device_spoofing` equals this value. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    HistoryFlagBannedIp:
-      name: rate_limited
-      in: query
-      required: false
-      description: Keep only rows whose `rate_limited` flag equals this value. Older clients may send `banned_ip`. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    HistoryFlagAiBot:
-      name: ai_bot
-      in: query
-      required: false
-      description: Keep only rows whose `ai_bot` equals this value. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    HistoryFlagAiBrowser:
-      name: ai_browser
-      in: query
-      required: false
-      description: Keep only rows whose `ai_browser` equals this value. Omit to leave unconstrained.
-      schema:
-        type: string
-        enum:
-          - 'true'
-          - 'false'
-      examples:
-        match:
-          value: 'true'
-    ShieldDomain:
-      name: X-Shield-Domain
-      in: header
-      required: true
-      description: 'Your registered domain. The server matches it exactly against the domain registered in the analytics dashboard, so send it normalized: lowercase, without scheme, path, trailing slash or a leading `www.` (`https://www.Example.com/` becomes `example.com`). A missing or wrong value gets a `401` with an empty body.'
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 253
-      examples:
-        domain:
-          summary: A registered domain
-          value: example.com
-    DeprecatedHistoryType:
-      name: type
-      in: path
-      required: true
-      description: Identifier to search by. `request_id` is a legacy alias of `identification_id`. Other values get a `404` with a bare JSON string such as `"auto is not supported"`.
-      schema:
-        type: string
-        enum:
-          - identification_id
-          - request_id
-          - device_id
-          - user_hid
-          - visitor_id
-          - ip
-          - session_id
-          - cookie_id
-      examples:
-        identificationId:
-          summary: Search by Identification ID
-          value: identification_id
-    DeprecatedHistoryValue:
-      name: value
-      in: path
-      required: true
-      description: Value of the identifier. UUID types accept a UUID of any version; `ip` must be an IP address (an IPv6 address passes validation but then fails with `400` and a `null` body); `user_hid` is free text.
-      schema:
-        type: string
-        minLength: 1
-      examples:
-        identificationId:
-          summary: An Identification ID
-          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
-    DeprecatedHistoryLimit:
-      name: limit
-      in: query
-      required: false
-      description: Maximum number of identifications, from 1 to 100. Any other value becomes 100. There is no `offset`.
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 100
-      examples:
-        ten:
-          summary: Ten rows
-          value: 10
-    ShieldSignature:
-      name: X-Shield-Signature
-      in: header
-      required: true
-      description: |-
-        `sha256=` followed by the lowercase hex HMAC-SHA256 of the raw request body:
-        - key: your endpoint's signing secret as UTF-8 bytes, the `whsec_` prefix included (not hex- or
-          base64-decoded, not stripped);
-        - message: the exact bytes of the body as received.
-
-        Compare it with your own digest in constant time, before parsing the JSON. The example values
-        are the signatures of the example bodies (in their compact form as sent) with the test secret
-        `whsec_00112233445566778899aabbccddeeff`.
-      schema:
-        type: string
-        pattern: ^sha256=[0-9a-f]{64}$
-      examples:
-        identificationScored:
-          summary: Signature of the identification.scored example
-          value: sha256=2c8e643dcedf8b31e2ff36a64e5a7de165ea9d78e2330aee08aa6a725d670a65
-        webhookPing:
-          summary: Signature of the webhook.ping example
-          value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8
-    ShieldEventId:
-      name: X-Shield-Event-Id
-      in: header
-      required: false
-      description: Convenience mirror of signed body event_id. Trust the body after HMAC verification. Absent on older bodies. Retries reuse the logical ID across attempts; it is not a separate delivery-attempt identity.
-      schema:
-        type: string
-      examples:
-        event:
-          summary: Logical event identity
-          value: 79e23184cd0b5aae43125e3b14910f13b107a54b
   schemas:
+    ErrorBody:
+      type: object
+      description: Error object sent by the History API and by the Management API rate and load limits.
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message. Branch on the HTTP status, not on this text.
+          examples:
+            - too many requests
+    ErrorBodyText:
+      type: string
+      contentMediaType: application/json
+      contentSchema:
+        $ref: '#/components/schemas/ErrorBody'
+      description: 'JSON text followed by a newline, sent with `Content-Type: text/plain; charset=utf-8`. Parse it as JSON: it holds `{"error": "..."}`.'
+      examples:
+        - |
+          {"error":"invalid api key"}
+    HtmlText:
+      type: string
+      description: HTML error page from the edge proxy. Do not parse it; branch on the status.
+      examples:
+        - <html><body><h1>502 Bad Gateway</h1></body></html>
     ClientIdentity:
       type: object
       additionalProperties: true
@@ -2385,36 +2158,11 @@ components:
           description: Number of identifications that match the search in total, across all pages. Page with `offset` while it is below `total`.
           examples:
             - 37
-    ErrorBody:
-      type: object
-      description: Error object sent by the History API and by the Management API rate and load limits.
-      required:
-        - error
-      properties:
-        error:
-          type: string
-          description: Human-readable error message. Branch on the HTTP status, not on this text.
-          examples:
-            - too many requests
-    ErrorBodyText:
-      type: string
-      contentMediaType: application/json
-      contentSchema:
-        $ref: '#/components/schemas/ErrorBody'
-      description: 'JSON text followed by a newline, sent with `Content-Type: text/plain; charset=utf-8`. Parse it as JSON: it holds `{"error": "..."}`.'
-      examples:
-        - |
-          {"error":"invalid api key"}
     PlainText:
       type: string
       description: Plain text body.
       examples:
         - 404 page not found
-    HtmlText:
-      type: string
-      description: HTML error page from the edge proxy. Do not parse it; branch on the status.
-      examples:
-        - <html><body><h1>502 Bad Gateway</h1></body></html>
     MaskedKey:
       type: string
       pattern: ^(\*+.{4}|.{0,4})$
@@ -3873,6 +3621,39 @@ components:
           type: string
           minLength: 1
   examples:
+    HistoryUnauthorizedMissingHeader:
+      summary: Missing or malformed Authorization header
+      description: JSON text sent as `text/plain`, followed by a newline.
+      value: |
+        {"error":"missing or invalid authorization header"}
+    HistoryUnauthorizedInvalidKey:
+      summary: Unknown, deleted or disabled key
+      description: JSON text sent as `text/plain`, followed by a newline.
+      value: |
+        {"error":"invalid api key"}
+    HistoryTooManyRequests:
+      summary: Soft rate limit reached
+      description: More than about 15 requests in the current second for this domain. Retry after about a second.
+      value:
+        error: too many requests
+    HistoryInvalidValue:
+      summary: Malformed UUID value
+      description: 'The raw database error for a value that is not a UUID. It repeats for the same request: validate the value instead of retrying.'
+      value:
+        error: 'code: 53, message: Cannot convert string ''abc'' to type UUID'
+    HistoryKeyLookupFailed:
+      summary: Key lookup failed
+      description: A transient error while checking the key, sent as JSON text. Retry with backoff.
+      value: |
+        {"error":"internal error"}
+    BadGatewayHtml:
+      summary: Bad gateway
+      description: HTML page from the edge proxy.
+      value: <html><body><h1>502 Bad Gateway</h1></body></html>
+    GatewayTimeoutHtml:
+      summary: Gateway timeout
+      description: HTML page from the edge proxy.
+      value: <html><body><h1>504 Gateway Time-out</h1></body></html>
     HistoryPage:
       summary: Five identifications
       description: 'One page of five identifications out of 37 matches: a dangerous paid click through a proxy with an anti-detect browser, a trusted anonymous visit, a VPN visit with a local network leak and a late network correction, a rate-limit marker (999) and a search-engine crawler.'
@@ -4272,43 +4053,10 @@ components:
       value:
         data: []
         total: 0
-    HistoryUnauthorizedMissingHeader:
-      summary: Missing or malformed Authorization header
-      description: JSON text sent as `text/plain`, followed by a newline.
-      value: |
-        {"error":"missing or invalid authorization header"}
-    HistoryUnauthorizedInvalidKey:
-      summary: Unknown, deleted or disabled key
-      description: JSON text sent as `text/plain`, followed by a newline.
-      value: |
-        {"error":"invalid api key"}
     NotFoundText:
       summary: No route matched
       description: Plain text body of an unrouted path.
       value: 404 page not found
-    HistoryTooManyRequests:
-      summary: Soft rate limit reached
-      description: More than about 15 requests in the current second for this domain. Retry after about a second.
-      value:
-        error: too many requests
-    HistoryInvalidValue:
-      summary: Malformed UUID value
-      description: 'The raw database error for a value that is not a UUID. It repeats for the same request: validate the value instead of retrying.'
-      value:
-        error: 'code: 53, message: Cannot convert string ''abc'' to type UUID'
-    HistoryKeyLookupFailed:
-      summary: Key lookup failed
-      description: A transient error while checking the key, sent as JSON text. Retry with backoff.
-      value: |
-        {"error":"internal error"}
-    BadGatewayHtml:
-      summary: Bad gateway
-      description: HTML page from the edge proxy.
-      value: <html><body><h1>502 Bad Gateway</h1></body></html>
-    GatewayTimeoutHtml:
-      summary: Gateway timeout
-      description: HTML page from the edge proxy.
-      value: <html><body><h1>504 Gateway Time-out</h1></body></html>
     DomainProfile:
       summary: Profile of example.com
       description: A domain with 148,230 remaining included identifications and masked keys.
@@ -4701,31 +4449,6 @@ components:
         event_type: webhook.ping
         schema_version: '2026-06-01'
   responses:
-    HistoryBadRequest:
-      description: 'The path or a query filter is not accepted: an unknown search type, an invalid IPv4 address, a page size outside 1-100, a bad offset, or a filter value the server does not accept. Do not retry.'
-      content:
-        application/json:
-          schema:
-            type: object
-            additionalProperties: false
-            required:
-              - code
-              - error
-            properties:
-              code:
-                type: string
-                const: invalid_request
-              error:
-                type: string
-                description: Human-readable rejection. Branch on the HTTP status, not on this text.
-                examples:
-                  - invalid history input
-          examples:
-            rejected:
-              summary: Rejected history input
-              value:
-                code: invalid_request
-                error: invalid history input
     HistoryUnauthorized:
       description: 'The `Authorization` header is missing or is not a Bearer token, or the Private API Key is unknown, deleted or belongs to a disabled domain. The body is JSON text sent with `Content-Type: text/plain; charset=utf-8`: parse it as JSON anyway. Do not retry.'
       content:
@@ -4737,15 +4460,6 @@ components:
               $ref: '#/components/examples/HistoryUnauthorizedMissingHeader'
             invalidKey:
               $ref: '#/components/examples/HistoryUnauthorizedInvalidKey'
-    NotFound:
-      description: No route matches the method and path, for example because the base URL repeats part of the path or a path value is empty or contains `/`. Plain text body. Check the URL; do not retry.
-      content:
-        text/plain:
-          schema:
-            $ref: '#/components/schemas/PlainText'
-          examples:
-            notFound:
-              $ref: '#/components/examples/NotFoundText'
     HistoryTooManyRequests:
       description: 'More than about 15 requests in the current second for this domain (all callers of the domain share the limit). There is no ban: retry after about a second, with backoff.'
       content:
@@ -4794,6 +4508,15 @@ components:
           examples:
             gatewayTimeout:
               $ref: '#/components/examples/GatewayTimeoutHtml'
+    NotFound:
+      description: No route matches the method and path, for example because the base URL repeats part of the path or a path value is empty or contains `/`. Plain text body. Check the URL; do not retry.
+      content:
+        text/plain:
+          schema:
+            $ref: '#/components/schemas/PlainText'
+          examples:
+            notFound:
+              $ref: '#/components/examples/NotFoundText'
     ManagementUnauthorized:
       description: Empty body, no `Content-Type`. `X-Shield-Domain` or `Authorization` is missing or malformed, the domain is unknown or disabled, or the Secret Key is wrong. Do not retry.
     ManagementTooManyRequests:
@@ -4814,6 +4537,375 @@ components:
           examples:
             serverBusy:
               $ref: '#/components/examples/ManagementServerBusy'
+  parameters:
+    HistoryFlagVpn:
+      name: is_vpn
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_vpn` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only VPN rows
+          value: 'true'
+    HistoryFlagTor:
+      name: is_tor
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_tor` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only Tor rows
+          value: 'true'
+    HistoryFlagProxy:
+      name: is_proxy
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_proxy` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only proxy rows
+          value: 'true'
+    HistoryFlagPrivacyRelay:
+      name: is_privacy_relay
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_privacy_relay` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only privacy-relay rows
+          value: 'true'
+    HistoryFlagNetworkCheckIncomplete:
+      name: network_check_incomplete
+      in: query
+      required: false
+      description: When set, keep only rows whose `network_check_incomplete` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose network check is incomplete
+          value: 'true'
+    HistoryFlagCheckIncomplete:
+      name: check_incomplete
+      in: query
+      required: false
+      description: When set, keep only rows whose `check_incomplete` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose check is incomplete
+          value: 'true'
+    HistoryFlagAntidetect:
+      name: is_antidetect
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_antidetect` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only antidetect rows
+          value: 'true'
+    HistoryFlagOsMismatch:
+      name: is_os_mismatch
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_os_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only OS-mismatch rows
+          value: 'true'
+    HistoryFlagOsNotDetected:
+      name: is_os_not_detected
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_os_not_detected` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows whose OS was not detected
+          value: 'true'
+    HistoryFlagTimezoneMismatch:
+      name: is_timezone_mismatch
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_timezone_mismatch` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only timezone-mismatch rows
+          value: 'true'
+    HistoryFlagJsDisabled:
+      name: is_js_disabled
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_js_disabled` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rows with JavaScript disabled
+          value: 'true'
+    HistoryFlagBrowserAutomation:
+      name: is_browser_automation
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_browser_automation` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only browser-automation rows
+          value: 'true'
+    HistoryFlagIncognito:
+      name: is_incognito
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_incognito` equals this value. Always false for search-engine crawlers, matching the row. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only incognito rows
+          value: 'true'
+    HistoryFlagSearchBot:
+      name: is_search_bot
+      in: query
+      required: false
+      description: When set, keep only rows whose `is_search_bot` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only search-engine crawler rows
+          value: 'true'
+    HistoryFlagIpMismatch:
+      name: ip_mismatch
+      in: query
+      required: false
+      description: Keep only rows whose `ip_mismatch` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagLatencyTest:
+      name: latency_test
+      in: query
+      required: false
+      description: Keep only rows whose `latency_test` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagDeviceSpoofing:
+      name: device_spoofing
+      in: query
+      required: false
+      description: Keep only rows whose `device_spoofing` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagRateLimited:
+      name: rate_limited
+      in: query
+      required: false
+      description: When set, keep only rows whose `rate_limited` equals this value. Omit the parameter to leave the flag unconstrained. The only accepted values are `true` and `false`.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          summary: Only rate-limited rows
+          value: 'true'
+    HistoryFlagAiBot:
+      name: ai_bot
+      in: query
+      required: false
+      description: Keep only rows whose `ai_bot` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    HistoryFlagAiBrowser:
+      name: ai_browser
+      in: query
+      required: false
+      description: Keep only rows whose `ai_browser` equals this value. Omit to leave unconstrained.
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+      examples:
+        match:
+          value: 'true'
+    ShieldDomain:
+      name: X-Shield-Domain
+      in: header
+      required: true
+      description: 'Your registered domain. The server matches it exactly against the domain registered in the analytics dashboard, so send it normalized: lowercase, without scheme, path, trailing slash or a leading `www.` (`https://www.Example.com/` becomes `example.com`). A missing or wrong value gets a `401` with an empty body.'
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 253
+      examples:
+        domain:
+          summary: A registered domain
+          value: example.com
+    DeprecatedHistoryType:
+      name: type
+      in: path
+      required: true
+      description: Identifier to search by. `request_id` is a legacy alias of `identification_id`. Other values get a `404` with a bare JSON string such as `"auto is not supported"`.
+      schema:
+        type: string
+        enum:
+          - identification_id
+          - request_id
+          - device_id
+          - user_hid
+          - visitor_id
+          - ip
+          - session_id
+          - cookie_id
+      examples:
+        identificationId:
+          summary: Search by Identification ID
+          value: identification_id
+    DeprecatedHistoryValue:
+      name: value
+      in: path
+      required: true
+      description: Value of the identifier. UUID types accept a UUID of any version; `ip` must be an IP address (an IPv6 address passes validation but then fails with `400` and a `null` body); `user_hid` is free text.
+      schema:
+        type: string
+        minLength: 1
+      examples:
+        identificationId:
+          summary: An Identification ID
+          value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+    DeprecatedHistoryLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of identifications, from 1 to 100. Any other value becomes 100. There is no `offset`.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 100
+      examples:
+        ten:
+          summary: Ten rows
+          value: 10
+    ShieldSignature:
+      name: X-Shield-Signature
+      in: header
+      required: true
+      description: |-
+        `sha256=` followed by the lowercase hex HMAC-SHA256 of the raw request body:
+        - key: your endpoint's signing secret as UTF-8 bytes, the `whsec_` prefix included (not hex- or
+          base64-decoded, not stripped);
+        - message: the exact bytes of the body as received.
+
+        Compare it with your own digest in constant time, before parsing the JSON. The example values
+        are the signatures of the example bodies (in their compact form as sent) with the test secret
+        `whsec_00112233445566778899aabbccddeeff`.
+      schema:
+        type: string
+        pattern: ^sha256=[0-9a-f]{64}$
+      examples:
+        identificationScored:
+          summary: Signature of the identification.scored example
+          value: sha256=2c8e643dcedf8b31e2ff36a64e5a7de165ea9d78e2330aee08aa6a725d670a65
+        webhookPing:
+          summary: Signature of the webhook.ping example
+          value: sha256=ea2685733d254f7028fb031c4214583b0650de01e6c8c93131236024edd9fdd8
+    ShieldEventId:
+      name: X-Shield-Event-Id
+      in: header
+      required: false
+      description: Convenience mirror of signed body event_id. Trust the body after HMAC verification. Absent on older bodies. Retries reuse the logical ID across attempts; it is not a separate delivery-attempt identity.
+      schema:
+        type: string
+      examples:
+        event:
+          summary: Logical event identity
+          value: 79e23184cd0b5aae43125e3b14910f13b107a54b
   headers:
     Deprecation:
       description: Marks the endpoint as deprecated. The value is the literal `true`.
@@ -4837,8 +4929,8 @@ components:
       description: Points to the replacement endpoint with `rel="successor-version"`.
       schema:
         type: string
-        const: <https://account.shieldlabs.ai/api/v1/history>; rel="successor-version"
+        const: <https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/identifications/{resource_id}>; rel="successor-version"
       examples:
         successor:
           summary: Successor endpoint
-          value: <https://account.shieldlabs.ai/api/v1/history>; rel="successor-version"
+          value: <https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/identifications/{resource_id}>; rel="successor-version"

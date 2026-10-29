@@ -1,0 +1,15 @@
+name: rate_limited
+in: query
+required: false
+description: >-
+  When set, keep only rows whose `rate_limited` equals this value. Omit the parameter to leave
+  the flag unconstrained. The only accepted values are `true` and `false`.
+schema:
+  type: string
+  enum:
+    - 'true'
+    - 'false'
+examples:
+  match:
+    summary: Only rate-limited rows
+    value: 'true'
