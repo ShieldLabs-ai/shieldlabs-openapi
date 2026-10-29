@@ -8,13 +8,13 @@ get:
   summary: Read one History entity
   description: |-
     Reads one `identifications`, `user`, `visitor`, `device` or `ip` card.
-    `{domain}` is the public domain UUID. The identification record uses `type: identification`.
-    An unknown id returns `404 not_found`. The same id on more than one owned domain returns
-    `409 ambiguous_entity_id`.
+    `{domain_id}` is the public domain UUID. `{resource_id}` is that record's id.
+    The list query parameters also apply. A device card accepts `device_id_source`.
+    An unknown id returns `404 not_found`.
   security:
     - historyApiKey: []
   parameters:
-    - name: domain
+    - name: domain_id
       in: path
       required: true
       description: Public domain UUID of the site whose History is being read.
@@ -34,15 +34,223 @@ get:
       examples:
         identifications:
           value: identifications
-    - name: id
+    - name: resource_id
       in: path
       required: true
-      description: Entity id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+      description: |-
+        Record id. UUID for identifications, visitor and device. User HID text for user. IPv4 for ip.
+        Send a User HID as one path segment: the characters `A-Z a-z 0-9 - . _ ~ $ & + , : ; = @` unescaped
+        and every other byte as uppercase `%XX`.
       schema:
         type: string
+        minLength: 1
+        pattern: '^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$'
       examples:
         identification:
           value: a5b7c9d1-e3f5-4a7b-9c1d-3e5f7a9b1c3d
+    - name: limit
+      in: query
+      required: false
+      description: Maximum records in the page, from 1 through 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      examples:
+        page:
+          value: 20
+    - name: page_token
+      in: query
+      required: false
+      description: Opaque token from the previous page. Omit it on the first page.
+      schema:
+        type: string
+      examples:
+        next:
+          value: next-page
+    - name: from
+      in: query
+      required: false
+      description: Inclusive RFC3339 start. Send `to` as well, or send neither.
+      schema:
+        type: string
+        format: date-time
+      examples:
+        start:
+          value: '2026-10-27T00:00:00Z'
+    - name: to
+      in: query
+      required: false
+      description: Exclusive RFC3339 end. Send `from` as well, or send neither.
+      schema:
+        type: string
+        format: date-time
+      examples:
+        end:
+          value: '2026-10-28T00:00:00Z'
+    - name: snapshot
+      in: query
+      required: false
+      description: Value of the History-Snapshot header. Continues that read.
+      schema:
+        type: string
+      examples:
+        pin:
+          value: snapshot-1
+    - name: risk_bands
+      in: query
+      required: false
+      description: Repeat for trusted, suspicious, or dangerous.
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [trusted, suspicious, dangerous]
+      style: form
+      explode: true
+      examples:
+        dangerous:
+          value: [dangerous]
+    - name: hre_min_accounts
+      in: query
+      required: false
+      description: Minimum linked accounts for a high-risk event, from 3 to 99.
+      schema:
+        type: integer
+        minimum: 3
+        maximum: 99
+        default: 3
+      examples:
+        minimum:
+          value: 3
+    - name: hre_min_devices
+      in: query
+      required: false
+      description: Minimum linked devices for a high-risk event, from 4 to 99.
+      schema:
+        type: integer
+        minimum: 4
+        maximum: 99
+        default: 4
+      examples:
+        minimum:
+          value: 4
+    - $ref: ../components/parameters/HistoryFlagVpn.yaml
+    - $ref: ../components/parameters/HistoryFlagTor.yaml
+    - $ref: ../components/parameters/HistoryFlagProxy.yaml
+    - $ref: ../components/parameters/HistoryFlagPrivacyRelay.yaml
+    - $ref: ../components/parameters/HistoryFlagNetworkCheckIncomplete.yaml
+    - $ref: ../components/parameters/HistoryFlagCheckIncomplete.yaml
+    - $ref: ../components/parameters/HistoryFlagAntidetect.yaml
+    - $ref: ../components/parameters/HistoryFlagOsMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagOsNotDetected.yaml
+    - $ref: ../components/parameters/HistoryFlagTimezoneMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagJsDisabled.yaml
+    - $ref: ../components/parameters/HistoryFlagBrowserAutomation.yaml
+    - $ref: ../components/parameters/HistoryFlagIncognito.yaml
+    - $ref: ../components/parameters/HistoryFlagSearchBot.yaml
+    - $ref: ../components/parameters/HistoryFlagIpMismatch.yaml
+    - $ref: ../components/parameters/HistoryFlagLatencyTest.yaml
+    - $ref: ../components/parameters/HistoryFlagDeviceSpoofing.yaml
+    - $ref: ../components/parameters/HistoryFlagRateLimited.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBot.yaml
+    - $ref: ../components/parameters/HistoryFlagAiBrowser.yaml
+    - name: risk_signals
+      in: query
+      required: false
+      description: Repeat a public signal code. Several codes combine with OR.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        vpn:
+          value: [vpn]
+    - name: source
+      in: query
+      required: false
+      description: Traffic source. Together with campaign, at most 8 values, matched if any value matches. _empty means no referrer.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        google:
+          value: [google]
+    - name: campaign
+      in: query
+      required: false
+      description: Campaign name. No campaign matches visits with no campaign.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      examples:
+        none:
+          value: ["No campaign"]
+    - name: device_id_source
+      in: query
+      required: false
+      description: Device cards only. `legacy` or `fp21_record`.
+      schema:
+        type: string
+        enum: [legacy, fp21_record]
+      examples:
+        legacy:
+          value: legacy
+    - name: relation
+      in: query
+      required: false
+      description: Linked-id page for this card. Identification cards reject this parameter.
+      schema:
+        type: string
+        enum:
+          - visitors
+          - devices
+          - users
+          - public_ips
+          - sessions
+          - cookies
+          - local_ips
+          - countries
+          - local_countries
+          - browsers
+          - os
+          - device_types
+          - connection_types
+          - risk_signals
+          - high_risk_events
+      examples:
+        visitors:
+          value: visitors
+    - name: relation_limit
+      in: query
+      required: false
+      description: Linked records in one page, from 1 through 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      examples:
+        page:
+          value: 20
+    - name: relation_page_token
+      in: query
+      required: false
+      description: Opaque token from the previous linked-id page.
+      schema:
+        type: string
+      examples:
+        next:
+          value: next-page
   responses:
     '200':
       description: The entity card.

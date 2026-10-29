@@ -155,7 +155,7 @@ describe('error responses', () => {
   const UNDOCUMENTED = {
     'management 402': 'SDKs map 402 defensively; these Management endpoints never debit included identifications',
   };
-  const OPERATIONS = { history: ['searchHistory'], management: ['getDomainProfile', 'searchHistoryDeprecated'] };
+  const OPERATIONS = { history: ['listHistoryEntities'], management: ['getDomainProfile', 'searchHistoryDeprecated'] };
   // Cases that only one operation of a surface can produce.
   const ONLY = { 'management 400': ['searchHistoryDeprecated'] };
 

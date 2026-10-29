@@ -15,10 +15,12 @@ const FLAGS = [
 describe('public History field cleanup', () => {
   it('keeps the 20 supported flags, date/score bounds and paging parameters', () => {
     const { doc } = freshBuild();
-    const { operation } = operationById(doc, 'searchHistory');
+    const { operation } = operationById(doc, 'listHistoryEntities');
     const names = operation.parameters.map((p) => deref(doc, p).name);
     assert.deepEqual(names.sort(), [
-      'search_type', 'value', 'limit', 'offset', 'from', 'to', 'score_from', 'score_to', ...FLAGS,
+      'domain_id', 'resource', 'limit', 'page_token', 'from', 'to', 'snapshot',
+      'risk_bands', 'hre_min_accounts', 'hre_min_devices', 'ids',
+      'risk_signals', 'source', 'campaign', ...FLAGS,
     ].sort());
     assert.ok(operation.responses['400']);
     for (const name of RETIRED) assert.ok(operation.description.includes(name));

@@ -146,7 +146,7 @@ export function parseEvent(rawBody) {
 SHIELDLABS_API_KEY=sec_your_private_key npm run check:live
 ```
 
-The script searches for a random request ID and expects `{"data":[],"total":0}`. Optional variables: `SHIELDLABS_LIVE_REQUEST_ID` (validates that row), `SHIELDLABS_SECRET_KEY` with `SHIELDLABS_DOMAIN` (one Management API profile call), `SHIELDLABS_API_BASE_URL` and `SHIELDLABS_MANAGEMENT_BASE_URL` (https only; plain http is accepted for localhost, 127.0.0.1 and [::1]). It never prints keys and is skipped when `SHIELDLABS_API_KEY` is not set.
+The script lists the domain, then reads one identification card. An unknown id is a `404`. Optional variables: `SHIELDLABS_LIVE_REQUEST_ID` (validates that card), `SHIELDLABS_SECRET_KEY` with `SHIELDLABS_DOMAIN` (one Management API profile call), `SHIELDLABS_API_BASE_URL` and `SHIELDLABS_MANAGEMENT_BASE_URL` (https only; plain http is accepted for localhost, 127.0.0.1 and [::1]). It never prints keys and is skipped when `SHIELDLABS_API_KEY` is not set.
 
 ## Reference
 
@@ -154,7 +154,9 @@ The script searches for a random request ID and expects `{"data":[],"total":0}`.
 
 | operationId | Request | Credentials | Purpose |
 |---|---|---|---|
-| `searchHistory` | `GET https://account.shieldlabs.ai/api/v1/history/{search_type}/{value}` | Private API Key | Identifications matching one identifier, newest first |
+| `listDomains` | `GET https://account.shieldlabs.ai/api/v1/domains` | Private API Key | Domain id for this key |
+| `listHistoryEntities` | `GET https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/{resource}` | Private API Key | Identifications or users |
+| `getHistoryEntity` | `GET https://account.shieldlabs.ai/api/v1/domains/{domain_id}/history/{resource}/{resource_id}` | Private API Key | One identification, user, visitor, device, or IP |
 | `getDomainProfile` | `GET https://api.shieldlabs.ai/v1/profile` | Secret Key + `X-Shield-Domain` | Domain, remaining included identifications, masked keys |
 | `searchHistoryDeprecated` | `GET https://api.shieldlabs.ai/v1/history/{type}/{value}` | Secret Key + `X-Shield-Domain` | Deprecated, stops working after Sat, 01 Jan 2027 00:00:00 GMT |
 | `getHealth` | `GET /health` on both hosts | none | Liveness |

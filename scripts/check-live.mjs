@@ -134,31 +134,30 @@ export async function runLiveChecks(env = process.env, print = console.log) {
   };
 
   try {
+    const domainsResponse = await getJson(`${history}/api/v1/domains`, auth);
+    if (domainsResponse.status !== 200 || !domainsResponse.body?.domains?.[0]?.id) {
+      fail(`History API domain list: ${describeFailure(domainsResponse)}`);
+    } else {
+    const domainId = domainsResponse.body.domains[0].id;
     const unknownId = randomUUID();
-    const url = `${history}/api/v1/history/identification_id/${unknownId}?limit=1`;
+    const url = `${history}/api/v1/domains/${domainId}/history/identifications/${unknownId}`;
     const response = await getJson(url, auth);
-    if (response.status !== 200) fail(`History API search for an unknown request ID: ${describeFailure(response)}`);
-    else if (check('History API page', 'HistoryPage', response.body)) {
-      if (response.body.total === 0 && response.body.data.length === 0) {
-        pass('History API: an unknown request ID returns {"data":[],"total":0}');
-      } else fail('History API: an unknown request ID returned rows');
-    }
+    if (response.status !== 404) fail(`History API card for an unknown identification: ${describeFailure(response)}`);
+    else pass('History API: an unknown identification returns 404');
 
     const liveId = env.SHIELDLABS_LIVE_REQUEST_ID;
     if (liveId) {
       if (!UUID.test(liveId)) fail('SHIELDLABS_LIVE_REQUEST_ID is not a UUID');
       else {
-        const rowUrl = `${history}/api/v1/history/identification_id/${liveId.toLowerCase()}?limit=1`;
+        const rowUrl = `${history}/api/v1/domains/${domainId}/history/identifications/${liveId.toLowerCase()}`;
         const rowResponse = await getJson(rowUrl, auth);
-        if (rowResponse.status !== 200) fail(`History API row: ${describeFailure(rowResponse)}`);
-        else if (check('History API page', 'HistoryPage', rowResponse.body)) {
-          if (rowResponse.body.data.length !== 1) fail('History API: SHIELDLABS_LIVE_REQUEST_ID matched no row');
-          else if (check('History API row', 'HistoryRow', rowResponse.body.data[0])) {
-            const { undocumented } = validator.inspect(schema('HistoryRow'), rowResponse.body.data[0]);
-            pass(`History API: the row matches HistoryRow (${undocumented.length} undocumented diagnostic fields)`);
-          }
+        if (rowResponse.status !== 200) fail(`History API card: ${describeFailure(rowResponse)}`);
+        else if (check('History API row', 'HistoryRow', rowResponse.body?.data)) {
+          const { undocumented } = validator.inspect(schema('HistoryRow'), rowResponse.body.data);
+          pass(`History API: the card matches HistoryRow (${undocumented.length} undocumented diagnostic fields)`);
         }
       }
+    }
     }
 
     const secret = env.SHIELDLABS_SECRET_KEY;
