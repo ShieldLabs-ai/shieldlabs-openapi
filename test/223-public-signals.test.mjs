@@ -12,8 +12,6 @@ test('2026-10-13 public flags fold the internal detectors',()=>{
  const body=JSON.parse(readFileSync(path.join(ROOT,'test/contracts/219-named.json'),'utf8'));
  body.schema_version='2026-10-13';
  const flags=body.data.detection_flags;
- flags.banned_ip=flags.banned_ip;
- delete flags.banned_ip;
  flags.private_relay=flags.privacy_relay;
  flags.network_check_incomplete=flags.stun_not_checked;
  delete flags.privacy_relay;
@@ -27,7 +25,7 @@ test('2026-10-13 public flags fold the internal detectors',()=>{
   delete missing.data.detection_flags[key];
   assert.equal(validator.validate(schema,missing).valid,false,key+' required');
  }
- for(const key of ['os_mismatch2','browser_vpn_proxy','privacy_relay','stun_not_checked','ws_tcp_latency','banned_ip']){
+ for(const key of ['os_mismatch2','browser_vpn_proxy','privacy_relay','stun_not_checked','ws_tcp_latency','rate_limited']){
   const extra=structuredClone(body);
   extra.data.detection_flags[key]=false;
   assert.equal(validator.validate(schema,extra).valid,false,key+' is not public');

@@ -2601,7 +2601,7 @@ components:
           description: Previous public name of the latency detector. Current 2026-10-13 payloads use latency_test.
         banned_ip:
           type: boolean
-          description: The visitor exceeded the identification rate limit.
+          description: Current public name of the banned-IP flag.
         ai_bot:
           type: boolean
           description: An accepted bot is classified as AI training or user-requested fetch. ChatGPT-User, Claude-User and Perplexity-User are AI bots, not AI browsers. Weight 0. The flag is optional on older payloads; its absence is not an evaluated negative result. Provider claims alone do not grant zero risk.

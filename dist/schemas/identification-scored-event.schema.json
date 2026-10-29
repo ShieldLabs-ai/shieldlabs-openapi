@@ -1206,7 +1206,7 @@
         },
         "banned_ip": {
           "type": "boolean",
-          "description": "The visitor exceeded the identification rate limit."
+          "description": "Current public name of the banned-IP flag."
         },
         "ai_bot": {
           "type": "boolean",
