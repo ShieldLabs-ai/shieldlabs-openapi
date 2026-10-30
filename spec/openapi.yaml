@@ -38,6 +38,8 @@ info:
     and Dangerous 60-100. Missing signal weights do not mean nothing contributed to a score.
     Entity counts are backend aggregates, not a list of analyzed identifications. Preserve
     `high_risk_events` availability and confidence separately from Risk Score.
+    Identification detail cards optionally include `scored_signals: [{name, weight}]` with
+    recorded webhook-shaped weights. Missing/null is unavailable; [] is known empty.
     Scored webhook payloads use `identification_id`, `risk_score` and weighted `signals`.
     Legacy 999 markers are not numeric risk scores and must not be fabricated from missing data.
 

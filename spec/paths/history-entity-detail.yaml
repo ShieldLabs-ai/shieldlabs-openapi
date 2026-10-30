@@ -233,6 +233,16 @@ get:
                         type: integer
                         minimum: 0
                         maximum: 100
+                  scored_signals:
+                    type: [array, 'null']
+                    maxItems: 100
+                    description: |-
+                      Actual recorded signal weights for this identification revision, as in
+                      identification.scored signals. Absent/null means unavailable; an empty
+                      array means known empty. Weights can be zero or negative. Keep risk.score
+                      as the total; group and visit caps can make it differ from the sum.
+                    items:
+                      $ref: ../components/schemas/Signal.yaml
                   signals:
                     type: object
                     properties:

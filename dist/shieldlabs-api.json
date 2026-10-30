@@ -4,7 +4,7 @@
     "title": "ShieldLabs API",
     "version": "1.0.1",
     "summary": "Identification results and risk scoring for your backend.",
-    "description": "ShieldLabs provides identification, risk signals and risk scoring. The public History API\nserves domain-scoped entity lists and cards. Signed scored webhooks use a separate payload\nshape: an entity card must not be normalized as a legacy row or a scored webhook.\n\n## How it fits\n\n1. The browser SDK returns an identification ID for a visit or protected action.\n2. Your backend reads its card at `/api/v1/domains/{domain_id}/history/identifications/{resource_id}`\n   or receives a signed `identification.scored` webhook.\n3. Check ownership, freshness, replay protection and the actual availability state before\n   applying your application's policy. An ID alone does not prove successful ingest.\n\n## Hosts and credentials\n\n| API | Host | Credentials |\n|---|---|---|\n| History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |\n| Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |\n\n`{domain_id}` in History is the public domain UUID from `GET /api/v1/domains`, not a hostname.\nLists are available for `identifications` and `user`. Cards are available for `identifications`,\n`user`, `visitor`, `device` and `ip`. Session and cookie are identification fields, not resources.\nThe old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.\nKeep server keys and webhook secrets off the browser; only the public browser key goes there.\nAccounts and configuration are available in the dashboard at https://app.shieldlabs.ai.\n\n## Risk and availability\n\nAn identification card uses `type: identification`, `id`, `domain_id`, `domain`, nested\n`risk` and `signals`. Use `risk.score` only when `risk.state` is `ok` and a score is present.\n`risk.state: unavailable` is unknown, never Score 0. Bands are Trusted 0-29, Suspicious 30-59\nand Dangerous 60-100. Missing signal weights do not mean nothing contributed to a score.\nEntity counts are backend aggregates, not a list of analyzed identifications. Preserve\n`high_risk_events` availability and confidence separately from Risk Score.\nScored webhook payloads use `identification_id`, `risk_score` and weighted `signals`.\nLegacy 999 markers are not numeric risk scores and must not be fabricated from missing data.\n\n## Pagination and time\n\nLists return `data` and an opaque `next_page_token`. Pass the token as `page_token`.\nFilters are repeated query parameters: `risk_bands`, `is_*` flags (`true` or `false`, AND),\n`risk_signals` (OR), and `source` with `campaign` (one OR group, at most 8). A nested `filter`,\n`chips`, and `offset` return `400`. `is_abuser`, `is_datacenter` and\n`is_stun_not_checked` return `400`.\nIdentification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.\n\n## Errors and retries\n\nEntity errors use `{\"error\":{\"code\":\"...\",\"message\":\"...\"}}`. Handle the controlled\ncode together with HTTP status. Missing entities return 404; retired routes return 410;\ninvalid queries return 400; snapshot failures return 503. Authentication and gateway errors\ncan use their own envelopes. Do not log credentials or raw private diagnostic bodies.\nRetry reads within a bounded budget, respecting Retry-After and cancellation. Never retry\nmutations automatically. A missing History result does not establish a billing cause.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
+    "description": "ShieldLabs provides identification, risk signals and risk scoring. The public History API\nserves domain-scoped entity lists and cards. Signed scored webhooks use a separate payload\nshape: an entity card must not be normalized as a legacy row or a scored webhook.\n\n## How it fits\n\n1. The browser SDK returns an identification ID for a visit or protected action.\n2. Your backend reads its card at `/api/v1/domains/{domain_id}/history/identifications/{resource_id}`\n   or receives a signed `identification.scored` webhook.\n3. Check ownership, freshness, replay protection and the actual availability state before\n   applying your application's policy. An ID alone does not prove successful ingest.\n\n## Hosts and credentials\n\n| API | Host | Credentials |\n|---|---|---|\n| History | `https://account.shieldlabs.ai` | Server-only `Authorization: Bearer <Private API Key>` |\n| Management | `https://api.shieldlabs.ai` | Server-only `X-Shield-Domain` and Secret Key |\n\n`{domain_id}` in History is the public domain UUID from `GET /api/v1/domains`, not a hostname.\nLists are available for `identifications` and `user`. Cards are available for `identifications`,\n`user`, `visitor`, `device` and `ip`. Session and cookie are identification fields, not resources.\nThe old unscoped `/api/v1/history/{search_type}/{value}` route is retired with HTTP 410.\nKeep server keys and webhook secrets off the browser; only the public browser key goes there.\nAccounts and configuration are available in the dashboard at https://app.shieldlabs.ai.\n\n## Risk and availability\n\nAn identification card uses `type: identification`, `id`, `domain_id`, `domain`, nested\n`risk` and `signals`. Use `risk.score` only when `risk.state` is `ok` and a score is present.\n`risk.state: unavailable` is unknown, never Score 0. Bands are Trusted 0-29, Suspicious 30-59\nand Dangerous 60-100. Missing signal weights do not mean nothing contributed to a score.\nEntity counts are backend aggregates, not a list of analyzed identifications. Preserve\n`high_risk_events` availability and confidence separately from Risk Score.\nIdentification detail cards optionally include `scored_signals: [{name, weight}]` with\nrecorded webhook-shaped weights. Missing/null is unavailable; [] is known empty.\nScored webhook payloads use `identification_id`, `risk_score` and weighted `signals`.\nLegacy 999 markers are not numeric risk scores and must not be fabricated from missing data.\n\n## Pagination and time\n\nLists return `data` and an opaque `next_page_token`. Pass the token as `page_token`.\nFilters are repeated query parameters: `risk_bands`, `is_*` flags (`true` or `false`, AND),\n`risk_signals` (OR), and `source` with `campaign` (one OR group, at most 8). A nested `filter`,\n`chips`, and `offset` return `400`. `is_abuser`, `is_datacenter` and\n`is_stun_not_checked` return `400`.\nIdentification timestamps and risk `as_of` are RFC3339. Nullable fields remain unavailable.\n\n## Errors and retries\n\nEntity errors use `{\"error\":{\"code\":\"...\",\"message\":\"...\"}}`. Handle the controlled\ncode together with HTTP status. Missing entities return 404; retired routes return 410;\ninvalid queries return 400; snapshot failures return 503. Authentication and gateway errors\ncan use their own envelopes. Do not log credentials or raw private diagnostic bodies.\nRetry reads within a bounded budget, respecting Retry-After and cancellation. Never retry\nmutations automatically. A missing History result does not establish a billing cause.\n\n## Webhooks\n\nShieldLabs creates one logical signed event per identification and enabled endpoint.\nContract `2026-10-13` includes the identification score, named signals, detection flags,\nincluding search bots, AI bots and AI browsers, and account-event evaluations.\nShieldLabs identifies the provider of recognized bots and AI browsers when available.\nMulti-account group changes use a separate event. Current user risk categories\nare separate from the score of one identification.\nDelivery attempts have a 1-second HTTP timeout. Network errors, timeouts, 429 and 5xx\nretry with backoff, up to 8 failed sends or a 15-minute retry age; other 4xx are terminal.\nRetries preserve the exact signed body and\n`event_id`; duplicate deliveries remain possible after an accepted request loses its response.\nVerify the signature, durably store the event using its signed `event_id` (legacy fallback:\n`data.identification_id`), then answer 2xx within a second and process asynchronously.\nRedirects are not followed. A later History refinement does not create a new webhook event.\nUse the History API for the latest stored result. See the `identification.scored` and\n`webhook.ping` entries for the signature algorithm.\n\n## Compatibility\n\nIgnore fields you do not know, keep unknown values of string fields (such as new signal names\nor channels) instead of failing, and accept webhook `schema_version` values other than\n`2026-10-13` (current) or a supported older version.\n\nStart free at https://app.shieldlabs.ai. Guides: https://docs.shieldlabs.ai.",
     "contact": {
       "name": "ShieldLabs",
       "url": "https://docs.shieldlabs.ai",
@@ -1009,6 +1009,17 @@
                               "minimum": 0,
                               "maximum": 100
                             }
+                          }
+                        },
+                        "scored_signals": {
+                          "type": [
+                            "array",
+                            "null"
+                          ],
+                          "maxItems": 100,
+                          "description": "Actual recorded signal weights for this identification revision, as in\nidentification.scored signals. Absent/null means unavailable; an empty\narray means known empty. Weights can be zero or negative. Keep risk.score\nas the total; group and visit caps can make it differ from the sum.",
+                          "items": {
+                            "$ref": "#/components/schemas/Signal"
                           }
                         },
                         "signals": {
@@ -2746,6 +2757,33 @@
           "404 page not found"
         ]
       },
+      "Signal": {
+        "type": "object",
+        "description": "One public risk signal behind the Risk Score. Fired signals are listed in scoring order, including weight 0 (incognito, search_bot, ai_bot, ai_browser, check_incomplete). Debug rows are omitted. The same name can appear twice, and weights can be negative.",
+        "required": [
+          "name",
+          "weight"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected, including a browser VPN or proxy;\n- `private_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: either operating-system consistency detector fired;\n- `latency_test`: the WebSocket-to-TCP latency test fired;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `network_check_incomplete`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `network_check_incomplete`;\n- `banned_ip`: the rate-limit marker. Older payloads used `banned_ip`.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
+            "examples": [
+              "proxy",
+              "antidetect_browser"
+            ]
+          },
+          "weight": {
+            "type": "integer",
+            "description": "Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `banned_ip`. Older payloads used `banned_ip`. Weights can change between releases; never add them up yourself.",
+            "examples": [
+              10,
+              -30
+            ]
+          }
+        }
+      },
       "MaskedKey": {
         "type": "string",
         "pattern": "^(\\*+.{4}|.{0,4})$",
@@ -3856,33 +3894,6 @@
             "description": "`utm_term` query parameter as sent.",
             "examples": [
               ""
-            ]
-          }
-        }
-      },
-      "Signal": {
-        "type": "object",
-        "description": "One public risk signal behind the Risk Score. Fired signals are listed in scoring order, including weight 0 (incognito, search_bot, ai_bot, ai_browser, check_incomplete). Debug rows are omitted. The same name can appear twice, and weights can be negative.",
-        "required": [
-          "name",
-          "weight"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Signal name. The set is open: new names can appear at any time, so keep unknown names and\nuse them for display and logging only. Known names:\n- `tor`: the request came through Tor;\n- `vpn`: a VPN was detected, including a browser VPN or proxy;\n- `private_relay`: a privacy relay such as iCloud Private Relay;\n- `proxy`: a proxy was detected;\n- `datacenter_ip`: the IP belongs to a datacenter or hosting range;\n- `abuser`: the IP has a record of abuse;\n- `browser_vpn_proxy`: a VPN or proxy inside the browser;\n- `antidetect_browser`: an anti-detect browser (the matching flag is `anti_detect_browser`);\n- `proxy_routed_antidetect`: the network check was routed through a proxy in a way typical\n  for anti-detect browsers;\n- `port_scan_routed_via_proxy`: `proxy_routed_antidetect` carried forward from an earlier\n  identification of the same device and IP;\n- `browser_automation`: browser automation, for example a WebDriver-controlled browser (90 in task 204 scoring releases);\n- `javascript_disabled`: JavaScript or the browser APIs the checks need were unavailable;\n- `os_mismatch`: either operating-system consistency detector fired;\n- `latency_test`: the WebSocket-to-TCP latency test fired;\n- `os_not_detected`: the operating system could not be determined;\n- `timezone_mismatch`: the browser timezone differs from the IP location timezone;\n- `network_check_incomplete`: the network (STUN) check did not complete;\n- `stun_late_correction`: a late network result arrived; negative weight that cancels\n  `network_check_incomplete`;\n- `banned_ip`: the rate-limit marker. Older payloads used `banned_ip`.\n\nA verdict carried forward from an earlier identification of the same device and IP (for\nexample `antidetect_browser`) keeps a name derived from the original signal and can carry a\npartial weight.",
-            "examples": [
-              "proxy",
-              "antidetect_browser"
-            ]
-          },
-          "weight": {
-            "type": "integer",
-            "description": "Points the signal contributed. Can be negative (`stun_late_correction` is -30) and is 999 for `banned_ip`. Older payloads used `banned_ip`. Weights can change between releases; never add them up yourself.",
-            "examples": [
-              10,
-              -30
             ]
           }
         }
