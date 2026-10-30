@@ -145,7 +145,7 @@
           "History API"
         ],
         "summary": "List History entities",
-        "description": "Lists `identifications` or `user` for one domain. `{domain_id}` is the public domain UUID\nfrom `GET /api/v1/domains`. Literal `all` returns `403 domain_scope_not_supported`. A list of\n`visitor`, `device` or `ip` returns `403 entity_list_disabled`.\n\nRepeat `risk_bands`, `risk_signals`, `source`, `campaign` and `ids`. Flags are `true` or `false`\nand combine with AND. Signal codes combine with OR. `source` and `campaign` are one OR group,\nat most 8 values together. `is_abuser`, `is_datacenter` and\n`is_stun_not_checked` return `400`. A nested `filter` or `chips` returns `400`.\n\nThe old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.\nPage with `page_token`, not `offset`. `from` and `to` are both required when either is set.",
+        "description": "Lists `identifications` or `user` for one domain. `{domain_id}` is the public domain UUID\nfrom `GET /api/v1/domains`. Literal `all` returns `403 domain_scope_not_supported`. A list of\n`visitor`, `device` or `ip` returns `403 entity_list_disabled`.\n\nRepeat `risk_bands`, `risk_signals`, `source` and `campaign`. Flags are `true` or `false`\nand combine with AND. Signal codes combine with OR. `source` and `campaign` are one OR group,\nat most 8 values together. `is_abuser`, `is_datacenter` and\n`is_stun_not_checked` return `400`. A nested `filter` or `chips` returns `400`.\n\nThe old `/api/v1/history/{search_type}/{value}` route returns `410 endpoint_retired`.\nPage with `page_token`, not `offset`. `from` and `to` are both required when either is set.",
         "security": [
           {
             "historyApiKey": []
@@ -327,9 +327,10 @@
             "name": "ids",
             "in": "query",
             "required": false,
-            "description": "User ids. Repeat the key. User list only, at most 100.",
+            "description": "One user id. User list only. A repeated key returns 400.",
             "schema": {
               "type": "array",
+              "maxItems": 1,
               "items": {
                 "type": "string"
               }
