@@ -1,6 +1,6 @@
 ## Unreleased
 
-- The History user list accepts one `ids` value. Repeating `ids` returns 400.
+- The History user list `ids` parameter is one string. Repeating it returns 400.
 
 - The History API lists domains and reads identifications, users, visitors, devices, and IPs by domain id. Filters are query parameters. The previous unscoped search route is retired.
 

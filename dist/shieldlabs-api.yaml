@@ -308,16 +308,12 @@ paths:
           required: false
           description: One user id. User list only. A repeated key returns 400.
           schema:
-            type: array
-            maxItems: 1
-            items:
-              type: string
-          style: form
-          explode: true
+            type: string
+            minLength: 1
+            maxLength: 512
           examples:
             one:
-              value:
-                - customer
+              value: customer
         - $ref: '#/components/parameters/HistoryFlagVpn'
         - $ref: '#/components/parameters/HistoryFlagTor'
         - $ref: '#/components/parameters/HistoryFlagProxy'
