@@ -50,3 +50,11 @@ test('every History operation accepts only concrete non-nil public domain UUID',
   assert.ok(item.get.responses['403'],path);
  }
 });
+
+test('identification detail preserves webhook-shaped recorded weights and availability',()=>{
+ const schema=doc.components.schemas.IdentificationDetail;
+ assert.ok(schema.properties.scored_signals);assert.ok(!schema.required.includes('scored_signals'));
+ const validate=ajv.compile({$ref:root.$id+'#/components/schemas/ScoredSignal'});
+ for(const weight of [0,-30,30,999])assert.ok(validate({name:'vpn',weight}));
+ for(const value of [{name:'vpn'}, {name:'vpn',weight:'30'}, {name:'vpn',weight:1.5},{name:'',weight:30}])assert.equal(validate(value),false);
+});

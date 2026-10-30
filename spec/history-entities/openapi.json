@@ -2242,6 +2242,17 @@
               }
             },
             "required": []
+          },
+          "scored_signals": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ScoredSignal"
+            },
+            "description": "Actual recorded signal weights for this identification revision. Absent or null means unavailable; [] means a known empty list. Does not replace signals.items or alter risk.score. No catalog weights are substituted."
           }
         },
         "required": [
@@ -2641,6 +2652,27 @@
         "required": [
           "data"
         ]
+      },
+      "ScoredSignal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "weight"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "weight": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "description": "Actual recorded name and weight, in the same format as identification.scored signals. Zero and negative weights are retained; total Risk Score must not be recomputed from their sum."
       }
     },
     "securitySchemes": {
