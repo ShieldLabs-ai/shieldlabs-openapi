@@ -205,52 +205,6 @@ get:
       examples:
         legacy:
           value: legacy
-    - name: relation
-      in: query
-      required: false
-      description: Linked-id page for this card. Identification cards reject this parameter.
-      schema:
-        type: string
-        enum:
-          - visitors
-          - devices
-          - users
-          - public_ips
-          - sessions
-          - cookies
-          - local_ips
-          - countries
-          - local_countries
-          - browsers
-          - os
-          - device_types
-          - connection_types
-          - risk_signals
-          - high_risk_events
-      examples:
-        visitors:
-          value: visitors
-    - name: relation_limit
-      in: query
-      required: false
-      description: Linked records in one page, from 1 through 100.
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
-      examples:
-        page:
-          value: 20
-    - name: relation_page_token
-      in: query
-      required: false
-      description: Opaque token from the previous linked-id page.
-      schema:
-        type: string
-      examples:
-        next:
-          value: next-page
   responses:
     '200':
       description: The entity card.

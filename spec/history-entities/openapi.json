@@ -489,7 +489,7 @@
     "/api/v1/domains/{domain_scope}/history/{resource}/{id}": {
       "get": {
         "operationId": "apiGetHistoryEntity",
-        "summary": "Get one entity or a bounded relation page",
+        "summary": "Get one entity card",
         "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
@@ -588,50 +588,6 @@
               "type": "integer",
               "minimum": 4,
               "maximum": 9
-            }
-          },
-          {
-            "name": "relation",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "enum": [
-                "visitors",
-                "devices",
-                "users",
-                "public_ips",
-                "sessions",
-                "cookies",
-                "local_ips",
-                "countries",
-                "local_countries",
-                "browsers",
-                "os",
-                "device_types",
-                "connection_types",
-                "risk_signals",
-                "high_risk_events"
-              ]
-            }
-          },
-          {
-            "name": "relation_limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20
-            }
-          },
-          {
-            "name": "relation_page_token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "maxLength": 4096
             }
           }
         ],
@@ -1287,7 +1243,7 @@
     "/mcp/v1/domains/{domain_scope}/history/{resource}/{id}": {
       "get": {
         "operationId": "mcpGetHistoryEntity",
-        "summary": "Get one entity or a bounded relation page",
+        "summary": "Get one entity card",
         "description": "domain_scope requires a concrete public domain UUID. all is disabled on both surfaces (403 domain_scope_not_supported) and reserved for a future release. Requires the retained admin reader; this candidate is not deployed.",
         "security": [
           {
@@ -1384,50 +1340,6 @@
               "type": "integer",
               "minimum": 4,
               "maximum": 9
-            }
-          },
-          {
-            "name": "relation",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "enum": [
-                "visitors",
-                "devices",
-                "users",
-                "public_ips",
-                "sessions",
-                "cookies",
-                "local_ips",
-                "countries",
-                "local_countries",
-                "browsers",
-                "os",
-                "device_types",
-                "connection_types",
-                "risk_signals",
-                "high_risk_events"
-              ]
-            }
-          },
-          {
-            "name": "relation_limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20
-            }
-          },
-          {
-            "name": "relation_page_token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "maxLength": 4096
             }
           }
         ],
