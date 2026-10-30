@@ -176,7 +176,7 @@ paths:
         from `GET /api/v1/domains`. Literal `all` returns `403 domain_scope_not_supported`. A list of
         `visitor`, `device` or `ip` returns `403 entity_list_disabled`.
 
-        Repeat `risk_bands`, `risk_signals`, `source`, `campaign` and `ids`. Flags are `true` or `false`
+        Repeat `risk_bands`, `risk_signals`, `source` and `campaign`. Flags are `true` or `false`
         and combine with AND. Signal codes combine with OR. `source` and `campaign` are one OR group,
         at most 8 values together. `is_abuser`, `is_datacenter` and
         `is_stun_not_checked` return `400`. A nested `filter` or `chips` returns `400`.
@@ -306,17 +306,14 @@ paths:
         - name: ids
           in: query
           required: false
-          description: User ids. Repeat the key. User list only, at most 100.
+          description: One user id. User list only. A repeated key returns 400.
           schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: true
+            type: string
+            minLength: 1
+            maxLength: 512
           examples:
             one:
-              value:
-                - customer
+              value: customer
         - $ref: '#/components/parameters/HistoryFlagVpn'
         - $ref: '#/components/parameters/HistoryFlagTor'
         - $ref: '#/components/parameters/HistoryFlagProxy'

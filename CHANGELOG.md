@@ -1,5 +1,7 @@
 ## Unreleased
 
+- The History user list `ids` parameter is one string. Repeating it returns 400.
+
 - The History API lists domains and reads identifications, users, visitors, devices, and IPs by domain id. Filters are query parameters. The previous unscoped search route is retired.
 
 - Public History exposes all 20 current detection flags, including six new predicates. Eight legacy diagnostic fields are no longer required by the row schema.
